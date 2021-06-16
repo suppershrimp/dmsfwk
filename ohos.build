@@ -1,6 +1,6 @@
 {
     "parts": {
-        "dmsfwk_L2": {
+        "dmsfwk_standard": {
             "variants": ["phone", "wearable"],
             "inner_kits": [
                 {
