@@ -18,6 +18,8 @@
 
 #include <cinttypes>
 
+#include "dtbschedmgr_log.h"
+
 namespace OHOS {
 namespace DistributedSchedule {
 #define PARCEL_WRITE_HELPER(parcel, type, value) \
