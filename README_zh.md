@@ -24,7 +24,7 @@
 
 ## 目录<a name="section161941989596"></a>
 
-分布式软总线组件主要代码目录结构如下：
+分布式调度组件主要代码目录结构如下：
 
 ```
 /foundation/distributedschedule/dmsfwk
