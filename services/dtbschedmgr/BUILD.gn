@@ -29,6 +29,9 @@ config("distributed_sched_config") {
 ohos_shared_library("distributedschedsvr") {
   install_enable = true
   sources = [
+    "src/continuation_callback_death_recipient.cpp",
+    "src/distributed_sched_ability_shell.cpp",
+    "src/distributed_sched_continuation.cpp",
     "src/distributed_sched_proxy.cpp",
     "src/distributed_sched_service.cpp",
     "src/distributed_sched_stub.cpp",
