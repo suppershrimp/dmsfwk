@@ -22,7 +22,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace DistributedSchedule {
 namespace {
-constexpr int64_t CONTINUATION_DELAY_TIME = 5000;
+constexpr int64_t CONTINUATION_DELAY_TIME = 20000;
 }
 
 void DSchedContinuation::Init(const FuncContinuationCallback& contCallback)

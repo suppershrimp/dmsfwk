@@ -159,7 +159,6 @@ int32_t DistributedSchedStub::NotifyCompleteContinuationInner(MessageParcel& dat
     PARCEL_READ_HELPER(data, Int32, sessionId);
     bool continuationResult = false;
     PARCEL_READ_HELPER(data, Bool, continuationResult);
-    //
     NotifyCompleteContinuation(devId, sessionId, continuationResult);
     return ERR_OK;
 }

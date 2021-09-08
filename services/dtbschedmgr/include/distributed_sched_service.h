@@ -68,7 +68,7 @@ private:
     bool Init();
     bool GetLocalDeviceId(std::string& localDeviceId);
     sptr<IDistributedSched> GetRemoteDms(const std::string& remoteDeviceId);
-    void NotifyContinuationCallbackRet(const sptr<IRemoteObject>& abilityToken, int32_t isSuccess);
+    void NotifyContinuationCallbackResult(const sptr<IRemoteObject>& abilityToken, int32_t isSuccess);
     bool registerToService_ = false;
     std::shared_ptr<DSchedContinuation> dschedContinuation_;
 };
