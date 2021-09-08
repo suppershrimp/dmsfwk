@@ -22,6 +22,7 @@
 #include <unordered_map>
 
 #include "ability_connect_callback_interface.h"
+#include "distributed_sched_continuation.h"
 #include "system_ability.h"
 #include "distributed_sched_stub.h"
 #include "iremote_object.h"
@@ -65,8 +66,11 @@ public:
 private:
     DistributedSchedService();
     bool Init();
+    bool GetLocalDeviceId(std::string& localDeviceId);
     sptr<IDistributedSched> GetRemoteDms(const std::string& remoteDeviceId);
+    void NotifyContinuationCallbackResult(const sptr<IRemoteObject>& abilityToken, int32_t isSuccess);
     bool registerToService_ = false;
+    std::shared_ptr<DSchedContinuation> dschedContinuation_;
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
