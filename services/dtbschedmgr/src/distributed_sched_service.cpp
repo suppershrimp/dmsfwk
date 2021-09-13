@@ -45,6 +45,10 @@ using namespace AAFwk;
 using namespace AppExecFwk;
 
 namespace {
+const std::u16string CONNECT_CALLBACK_INTERFACE_TOKEN = u"ohos.abilityshell.DistributedConnection";
+const std::string CONNECT_TOKEN_KEY = "ohos.extra.param.key.cmpConnectToken";
+const int32_t ABILITY_DISCONNECT_DONE = 2;
+
 constexpr int32_t BIND_CONNECT_RETRY_TIMES = 3;
 constexpr int32_t BIND_CONNECT_TIMEOUT = 500; // 500ms
 constexpr int32_t MAX_DISTRIBUTED_CONNECT_NUM = 600;
@@ -507,7 +511,8 @@ int32_t DistributedSchedService::ConnectAbilityFromRemote(const OHOS::AAFwk::Wan
         if (itConnect != connectAbilityMap_.end()) {
             callbackWrapper = itConnect->second.callbackWrapper;
         } else {
-            callbackWrapper = new AbilityConnectionWrapperStub(connect);
+            std::string token = want.GetStringParam(CONNECT_TOKEN_KEY);
+            callbackWrapper = new AbilityConnectionWrapperStub(connect, Str8ToStr16(token));
             ConnectInfo connectInfo {callerInfo, callbackWrapper};
             connectAbilityMap_.emplace(connect, connectInfo);
         }
@@ -688,14 +693,14 @@ int32_t DistributedSchedService::NotifyApp(const sptr<IRemoteObject>& connect,
         return OBJECT_NULL;
     }
     MessageParcel data;
-    if (!data.WriteInterfaceToken(IAbilityConnection::GetDescriptor())) {
+    if (!data.WriteInterfaceToken(CONNECT_CALLBACK_INTERFACE_TOKEN)) {
         return ERR_FLATTEN_OBJECT;
     }
     PARCEL_WRITE_HELPER(data, Parcelable, &element);
     PARCEL_WRITE_HELPER(data, Int32, errCode);
     MessageParcel reply;
     MessageOption option;
-    return connect->SendRequest(IAbilityConnection::ON_ABILITY_DISCONNECT_DONE, data, reply, option);
+    return connect->SendRequest(ABILITY_DISCONNECT_DONE, data, reply, option);
 }
 
 void DistributedSchedService::ProcessConnectDied(const sptr<IRemoteObject>& connect)

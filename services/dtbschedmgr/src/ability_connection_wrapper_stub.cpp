@@ -15,17 +15,31 @@
 
 #include "ability_connection_wrapper_stub.h"
 
-#include "ability_connection_wrapper_proxy.h"
 #include "dtbschedmgr_log.h"
+#include "ipc_object_proxy.h"
 #include "ipc_types.h"
+#include "parcel_helper.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
 using namespace AAFwk;
 
-AbilityConnectionWrapperStub::AbilityConnectionWrapperStub(sptr<IRemoteObject> connection)
+namespace {
+enum {
+    ON_ABILITY_CONNECT_DONE_EVENT = 1,
+    ON_ABILITY_DISCONNECT_DONE_EVENT = 2
+};
+
+const std::u16string CONNECT_CALLBACK_INTERFACE_TOKEN = u"ohos.abilityshell.DistributedConnection";
+// in order to be compatible with old harmony device, this will be deprecated after several versions
+const std::u16string COMPATIBLE_CONNECT_CALLBACK_INTERFACE_TOKEN = u"harmonyos.abilityshell.DistributedConnection";
+}
+
+AbilityConnectionWrapperStub::AbilityConnectionWrapperStub(sptr<IRemoteObject> connection,
+    const std::u16string& connectCallbackToken) : distributedConnection_(connection)
 {
-    distributedConnection_ = connection;
+    connectCallbackToken_ = connectCallbackToken.empty() ?
+        COMPATIBLE_CONNECT_CALLBACK_INTERFACE_TOKEN : CONNECT_CALLBACK_INTERFACE_TOKEN;
 }
 
 int32_t AbilityConnectionWrapperStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
@@ -69,15 +83,35 @@ int32_t AbilityConnectionWrapperStub::OnRemoteRequest(uint32_t code, MessageParc
 void AbilityConnectionWrapperStub::OnAbilityConnectDone(const AppExecFwk::ElementName& element,
     const sptr<IRemoteObject>& remoteObject, int32_t resultCode)
 {
-    auto proxy = std::make_unique<AbilityConnectionWrapperProxy>(distributedConnection_);
-    proxy->OnAbilityConnectDone(element, remoteObject, resultCode);
+    HILOGD("AbilityConnectionWrapperStub::OnAbilityConnectDone called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(connectCallbackToken_)) {
+        return;
+    }
+    MessageParcel reply;
+    MessageOption option;
+    PARCEL_WRITE_HELPER_NORET(data, Parcelable, &element);
+    PARCEL_WRITE_HELPER_NORET(data, RemoteObject, remoteObject);
+    PARCEL_WRITE_HELPER_NORET(data, Int32, resultCode);
+    int32_t errCode = distributedConnection_->SendRequest(ON_ABILITY_CONNECT_DONE_EVENT, data, reply, option);
+    HILOGI("AbilityConnectionWrapperStub::OnAbilityConnectDone result %{public}d", errCode);
 }
 
 void AbilityConnectionWrapperStub::OnAbilityDisconnectDone(const AppExecFwk::ElementName& element,
     int32_t resultCode)
 {
-    auto proxy = std::make_unique<AbilityConnectionWrapperProxy>(distributedConnection_);
-    proxy->OnAbilityDisconnectDone(element, resultCode);
+    HILOGD("AbilityConnectionWrapperStub::OnAbilityDisconnectDone called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(connectCallbackToken_)) {
+        return;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    PARCEL_WRITE_HELPER_NORET(data, Parcelable, &element);
+    PARCEL_WRITE_HELPER_NORET(data, Int32, resultCode);
+    int32_t errCode = distributedConnection_->SendRequest(ON_ABILITY_CONNECT_DONE_EVENT, data, reply, option);
+    HILOGI("AbilityConnectionWrapperStub::OnAbilityDisconnectDone result %{public}d", errCode);
 }
 } // namespace DistributedSchedule
 } // namespace OHOS
