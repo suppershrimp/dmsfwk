@@ -26,7 +26,7 @@ namespace OHOS {
 namespace DistributedSchedule {
 class AbilityConnectionWrapperStub : public IRemoteStub<AAFwk::IAbilityConnection> {
 public:
-    explicit AbilityConnectionWrapperStub(sptr<IRemoteObject> connection);
+    AbilityConnectionWrapperStub(sptr<IRemoteObject> connection, const std::u16string& connectCallbackToken);
     virtual ~AbilityConnectionWrapperStub() = default;
 
     void OnAbilityConnectDone(const AppExecFwk::ElementName& element, const sptr<IRemoteObject>& remoteObject,
@@ -38,7 +38,9 @@ public:
 
 private:
     DISALLOW_COPY_AND_MOVE(AbilityConnectionWrapperStub);
+
     sptr<IRemoteObject> distributedConnection_;
+    std::u16string connectCallbackToken_;
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
