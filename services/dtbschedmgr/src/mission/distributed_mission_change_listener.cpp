@@ -15,6 +15,7 @@
 
 #include "mission/distributed_mission_change_listener.h"
 
+#include "distributed_sched_adapter.h"
 #include "dtbschedmgr_log.h"
 #include "mission/distributed_sched_mission_manager.h"
 
@@ -33,11 +34,13 @@ void DistributedMissionChangeListener::OnMissionDestroyed(int32_t missionId)
 {
     HILOGI("OnMissionDestroyed, missionId = %{public}d", missionId);
     DistributedSchedMissionManager::GetInstance().NotifyLocalMissionsChanged();
+    DistributedSchedAdapter::GetInstance().NotifyMissionSnapshotDestroyed(missionId);
 }
 
 void DistributedMissionChangeListener::OnMissionSnapshotChanged(int32_t missionId)
 {
     HILOGI("OnMissionSnapshotChanged, missionId = %{public}d", missionId);
+    DistributedSchedAdapter::GetInstance().NotifyMissionSnapshotChanged(missionId);
 }
 
 void DistributedMissionChangeListener::OnMissionMovedToFront(int32_t missionId)

@@ -27,6 +27,7 @@
 #include "iservice_registry.h"
 #include "mission/mission_changed_notify.h"
 #include "mission/mission_constant.h"
+#include "mission/snapshot_converter.h"
 #include "nlohmann/json.hpp"
 #include "string_ex.h"
 #include "system_ability_definition.h"
@@ -180,7 +181,7 @@ int32_t DistributedSchedMissionManager::StoreSnapshotInfo(const std::string& dev
     }
     if (!distributedDataStorage_->Insert(deviceId, missionId, byteStream, len)) {
         HILOGE("StoreSnapshotInfo DistributedDataStorage insert failed!");
-        return ERR_NULL_OBJECT;
+        return INVALID_PARAMETERS_ERR;
     }
     return ERR_NONE;
 }
@@ -193,7 +194,7 @@ int32_t DistributedSchedMissionManager::RemoveSnapshotInfo(const std::string& de
     }
     if (!distributedDataStorage_->Delete(deviceId, missionId)) {
         HILOGE("RemoveSnapshotInfo DistributedDataStorage delete failed!");
-        return ERR_NULL_OBJECT;
+        return INVALID_PARAMETERS_ERR;
     }
     return ERR_NONE;
 }
@@ -230,6 +231,42 @@ std::unique_ptr<Snapshot> DistributedSchedMissionManager::GetRemoteSnapshotInfo(
         return nullptr;
     }
     return snapshot;
+}
+
+int32_t DistributedSchedMissionManager::GetRemoteMissionSnapshotInfo(const std::string& networkId, int32_t missionId,
+    std::unique_ptr<AAFwk::MissionSnapshot>& missionSnapshot)
+{
+    if (!AllowMissionUid(IPCSkeleton::GetCallingUid())) {
+        HILOGE("permission denied!");
+        return DMS_PERMISSION_DENIED;
+    }
+    std::string uuid = DtbschedmgrDeviceInfoStorage::GetInstance().GetUuidByNetworkId(networkId);
+    if (uuid.empty()) {
+        HILOGE("uuid is empty!");
+        return INVALID_PARAMETERS_ERR;
+    }
+    std::unique_ptr<Snapshot> snapshotPtr = DequeueCachedSnapshotInfo(uuid, missionId);
+    if (snapshotPtr != nullptr) {
+        SnapshotConverter::ConvertToMissionSnapshot(*snapshotPtr, missionSnapshot);
+        return ERR_NONE;
+    }
+    if (distributedDataStorage_ == nullptr) {
+        HILOGE("DistributedDataStorage null!");
+        return ERR_NULL_OBJECT;
+    }
+    DistributedKv::Value value;
+    bool ret = distributedDataStorage_->Query(networkId, missionId, value);
+    if (!ret) {
+        HILOGE("DistributedDataStorage query failed!");
+        return INVALID_PARAMETERS_ERR;
+    }
+    snapshotPtr = Snapshot::Create(value.Data());
+    if (snapshotPtr == nullptr) {
+        HILOGE("snapshot create failed!");
+        return ERR_NULL_OBJECT;
+    }
+    SnapshotConverter::ConvertToMissionSnapshot(*snapshotPtr, missionSnapshot);
+    return ERR_NONE;
 }
 
 void DistributedSchedMissionManager::DeviceOnlineNotify(const std::string& deviceId)
@@ -310,9 +347,9 @@ void DistributedSchedMissionManager::DeleteDataStorage(const std::string& device
         HILOGE("DeleteDataStorage DistributedDataStorage null!");
         return;
     }
-    std::string uuid = DtbschedmgrDeviceInfoStorage::GetInstance().GetUuidByNetworkId(deviceId);
-    auto callback = [this, uuid]() {
-        if (!distributedDataStorage_->FuzzyDelete(uuid)) {
+    // std::string uuid = DtbschedmgrDeviceInfoStorage::GetInstance().GetUuidByNetworkId(deviceId);
+    auto callback = [this, deviceId]() {
+        if (!distributedDataStorage_->FuzzyDelete(deviceId)) {
             HILOGE("DeleteDataStorage storage delete failed!");
         } else {
             HILOGI("DeleteDataStorage storage delete successfully!");
@@ -321,12 +358,12 @@ void DistributedSchedMissionManager::DeleteDataStorage(const std::string& device
     if (isDelayed) {
         if (missionHandler_ != nullptr) {
             HILOGI("DeleteDataStorage PostTask");
-            missionHandler_->PostTask(callback, DELETE_DATA_STORAGE + uuid, DELETE_DATA_STORAGE_DELAYED);
+            missionHandler_->PostTask(callback, DELETE_DATA_STORAGE + deviceId, DELETE_DATA_STORAGE_DELAYED);
         }
     } else {
         if (missionHandler_ != nullptr) {
             HILOGI("DeleteDataStorage RemoveTask");
-            missionHandler_->RemoveTask(DELETE_DATA_STORAGE + uuid);
+            missionHandler_->RemoveTask(DELETE_DATA_STORAGE + deviceId);
         }
         callback();
     }
@@ -550,11 +587,6 @@ int32_t DistributedSchedMissionManager::StartSyncMissionsFromRemote(const Caller
         HILOGI("osd function is disable!");
         return ERR_NONE;
     }
-    if (distributedDataStorage_ != nullptr) {
-        if (!distributedDataStorage_->Sync(deviceId)) {
-            HILOGE("DistributedDataStorage push sync failed!");
-        }
-    }
     if (!isRegMissionChange_) {
         int32_t ret = DistributedSchedAdapter::GetInstance().RegisterMissionListener(missonChangeListener_);
         if (ret == ERR_OK) {
@@ -589,19 +621,19 @@ bool DistributedSchedMissionManager::needSyncDevice(const std::string& deviceId)
     return true;
 }
 
-bool DistributedSchedMissionManager::HasSyncListener(const std::string& dstDeviceId)
+bool DistributedSchedMissionManager::HasSyncListener(const std::string& networkId)
 {
     std::lock_guard<std::mutex> autoLock(listenDeviceLock_);
-    auto iter = listenDeviceMap_.find(Str8ToStr16(dstDeviceId));
+    auto iter = listenDeviceMap_.find(Str8ToStr16(networkId));
     if (iter != listenDeviceMap_.end()) {
         return iter->second.called;
     }
     return false;
 }
 
-void DistributedSchedMissionManager::NotifySnapshotChanged(const std::string& devId, int32_t missionId)
+void DistributedSchedMissionManager::NotifySnapshotChanged(const std::string& networkId, int32_t missionId)
 {
-    std::u16string u16DevId = Str8ToStr16(devId);
+    std::u16string u16DevId = Str8ToStr16(networkId);
     std::lock_guard<std::mutex> autoLock(listenDeviceLock_);
     auto iter = listenDeviceMap_.find(u16DevId);
     if (iter == listenDeviceMap_.end()) {

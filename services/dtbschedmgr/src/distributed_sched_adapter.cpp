@@ -15,15 +15,18 @@
 
 #include "distributed_sched_adapter.h"
 
-#include "bundle/bundle_manager_internal.h"
-#include "distributed_sched_service.h"
-#include "dtbschedmgr_log.h"
-
 #include "ability_manager_client.h"
+#include "bundle/bundle_manager_internal.h"
+#include "datetime_ex.h"
+#include "distributed_sched_service.h"
+#include "dtbschedmgr_device_info_storage.h"
+#include "dtbschedmgr_log.h"
+#include "image_packer.h"
 #include "ipc_skeleton.h"
 #include "ipc_types.h"
 #include "mission/distributed_sched_mission_manager.h"
 #include "mission/mission_info_converter.h"
+#include "mission/snapshot_converter.h"
 #include "parcel_helper.h"
 #include "string_ex.h"
 
@@ -32,7 +35,7 @@ namespace DistributedSchedule {
 using namespace std;
 using namespace AAFwk;
 using namespace AppExecFwk;
-
+using namespace Media;
 using DstbMissionChangeListener = DistributedMissionChangeListener;
 
 namespace {
@@ -40,6 +43,9 @@ namespace {
 constexpr int64_t DEVICE_OFFLINE_DELAY_TIME = 0;
 const std::string TAG = "DistributedSchedAdapter";
 }
+namespace Mission {
+constexpr int32_t GET_MAX_MISSIONS = 20;
+} // Mission
 
 IMPLEMENT_SINGLE_INSTANCE(DistributedSchedAdapter);
 
@@ -226,6 +232,7 @@ bool DistributedSchedAdapter::AllowMissionUid(int32_t uid)
 
 int32_t DistributedSchedAdapter::RegisterMissionListener(const sptr<DstbMissionChangeListener>& listener)
 {
+    HILOGD("called.");
     if (listener == nullptr) {
         HILOGE("listener is null");
         return INVALID_PARAMETERS_ERR;
@@ -240,6 +247,7 @@ int32_t DistributedSchedAdapter::RegisterMissionListener(const sptr<DstbMissionC
         HILOGE("RegisterMissionListener failed, ret=%{public}d", ret);
         return ret;
     }
+    InitAllSnapshots();
     return ERR_OK;
 }
 
@@ -261,6 +269,162 @@ int32_t DistributedSchedAdapter::UnRegisterMissionListener(const sptr<DstbMissio
         return ret;
     }
     return ERR_OK;
+}
+
+void DistributedSchedAdapter::InitAllSnapshots()
+{
+    std::vector<DstbMissionInfo> missionInfos;
+    GetLocalMissionInfos(Mission::GET_MAX_MISSIONS, missionInfos);
+    ErrCode errCode = AAFwk::AbilityManagerClient::GetInstance()->Connect();
+    if (errCode != ERR_OK) {
+        HILOGE("get ability server failed, errCode=%{public}d", errCode);
+        return;
+    }
+    for (auto iter = missionInfos.begin(); iter != missionInfos.end(); iter++) {
+        errCode = MissionSnapshotChanged(iter->id);
+        if (errCode != ERR_OK) {
+            HILOGE("mission snapshot changed failed, missionId=%{public}d, errCode=%{public}d", iter->id, errCode);
+        }
+    }
+}
+
+int32_t DistributedSchedAdapter::MissionSnapshotChanged(int32_t missionId) {
+    std::string networkId;
+    if (!DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(networkId)) {
+        HILOGE("get local networkId failed!");
+        return INVALID_PARAMETERS_ERR;
+    }
+    int64_t begin = GetTickCount();
+    MissionSnapshot missionSnapshot;
+    ErrCode errCode = AAFwk::AbilityManagerClient::GetInstance()->GetMissionSnapshot(networkId,
+        missionId, missionSnapshot);
+    HILOGI("[PerformanceTest] GetMissionSnapshot spend %{public}" PRId64 " ms", GetTickCount() - begin);
+    if (errCode != ERR_OK) {
+        HILOGE("get mission snapshot failed, missionId=%{public}d, errCode=%{public}d", missionId, errCode);
+        return errCode;
+    }
+    if (missionSnapshot.snapshot == nullptr) {
+        HILOGE("pixel map is nullptr!");
+        return ERR_NULL_OBJECT;
+    }
+    HILOGD("pixelMap size:%{public}d", missionSnapshot.snapshot->GetCapacity());
+    Snapshot snapshot;
+    SnapshotConverter::ConvertToSnapshot(missionSnapshot, snapshot);
+    MessageParcel data;
+    errCode = MissionSnapshotSequence(snapshot, data);
+    if (errCode != ERR_OK) {
+        HILOGE("mission snapshot sequence failed, errCode=%{public}d", errCode);
+        return errCode;
+    }
+    size_t len = data.GetReadableBytes();
+    const uint8_t* byteStream = data.ReadBuffer(len);
+    errCode = DistributedSchedService::GetInstance().StoreSnapshotInfo(networkId, missionId, byteStream, len);
+    return errCode;
+}
+
+int32_t DistributedSchedAdapter::MissionSnapshotDestroyed(int32_t missionId) {
+    std::string networkId;
+    if (!DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(networkId)) {
+        HILOGE("get local networkId failed!");
+        return INVALID_PARAMETERS_ERR;
+    }
+    ErrCode errCode = DistributedSchedService::GetInstance().RemoveSnapshotInfo(networkId, missionId);
+    return errCode;
+}
+
+int32_t DistributedSchedAdapter::MissionSnapshotSequence(const Snapshot& snapshot, MessageParcel& data) {
+    bool ret = WriteSnapshotInfo(snapshot, data);
+    if (!ret) {
+        HILOGE("WriteSnapshotInfo failed!");
+        return ERR_FLATTEN_OBJECT;
+    }
+    ret = WritePixelMap(snapshot, data);
+    if (!ret) {
+        HILOGE("WritePixelMap failed!");
+        return ERR_FLATTEN_OBJECT;
+    }
+    return ERR_OK;
+}
+
+bool DistributedSchedAdapter::WriteSnapshotInfo(const Snapshot& snapshot, MessageParcel& data)
+{
+    MessageParcel parcel;
+    PARCEL_WRITE_HELPER_RET(parcel, Int32, snapshot.version_, false); // for dms version
+    PARCEL_WRITE_HELPER_RET(parcel, Int32, snapshot.orientation_, false); // for orientation
+    PARCEL_WRITE_HELPER_RET(parcel, Parcelable, snapshot.rect_.get(), false); // for contentInsets
+    PARCEL_WRITE_HELPER_RET(parcel, Bool, snapshot.reducedResolution_, false); // for reduceResolution
+    PARCEL_WRITE_HELPER_RET(parcel, Float, snapshot.scale_, false); // for scale
+    PARCEL_WRITE_HELPER_RET(parcel, Bool, snapshot.isRealSnapshot_, false); // for isRealSnapshot
+    PARCEL_WRITE_HELPER_RET(parcel, Int32, snapshot.windowingMode_, false); // for windowingMode
+    PARCEL_WRITE_HELPER_RET(parcel, Int32, snapshot.systemUiVisibility_, false); // for systemUiVisibility
+    PARCEL_WRITE_HELPER_RET(parcel, Bool, snapshot.isTranslucent_, false); // for isTranslucent
+    PARCEL_WRITE_HELPER_RET(parcel, Parcelable, snapshot.windowBounds_.get(), false); // for windowBounds
+    PARCEL_WRITE_HELPER_RET(parcel, String16, snapshot.applicationLabel_, false); // for applicationLabel
+    PARCEL_WRITE_HELPER_RET(parcel, String16, snapshot.activityLabel_, false); // for activityLabel
+    PARCEL_WRITE_HELPER_RET(parcel, UInt8Vector, snapshot.icon_, false); // for icon
+    PARCEL_WRITE_HELPER_RET(parcel, String16, snapshot.secApplicationLabel_, false); // for secApplicationLabel
+    PARCEL_WRITE_HELPER_RET(parcel, String16, snapshot.secActivityLabel_, false); // for secActivityLabel
+    PARCEL_WRITE_HELPER_RET(parcel, UInt8Vector, snapshot.secIcon_, false); // for secIcon
+    PARCEL_WRITE_HELPER_RET(parcel, String16, snapshot.sourceDeviceTips_, false); // for sourceDeviceTips
+    size_t infoSize = parcel.GetReadableBytes();
+    const uint8_t* infoBuffer = parcel.ReadBuffer(infoSize);
+    PARCEL_WRITE_HELPER_RET(data, Uint32, infoSize, false); // for snapshot info size
+    bool ret = data.WriteBuffer(infoBuffer, infoSize); // for snapshot info buffer
+    if (!ret) {
+        HILOGE("snapshot info write parcel failed!");
+        return false;
+    }
+    return true;
+}
+
+bool DistributedSchedAdapter::WritePixelMap(const Snapshot& snapshot, MessageParcel& data)
+{
+    ImagePacker imagePacker;
+    PackOption option;
+    option.format = "image/jpeg";
+    option.quality = 85;
+    option.numberHint = 1;
+    stringstream ss;
+    std::ostream outputStream(ss.rdbuf());
+    imagePacker.StartPacking(outputStream, option);
+    imagePacker.AddImage(*snapshot.pixelMap_);
+    imagePacker.FinalizePacking();
+    std::istream inputStream(outputStream.rdbuf());
+    inputStream.seekg(0, inputStream.end);
+    size_t len = inputStream.tellg();
+    inputStream.seekg(0);
+    std::unique_ptr<char> pixelMapBuffer(new char[len]);
+    inputStream.read(pixelMapBuffer.get(), len);
+    uint8_t* byteStream = reinterpret_cast<uint8_t*>(pixelMapBuffer.get());
+    HILOGD("pixelMap compress size:%{public}d", len);
+    PARCEL_WRITE_HELPER_RET(data, Uint32, len, false); // for pixel map size
+    bool ret = data.WriteBuffer(byteStream, len); // for pixel map buffer
+    if (!ret) {
+        HILOGE("pixel map write parcel failed!");
+        return false;
+    }
+    return true;
+}
+
+void DistributedSchedAdapter::NotifyMissionSnapshotChanged(int32_t missionId) {
+    ErrCode errCode = AAFwk::AbilityManagerClient::GetInstance()->Connect();
+    if (errCode != ERR_OK) {
+        HILOGE("get ability server failed, errCode=%{public}d", errCode);
+        return;
+    }
+    errCode = MissionSnapshotChanged(missionId);
+    if (errCode != ERR_OK) {
+        HILOGE("mission snapshot changed failed, missionId=%{public}d, errCode=%{public}d", missionId, errCode);
+        return;
+    }
+}
+
+void DistributedSchedAdapter::NotifyMissionSnapshotDestroyed(int32_t missionId) {
+    ErrCode errCode = MissionSnapshotDestroyed(missionId);
+    if (errCode != ERR_OK) {
+        HILOGE("mission snapshot removed failed, missionId=%{public}d, errCode=%{public}d", missionId, errCode);
+        return;
+    }
 }
 
 int32_t DistributedSchedAdapter::GetOsdSwitch()
