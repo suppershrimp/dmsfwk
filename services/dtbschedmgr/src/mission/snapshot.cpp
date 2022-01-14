@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -141,7 +141,7 @@ unique_ptr<PixelMap> Snapshot::CreatePixelMap(const uint8_t* buffer, uint32_t bu
     }
     DecodeOptions decodeOpt;
     decodeOpt.allocatorType = AllocatorType::SHARE_MEM_ALLOC;
-    decodeOpt.desiredPixelFormat = PixelFormat::RGB_565;
+    decodeOpt.desiredPixelFormat = PixelFormat::RGB_888;
     int64_t begin = GetTickCount();
     unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpt, errCode);
     HILOGI("[PerformanceTest] Create PixelMap spend %{public}" PRId64 " ms", GetTickCount() - begin);

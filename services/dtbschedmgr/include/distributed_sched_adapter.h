@@ -24,6 +24,7 @@
 #include "iremote_object.h"
 #include "mission/distributed_mission_change_listener.h"
 #include "mission/distributed_mission_info.h"
+#include "mission/snapshot.h"
 #include "single_instance.h"
 #include "uri.h"
 
@@ -51,8 +52,17 @@ public:
     int32_t UnRegisterMissionListener(const sptr<DistributedMissionChangeListener>& listener);
     int32_t GetOsdSwitch();
     void OnOsdEventOccur(int32_t flag);
+
+    void NotifyMissionSnapshotChanged(int32_t missionId);
+    void NotifyMissionSnapshotDestroyed(int32_t missionId);
 private:
     void ProcessDeviceOffline(const std::string& deviceId);
+    void InitAllSnapshots();
+    int32_t MissionSnapshotChanged(int32_t missionId);
+    int32_t MissionSnapshotDestroyed(int32_t missionId);
+    int32_t MissionSnapshotSequence(const Snapshot& snapshot, MessageParcel& data);
+    bool WriteSnapshotInfo(const Snapshot& snapshot, MessageParcel& data);
+    bool WritePixelMap(const Snapshot& snapshot, MessageParcel& data);
 
     std::shared_ptr<AppExecFwk::EventHandler> dmsAdapterHandler_;
     friend class BundleManagerInternal;
