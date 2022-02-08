@@ -109,7 +109,7 @@ void DistributedSchedService::OnStop()
 }
 
 int32_t DistributedSchedService::StartRemoteAbility(const OHOS::AAFwk::Want& want,
-    int32_t callerUid, int32_t requestCode)
+    uint32_t tokenCaller, int32_t requestCode)
 {
     std::string localDeviceId;
     std::string deviceId = want.GetElement().GetDeviceID();
@@ -129,7 +129,7 @@ int32_t DistributedSchedService::StartRemoteAbility(const OHOS::AAFwk::Want& wan
     AppExecFwk::AbilityInfo abilityInfo;
     CallerInfo callerInfo;
     callerInfo.sourceDeviceId = localDeviceId;
-    callerInfo.uid = callerUid;
+    callerInfo.tokenCaller = tokenCaller;
     AccountInfo accountInfo;
     HILOGI("[PerformanceTest] StartRemoteAbility transact begin");
     int32_t result = remoteDms->StartAbilityFromRemote(want, abilityInfo, requestCode, callerInfo, accountInfo);
@@ -505,7 +505,7 @@ int32_t DistributedSchedService::GetUidLocked(const std::list<ConnectAbilitySess
 }
 
 int32_t DistributedSchedService::ConnectRemoteAbility(const OHOS::AAFwk::Want& want,
-    const sptr<IRemoteObject>& connect, int32_t callerUid, int32_t callerPid)
+    const sptr<IRemoteObject>& connect, int32_t callerUid, int32_t callerPid, uint32_t tokenCaller)
 {
     std::string localDeviceId;
     std::string remoteDeviceId = want.GetElement().GetDeviceID();
@@ -521,6 +521,7 @@ int32_t DistributedSchedService::ConnectRemoteAbility(const OHOS::AAFwk::Want& w
     {
         std::lock_guard<std::mutex> autoLock(distributedLock_);
         callerInfo = { callerUid, callerPid, CALLER_TYPE_HARMONY, localDeviceId };
+        callerInfo.tokenCaller = tokenCaller;
         int32_t checkResult = CheckDistributedConnectLocked(callerInfo);
         if (checkResult != ERR_OK) {
             return checkResult;
@@ -657,7 +658,8 @@ int32_t DistributedSchedService::ConnectAbilityFromRemote(const OHOS::AAFwk::Wan
         HILOGE("ConnectAbilityFromRemote connect is null");
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
-    HILOGD("ConnectAbilityFromRemote uid is %d, pid is %d", callerInfo.uid, callerInfo.pid);
+    HILOGD("ConnectAbilityFromRemote uid is %{public}d, pid is %{public}d, AccessTokenID is %{public}d",
+        callerInfo.uid, callerInfo.pid, callerInfo.tokenCaller);
     std::string localDeviceId;
     std::string destinationDeviceId = want.GetElement().GetDeviceID();
     if (!GetLocalDeviceId(localDeviceId) ||
