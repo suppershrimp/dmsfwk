@@ -28,7 +28,7 @@ public:
     explicit DistributedSchedProxy(const sptr<IRemoteObject>& impl)
         : IRemoteProxy<IDistributedSched>(impl) {}
     ~DistributedSchedProxy() {}
-    int32_t StartRemoteAbility(const OHOS::AAFwk::Want& want, int32_t callerUid, int32_t requestCode) override;
+    int32_t StartRemoteAbility(const OHOS::AAFwk::Want& want, uint32_t tokenCaller, int32_t requestCode) override;
     int32_t StartAbilityFromRemote(const OHOS::AAFwk::Want& want,
         const OHOS::AppExecFwk::AbilityInfo& abilityInfo, int32_t requestCode, const CallerInfo& callerInfo,
         const AccountInfo& accountInfo) override;
@@ -38,8 +38,8 @@ public:
         int32_t status) override;
     void NotifyCompleteContinuation(const std::u16string& devId, int32_t sessionId, bool isSuccess) override;
     int32_t NotifyContinuationResultFromRemote(int32_t sessionId, bool isSuccess) override;
-    int32_t ConnectRemoteAbility(const OHOS::AAFwk::Want& want,
-        const sptr<IRemoteObject>& connect, int32_t callerUid, int32_t callerPid) override;
+    int32_t ConnectRemoteAbility(const OHOS::AAFwk::Want& want, const sptr<IRemoteObject>& connect,
+        int32_t callerUid, int32_t callerPid, uint32_t tokenCaller) override;
     int32_t DisconnectRemoteAbility(const sptr<IRemoteObject>& connect) override;
     int32_t ConnectAbilityFromRemote(const OHOS::AAFwk::Want& want, const AppExecFwk::AbilityInfo& abilityInfo,
         const sptr<IRemoteObject>& connect, const CallerInfo& callerInfo, const AccountInfo& accountInfo) override;
