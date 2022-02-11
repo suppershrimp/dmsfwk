@@ -129,7 +129,8 @@ bool DistributedSchedAdapter::QueryAbilityInfo(const OHOS::AAFwk::Want& want, Ap
         HILOGE("QueryAbilityInfo failed to get bms");
         return false;
     }
-    bool result = bundleMgr->QueryAbilityInfo(want, abilityInfo);
+    // bool result = bundleMgr->QueryAbilityInfo(want, abilityInfo);
+    bool result = bundleMgr->QueryAbilityInfo(want, 0, 100, abilityInfo);
     if (!result) {
         HILOGE("QueryAbilityInfo fail");
         return false;

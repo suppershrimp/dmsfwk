@@ -34,6 +34,8 @@ public:
         const std::string& localDeviceId);
     bool CheckComponentAccessPermission(const AppExecFwk::AbilityInfo& targetAbility,
         const CallerInfo& callerInfo, const AccountInfo& accountInfo, const AAFwk::Want& want) const;
+    bool CheckCustomPermission(const AppExecFwk::AbilityInfo& targetAbility,
+        const CallerInfo& callerInfo) const;
 
 private:
     bool getTargetAbility(const AAFwk::Want& want, const AppExecFwk::AbilityInfo& abilityInfo,
