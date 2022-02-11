@@ -44,7 +44,8 @@ bool BundleManagerInternal::GetCallerAppIdFromBms(int32_t callingUid, std::strin
 
     // getting an arbitrary bundlename for they sharing a same appId, here we get the first one
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    appId = bundleMgr->GetAppIdByBundleName(bundleNameList.front(), callingUid);
+    // appId = bundleMgr->GetAppIdByBundleName(bundleNameList.front(), callingUid);
+    appId = bundleMgr->GetAppIdByBundleName(bundleNameList.front(), 100);
     IPCSkeleton::SetCallingIdentity(identity);
     HILOGD("appId:%s", appId.c_str());
     return true;

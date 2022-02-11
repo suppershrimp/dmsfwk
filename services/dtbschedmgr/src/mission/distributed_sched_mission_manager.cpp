@@ -42,9 +42,9 @@ constexpr int32_t FIRST_APPLICATION_UID = 10000;
 constexpr int32_t MULTIUSER_HAP_PER_USER_RANGE = 100000;
 constexpr int32_t MAX_RETRY_TIMES = 15;
 constexpr int32_t RETRY_DELAYED = 2000;
-constexpr int32_t GET_FOREGROUND_SNAPSHOT_DELAY_TIME = 800;
+constexpr int32_t GET_FOREGROUND_SNAPSHOT_DELAY_TIME = 800; // ms
 const std::string DELETE_DATA_STORAGE = "DeleteDataStorage";
-constexpr int32_t DELETE_DATA_STORAGE_DELAYED = 60000;
+constexpr int32_t DELETE_DATA_STORAGE_DELAYED = 60000; // ms
 constexpr int32_t REGISTER_MISSION_LISTENER = 0;
 constexpr int32_t UNREGISTER_MISSION_LISTENER = 1;
 constexpr int64_t DELAY_TIME = 300;
@@ -870,7 +870,7 @@ void DistributedSchedMissionManager::NotifyLocalMissionsChanged()
 void DistributedSchedMissionManager::NotifyMissionSnapshotCreated(int32_t missionId)
 {
     auto func = [this, missionId]() {
-        HILOGD("called.");
+        HILOGD("NotifyMissionSnapshotCreated called.");
         ErrCode errCode = MissionSnapshotChanged(missionId);
         if (errCode != ERR_OK) {
             HILOGE("mission snapshot changed failed, missionId=%{public}d, errCode=%{public}d", missionId, errCode);
@@ -884,7 +884,7 @@ void DistributedSchedMissionManager::NotifyMissionSnapshotCreated(int32_t missio
 void DistributedSchedMissionManager::NotifyMissionSnapshotChanged(int32_t missionId)
 {
     auto func = [this, missionId]() {
-        HILOGD("called.");
+        HILOGD("NotifyMissionSnapshotChanged called.");
         ErrCode errCode = MissionSnapshotChanged(missionId);
         if (errCode != ERR_OK) {
             HILOGE("mission snapshot changed failed, missionId=%{public}d, errCode=%{public}d", missionId, errCode);
