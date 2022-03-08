@@ -346,6 +346,7 @@ int32_t DistributedSchedAdapter::UnRegisterMissionListener(const sptr<DstbMissio
 int32_t DistributedSchedAdapter::GetLocalMissionSnapshotInfo(const std::string& networkId, int32_t missionId,
     MissionSnapshot& missionSnapshot)
 {
+#ifdef SUPPORT_GRAPHICS
     int64_t begin = GetTickCount();
     ErrCode errCode = AAFwk::AbilityManagerClient::GetInstance()->Connect();
     if (errCode != ERR_OK) {
@@ -359,12 +360,16 @@ int32_t DistributedSchedAdapter::GetLocalMissionSnapshotInfo(const std::string& 
         HILOGE("get mission snapshot failed, missionId=%{public}d, errCode=%{public}d", missionId, errCode);
         return errCode;
     }
+
     if (missionSnapshot.snapshot == nullptr) {
         HILOGE("pixel map is nullptr!");
         return ERR_NULL_OBJECT;
     }
     HILOGD("pixelMap size:%{public}d", missionSnapshot.snapshot->GetCapacity());
     return ERR_OK;
+#else
+    return ERR_NONE;
+#endif
 }
 
 int32_t DistributedSchedAdapter::GetOsdSwitch()

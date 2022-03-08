@@ -52,7 +52,9 @@ int32_t SnapshotConverter::ConvertToSnapshot(AAFwk::MissionSnapshot& missionSnap
     snapshot.secIcon_ = secIcon;
     std::u16string sourceDeviceTips;
     snapshot.sourceDeviceTips_ = sourceDeviceTips;
+#ifdef SUPPORT_GRAPHICS
     snapshot.pixelMap_ = missionSnapshot.snapshot;
+#endif
     return ERR_OK;
 }
 
@@ -85,14 +87,18 @@ int32_t SnapshotConverter::ConvertToSnapshot(AAFwk::MissionSnapshot& missionSnap
     snapshot->secIcon_ = secIcon;
     std::u16string sourceDeviceTips;
     snapshot->sourceDeviceTips_ = sourceDeviceTips;
+#ifdef SUPPORT_GRAPHICS
     snapshot->pixelMap_ = missionSnapshot.snapshot;
+#endif
     return ERR_OK;
 }
 
 int32_t SnapshotConverter::ConvertToMissionSnapshot(Snapshot& snapshot,
     std::unique_ptr<AAFwk::MissionSnapshot>& missionSnapshot)
 {
+#ifdef SUPPORT_GRAPHICS
     missionSnapshot->snapshot = snapshot.pixelMap_;
+#endif
     return ERR_OK;
 }
 }

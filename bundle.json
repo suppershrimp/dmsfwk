@@ -14,6 +14,7 @@
     "component": {
       "name": "dmsfwk_standard",
       "subsystem": "distributedschedule",
+      "features":[ "dmsfwk_standard_graphics" ],
       "adapted_system_type": [ "standard" ],
       "rom": "",
       "ram": "",
