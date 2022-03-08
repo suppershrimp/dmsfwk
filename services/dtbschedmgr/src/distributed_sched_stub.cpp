@@ -21,7 +21,9 @@
 #include "datetime_ex.h"
 #include "dtbschedmgr_log.h"
 #include "dtbschedmgr_device_info_storage.h"
+#ifdef SUPPORT_GRAPHICS
 #include "image_source.h"
+#endif
 #include "ipc_skeleton.h"
 #include "message_parcel.h"
 #include "mission/distributed_sched_mission_manager.h"

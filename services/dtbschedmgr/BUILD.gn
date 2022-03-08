@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//build/ohos_var.gni")
+import("//foundation/distributedschedule/dmsfwk/dmsfwk.gni")
 
 group("unittest") {
   testonly = true
@@ -69,12 +70,16 @@ ohos_shared_library("distributedschedsvr") {
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "multimedia_image_standard:image_native",
     "os_account_standard:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
     "utils_base:utils",
   ]
+
+  if (dmsfwk_standard_graphics) {
+    defines += [ "SUPPORT_GRAPHICS" ]
+    external_deps += [ "multimedia_image_standard:image_native" ]
+  }
 
   part_name = "dmsfwk_standard"
   subsystem_name = "distributedschedule"

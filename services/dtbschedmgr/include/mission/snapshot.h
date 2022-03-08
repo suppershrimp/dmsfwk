@@ -20,7 +20,9 @@
 
 #include "dtbschedmgr_log.h"
 #include "message_parcel.h"
+#ifdef SUPPORT_GRAPHICS
 #include "pixel_map.h"
+#endif
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -44,7 +46,9 @@ public:
     std::u16string secAbilityLabel_;
     std::vector<uint8_t> secIcon_;
     std::u16string sourceDeviceTips_;
+#ifdef SUPPORT_GRAPHICS
     std::shared_ptr<Media::PixelMap> pixelMap_;
+#endif
 
     ~Snapshot();
     bool WriteToParcel(MessageParcel& data) const;
@@ -55,7 +59,9 @@ public:
     int64_t GetLastAccessTime() const;
     void UpdateLastAccessTime(int64_t accessTime);
 private:
+#ifdef SUPPORT_GRAPHICS
     static std::unique_ptr<Media::PixelMap> CreatePixelMap(const uint8_t* buffer, uint32_t bufferSize);
+#endif
     static std::unique_ptr<Snapshot> FillSnapShot(MessageParcel& data);
 
     // inner used
