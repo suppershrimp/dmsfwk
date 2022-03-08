@@ -20,7 +20,9 @@
 #include "ipc_types.h"
 #include "mission/mission_info_converter.h"
 #include "parcel_helper.h"
+#ifdef SUPPORT_GRAPHICS
 #include "pixel_map.h"
+#endif
 #include "string_ex.h"
 
 namespace OHOS {
