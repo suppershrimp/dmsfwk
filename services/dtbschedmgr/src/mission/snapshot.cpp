@@ -18,22 +18,28 @@
 #include <sstream>
 #include "datetime_ex.h"
 #include "dtbschedmgr_log.h"
+#ifdef SUPPORT_GRAPHICS
 #include "image_source.h"
 #include "image_packer.h"
-#include "parcel_helper.h"
 #include "pixel_map_parcel.h"
+#endif
+#include "parcel_helper.h"
 #include "string_ex.h"
 
 using namespace std;
+#ifdef SUPPORT_GRAPHICS
 using namespace OHOS::Media;
+#endif
 
 namespace OHOS {
 namespace DistributedSchedule {
 namespace {
 const std::string TAG = "Snapshot";
+#ifdef SUPPORT_GRAPHICS
 constexpr int32_t COMPRESS_QUALITY = 85;
 constexpr size_t PIXEL_MAP_MAX_BUFFER_SIZE = 600 * 1024;
 constexpr size_t INT_BYTE = 4;
+#endif
 }
 
 Snapshot::~Snapshot()
@@ -68,6 +74,7 @@ bool Snapshot::WriteToParcel(MessageParcel& data) const
     PARCEL_WRITE_HELPER_RET(data, String16, secAbilityLabel_, false);
     PARCEL_WRITE_HELPER_RET(data, UInt8Vector, secIcon_, false);
     PARCEL_WRITE_HELPER_RET(data, String16, sourceDeviceTips_, false);
+#ifdef SUPPORT_GRAPHICS
     if (pixelMap_ != nullptr) {
         PARCEL_WRITE_HELPER_RET(data, Int32, 1, false);
         bool ret = PixelMapParcel::WriteToParcel(pixelMap_.get(), data);
@@ -78,6 +85,7 @@ bool Snapshot::WriteToParcel(MessageParcel& data) const
     } else {
         PARCEL_WRITE_HELPER_RET(data, Parcelable, nullptr, false);
     }
+#endif
     return true;
 }
 
@@ -131,6 +139,7 @@ unique_ptr<Snapshot> Snapshot::FillSnapShot(MessageParcel& data)
     return snapShot;
 }
 
+#ifdef SUPPORT_GRAPHICS
 unique_ptr<PixelMap> Snapshot::CreatePixelMap(const uint8_t* buffer, uint32_t bufferSize)
 {
     if (buffer == nullptr || bufferSize == 0) {
@@ -157,6 +166,7 @@ unique_ptr<PixelMap> Snapshot::CreatePixelMap(const uint8_t* buffer, uint32_t bu
     }
     return pixelMap;
 }
+#endif
 
 unique_ptr<Snapshot> Snapshot::Create(const vector<uint8_t>& data)
 {
@@ -195,6 +205,7 @@ unique_ptr<Snapshot> Snapshot::Create(const vector<uint8_t>& data)
         return nullptr;
     }
     dataBuffer += sizeof(uint32_t);
+#ifdef SUPPORT_GRAPHICS
     unique_ptr<PixelMap> pixelMap = CreatePixelMap(dataBuffer, pixelmapLen);
     if (pixelMap != nullptr) {
         HILOGD("create pixelMap width:%{public}d, height:%{public}d, byteCount:%{public}d, pixelformat:%{public}d",
@@ -202,6 +213,7 @@ unique_ptr<Snapshot> Snapshot::Create(const vector<uint8_t>& data)
             static_cast<int32_t>(pixelMap->GetPixelFormat()));
         snapShot->pixelMap_ = std::move(pixelMap);
     }
+#endif
     snapShot->createdTime_ = GetTickCount();
     snapShot->lastAccessTime_ = snapShot->createdTime_;
     return snapShot;
@@ -240,6 +252,7 @@ bool Snapshot::WriteSnapshotInfo(MessageParcel& data) const
 
 bool Snapshot::WritePixelMap(MessageParcel& data) const
 {
+#ifdef SUPPORT_GRAPHICS
     ImagePacker imagePacker;
     PackOption option;
     option.format = "image/jpeg";
@@ -278,6 +291,9 @@ bool Snapshot::WritePixelMap(MessageParcel& data) const
         return false;
     }
     return true;
+#else
+    return false;
+#endif
 }
 
 int64_t Snapshot::GetCreatedTime() const
