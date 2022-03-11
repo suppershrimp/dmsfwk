@@ -21,7 +21,6 @@
 #include "dtbschedmgr_log.h"
 #include "message_parcel.h"
 #include "pixel_map.h"
-
 namespace OHOS {
 namespace DistributedSchedule {
 struct Rect;
@@ -45,7 +44,6 @@ public:
     std::vector<uint8_t> secIcon_;
     std::u16string sourceDeviceTips_;
     std::shared_ptr<Media::PixelMap> pixelMap_;
-
     ~Snapshot();
     bool WriteToParcel(MessageParcel& data) const;
     static std::unique_ptr<Snapshot> Create(const std::vector<uint8_t>& data);
