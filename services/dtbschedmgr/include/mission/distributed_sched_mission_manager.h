@@ -103,10 +103,10 @@ public:
     int32_t NotifyMissionsChangedFromRemote(const CallerInfo& callerInfo,
         const std::vector<DstbMissionInfo>& missionInfos);
     int32_t CheckSupportOsd(const std::string& deviceId);
-    int32_t CheckOsdSwitch(const std::string& deviceId);
     void GetCachedOsdSwitch(std::vector<std::u16string>& deviceIds, std::vector<int32_t>& values);
     int32_t GetOsdSwitchValueFromRemote();
     int32_t UpdateOsdSwitchValueFromRemote(int32_t switchVal, const std::string& deviceId);
+    int32_t CheckOsdSwitch(const std::string& deviceId);
     int32_t UpdateSwitchValueToRemote();
     void UpdateConnCapSupportOsd(const std::string& deviceId);
     void NotifyOsdSwitchChanged(bool needNotifyChanged);
