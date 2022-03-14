@@ -68,9 +68,9 @@ struct ListenerInfo {
         return listenerSet.empty();
     }
 };
+
 class DistributedSchedMissionManager {
     DECLARE_SINGLE_INSTANCE(DistributedSchedMissionManager);
-
 public:
     void Init();
     int32_t GetMissionInfos(const std::string& deviceId, int32_t numMissions,
