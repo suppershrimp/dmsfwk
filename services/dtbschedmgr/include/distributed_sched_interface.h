@@ -41,6 +41,14 @@ public:
         std::vector<std::string> groupIdList;
     };
 
+    struct FreeInstallInfo {
+        OHOS::AAFwk::Want want;
+        OHOS::AppExecFwk::AbilityInfo abilityInfo;
+        int32_t requestCode;
+        CallerInfo callerInfo;
+        AccountInfo accountInfo;
+    };
+
     virtual int32_t StartRemoteAbility(const OHOS::AAFwk::Want& want, int32_t callerUid, int32_t requestCode,
         uint32_t accessToken) = 0;
     virtual int32_t StartAbilityFromRemote(const OHOS::AAFwk::Want& want,
@@ -91,6 +99,10 @@ public:
         const CallerInfo& callerInfo, const AccountInfo& accountInfo) = 0;
     virtual int32_t ReleaseAbilityFromRemote(const sptr<IRemoteObject>& connect, const AppExecFwk::ElementName &element,
         const CallerInfo& callerInfo) = 0;
+    virtual int32_t StartRemoteFreeInstall(const OHOS::AAFwk::Want& want,
+        int32_t callerUid, int32_t requestCode, uint32_t accessToken, const sptr<IRemoteObject>& callback) = 0;
+    virtual int32_t StartFreeInstallFromRemote(const FreeInstallInfo info, int32_t sessionId) = 0;
+    virtual int32_t NotifyCompleteFreeInstallFromRemote(int32_t sessionId, int32_t resultCode) = 0;
     enum {
         START_REMOTE_ABILITY = 1,
         STOP_REMOTE_ABILITY = 3,
@@ -137,6 +149,10 @@ public:
         RELEASE_REMOTE_ABILITY = 151,
         START_ABILITY_BY_CALL_FROM_REMOTE = 152,
         RELEASE_ABILITY_FROM_REMOTE = 153,
+
+        START_REMOTE_FREE_INSTALL = 200,
+        START_FREE_INSTALL_FROM_REMOTE = 201,
+        NOTIFYCOMPLETE_FREE_INSTALL_FROM_REMOTE = 202,
     };
 };
 } // namespace DistributedSchedule
