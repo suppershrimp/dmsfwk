@@ -19,7 +19,6 @@
 #include "errors.h"
 #include "hilog/log_c.h"
 #include "hilog/log_cpp.h"
-#include "inttypes.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -169,6 +168,10 @@ enum {
      * Result(29360153) for DistributedSched Service Continue Ability Timeout Error.
      */
     CONTINUE_ABILITY_TIMEOUT_ERR = 29360153,
+    /**
+     * Result(29360189) for DistributedSched Service Continue Ability success code.
+     */
+    CONTINUE_FREE_INSTALL_SECUESS = 29360189,
     /**
      * Result(29360154) for DistributedSched Service Notify Complete Continuation abilityToken null.
      */

@@ -15,9 +15,6 @@
       "name": "dmsfwk_standard",
       "subsystem": "distributedschedule",
       "adapted_system_type": [ "standard" ],
-      "features" : [
-        "dmsfwk_standard_mission_manager"
-      ],
       "rom": "",
       "ram": "",
       "deps": {
@@ -43,6 +40,17 @@
           "//foundation/distributedschedule/dmsfwk/etc/profile:distributedsched_trust",
           "//foundation/distributedschedule/dmsfwk/sa_profile:dms_sa_profile",
           "//foundation/distributedschedule/dmsfwk/services/dtbschedmgr:distributedschedsvr"
+        ],
+        "inner_kits": [
+          {
+            "name": "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/uri:zuri",
+            "header": {
+              "header_files": [
+                "uri.h"
+              ],
+              "header_base": "//foundation/distributedschedule/dmsfwk/services/dtbschedmgr/include"
+            }
+          }
         ],
         "test": [
           "//foundation/distributedschedule/dmsfwk/services/dtbschedmgr:unittest"
