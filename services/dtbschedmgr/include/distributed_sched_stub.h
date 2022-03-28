@@ -18,9 +18,7 @@
 
 #include "distributed_sched_interface.h"
 #include "iremote_stub.h"
-#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
 #include "mission/snapshot.h"
-#endif
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -31,12 +29,10 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel& data,
         MessageParcel& reply, MessageOption& option) override;
 protected:
-#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
     virtual std::unique_ptr<Snapshot> GetRemoteSnapshotInfo(const std::u16string& deviceId, int32_t missionId)
     {
         return nullptr;
     }
-#endif
 
 private:
     int32_t StartRemoteAbilityInner(MessageParcel& data, MessageParcel& reply);
@@ -51,7 +47,6 @@ private:
     int32_t ConnectAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t DisconnectAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t NotifyProcessDiedFromRemoteInner(MessageParcel& data, MessageParcel& reply);
-#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
     int32_t CheckSupportOsdInner(MessageParcel& data, MessageParcel& reply);
     int32_t GetCachedOsdSwitchInner(MessageParcel& data, MessageParcel& reply);
     int32_t GetMissionInfosInner(MessageParcel& data, MessageParcel& reply);
@@ -67,15 +62,17 @@ private:
     int32_t StopSyncRemoteMissionsInner(MessageParcel& data, MessageParcel& reply);
     int32_t StopSyncMissionsFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t NotifyMissionsChangedFromRemoteInner(MessageParcel& data, MessageParcel& reply);
+    bool CheckCallingUid();
     int32_t NotifyOsdSwitchChangedInner(MessageParcel& data, MessageParcel& reply);
     int32_t UpdateOsdSwitchValueFromRemoteInner(MessageParcel& data, MessageParcel& reply);
-#endif
-    bool CheckCallingUid();
     bool EnforceInterfaceToken(MessageParcel& data);
     int32_t StartRemoteAbilityByCallInner(MessageParcel& data, MessageParcel& reply);
     int32_t ReleaseRemoteAbilityInner(MessageParcel& data, MessageParcel& reply);
     int32_t StartAbilityByCallFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t ReleaseAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply);
+    int32_t StartRemoteFreeInstallInner(MessageParcel& data, MessageParcel& reply);
+    int32_t StartFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply);
+    int32_t NotifyCompleteFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply);
 
     bool CallerInfoUnmarshalling(CallerInfo& callerInfo, MessageParcel& data);
     using DistributedSchedFunc = int32_t(DistributedSchedStub::*)(MessageParcel& data, MessageParcel& reply);

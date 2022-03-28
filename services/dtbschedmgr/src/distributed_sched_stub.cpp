@@ -22,15 +22,12 @@
 #include "distributed_sched_permission.h"
 #include "dtbschedmgr_log.h"
 #include "dtbschedmgr_device_info_storage.h"
-#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
 #include "image_source.h"
+#include "ipc_skeleton.h"
+#include "message_parcel.h"
 #include "mission/distributed_sched_mission_manager.h"
 #include "mission/mission_info_converter.h"
 #include "mission/snapshot_converter.h"
-#endif
-#include "ipc_skeleton.h"
-#include "message_parcel.h"
-
 #include "parcel_helper.h"
 
 namespace OHOS {
@@ -55,8 +52,7 @@ DistributedSchedStub::DistributedSchedStub()
     localFuncsMap_[NOTIFY_COMPLETE_CONTINUATION] = &DistributedSchedStub::NotifyCompleteContinuationInner;
     localFuncsMap_[CONNECT_REMOTE_ABILITY] = &DistributedSchedStub::ConnectRemoteAbilityInner;
     localFuncsMap_[DISCONNECT_REMOTE_ABILITY] = &DistributedSchedStub::DisconnectRemoteAbilityInner;
-    // request codes for mission manager
-#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
+    // request codes for mission mananger
     localFuncsMap_[CHECK_SUPPORTED_OSD] = &DistributedSchedStub::CheckSupportOsdInner;
     localFuncsMap_[STORE_SNAPSHOT_INFO] = &DistributedSchedStub::StoreSnapshotInfoInner;
     localFuncsMap_[REMOVE_SNAPSHOT_INFO] = &DistributedSchedStub::RemoveSnapshotInfoInner;
@@ -69,15 +65,14 @@ DistributedSchedStub::DistributedSchedStub()
     localFuncsMap_[STOP_SYNC_MISSIONS] = &DistributedSchedStub::StopSyncRemoteMissionsInner;
     localFuncsMap_[SWITCH_CHANGED] = &DistributedSchedStub::NotifyOsdSwitchChangedInner;
     localFuncsMap_[GET_CACHED_SUPPORTED_OSD] = &DistributedSchedStub::GetCachedOsdSwitchInner;
-#endif
+
     remoteFuncsMap_[START_ABILITY_FROM_REMOTE] = &DistributedSchedStub::StartAbilityFromRemoteInner;
     remoteFuncsMap_[NOTIFY_CONTINUATION_RESULT_FROM_REMOTE] =
         &DistributedSchedStub::NotifyContinuationResultFromRemoteInner;
     remoteFuncsMap_[CONNECT_ABILITY_FROM_REMOTE] = &DistributedSchedStub::ConnectAbilityFromRemoteInner;
     remoteFuncsMap_[DISCONNECT_ABILITY_FROM_REMOTE] = &DistributedSchedStub::DisconnectAbilityFromRemoteInner;
     remoteFuncsMap_[NOTIFY_PROCESS_DIED_FROM_REMOTE] = &DistributedSchedStub::NotifyProcessDiedFromRemoteInner;
-#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
-    // request codes for mission manager
+    // request codes for mission mananger
     remoteFuncsMap_[CHECK_SUPPORT_OSD_FROM_REMOTE] = &DistributedSchedStub::GetOsdSwitchValueFromRemoteInner;
     remoteFuncsMap_[START_SYNC_MISSIONS_FROM_REMOTE] =
         &DistributedSchedStub::StartSyncMissionsFromRemoteInner;
@@ -85,13 +80,18 @@ DistributedSchedStub::DistributedSchedStub()
         &DistributedSchedStub::StopSyncMissionsFromRemoteInner;
     remoteFuncsMap_[NOTIFY_MISSIONS_CHANGED_FROM_REMOTE] = &DistributedSchedStub::NotifyMissionsChangedFromRemoteInner;
     remoteFuncsMap_[NOTIFY_SWITCH_CHANGED_FROM_REMOTE] = &DistributedSchedStub::UpdateOsdSwitchValueFromRemoteInner;
-#endif
     remoteFuncsMap_[CONTINUE_MISSION] = &DistributedSchedStub::ContinueMissionInner;
+
     // request codes for call ability
     localFuncsMap_[START_REMOTE_ABILITY_BY_CALL] = &DistributedSchedStub::StartRemoteAbilityByCallInner;
     localFuncsMap_[RELEASE_REMOTE_ABILITY] = &DistributedSchedStub::ReleaseRemoteAbilityInner;
     remoteFuncsMap_[START_ABILITY_BY_CALL_FROM_REMOTE] = &DistributedSchedStub::StartAbilityByCallFromRemoteInner;
     remoteFuncsMap_[RELEASE_ABILITY_FROM_REMOTE] = &DistributedSchedStub::ReleaseAbilityFromRemoteInner;
+
+    localFuncsMap_[START_REMOTE_FREE_INSTALL] = &DistributedSchedStub::StartRemoteFreeInstallInner;
+    remoteFuncsMap_[START_FREE_INSTALL_FROM_REMOTE] = &DistributedSchedStub::StartFreeInstallFromRemoteInner;
+    remoteFuncsMap_[NOTIFYCOMPLETE_FREE_INSTALL_FROM_REMOTE] =
+        &DistributedSchedStub::NotifyCompleteFreeInstallFromRemoteInner;
 }
 
 DistributedSchedStub::~DistributedSchedStub()
@@ -155,7 +155,7 @@ int32_t DistributedSchedStub::StartAbilityFromRemoteInner(MessageParcel& data, M
         HILOGW("request DENIED!");
         return DMS_PERMISSION_DENIED;
     }
-    
+
     shared_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
     if (want == nullptr) {
         HILOGW("want readParcelable failed!");
@@ -429,7 +429,6 @@ bool DistributedSchedStub::EnforceInterfaceToken(MessageParcel& data)
     return interfaceToken == DMS_STUB_INTERFACE_TOKEN;
 }
 
-#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
 int32_t DistributedSchedStub::GetMissionInfosInner(MessageParcel& data, MessageParcel& reply)
 {
     HILOGI("[PerformanceTest] called, IPC end = %{public}" PRId64, GetTickCount());
@@ -706,7 +705,6 @@ int32_t DistributedSchedStub::StartSyncRemoteMissionsInner(MessageParcel& data, 
     int32_t result = StartSyncRemoteMissions(deviceId, fixConflict, tag);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
-#endif
 
 bool DistributedSchedStub::CallerInfoUnmarshalling(CallerInfo& callerInfo, MessageParcel& data)
 {
@@ -830,6 +828,109 @@ int32_t DistributedSchedStub::ReleaseAbilityFromRemoteInner(MessageParcel& data,
     PARCEL_READ_HELPER(data, String, extraInfo);
     int32_t result = ReleaseAbilityFromRemote(connect, *element, callerInfo);
     HILOGI("result %{public}d", result);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+int32_t DistributedSchedStub::StartRemoteFreeInstallInner(MessageParcel& data, MessageParcel& reply)
+{
+    shared_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
+    if (want == nullptr) {
+        HILOGE("want readParcelable failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+    int32_t callerUid = 0;
+    int32_t requestCode = 0;
+    uint32_t accessToken = 0;
+    PARCEL_READ_HELPER(data, Int32, callerUid);
+    PARCEL_READ_HELPER(data, Int32, requestCode);
+    PARCEL_READ_HELPER(data, Uint32, accessToken);
+    sptr<IRemoteObject> callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        HILOGE("read callback failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+    auto permissionInstance = DistributedSchedPermission::GetInstance();
+    if (permissionInstance.CheckPermission(accessToken, PERMISSION_DISTRIBUTED_DATASYNC) != ERR_OK) {
+        HILOGE("check data_sync permission failed! accessToken = %{public}d", accessToken);
+        return DMS_PERMISSION_DENIED;
+    }
+    
+    int32_t result = StartRemoteFreeInstall(*want, callerUid, requestCode, accessToken, callback);
+    HILOGI("StartRemoteFreeInstallInner result = %{public}d", result);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+int32_t DistributedSchedStub::StartFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply)
+{
+    shared_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
+    if (want == nullptr) {
+        HILOGE("want readParcelable failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+    unique_ptr<CompatibleAbilityInfo> cmpAbilityInfo(data.ReadParcelable<CompatibleAbilityInfo>());
+    if (cmpAbilityInfo == nullptr) {
+        HILOGE("AbilityInfo readParcelable failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+    AbilityInfo abilityInfo = {};
+    cmpAbilityInfo->ConvertToAbilityInfo(abilityInfo);
+    std::string package = abilityInfo.bundleName;
+    std::string deviceId = abilityInfo.deviceId;
+    int64_t begin = GetTickCount();
+    int32_t requestCode = 0;
+    CallerInfo callerInfo = {};
+    callerInfo.callerType = CALLER_TYPE_HARMONY;
+    AccountInfo accountInfo = {};
+    int32_t sessionId = 0;
+
+    PARCEL_READ_HELPER(data, Int32, requestCode);
+    PARCEL_READ_HELPER(data, Int32, callerInfo.uid);
+    PARCEL_READ_HELPER(data, String, callerInfo.sourceDeviceId);
+    accountInfo.accountType = data.ReadInt32();
+    PARCEL_READ_HELPER(data, StringVector, &accountInfo.groupIdList);
+    callerInfo.callerAppId = data.ReadString();
+    PARCEL_READ_HELPER(data, Int32, sessionId);
+    std::string extraInfo = data.ReadString();
+    if (extraInfo.empty()) {
+        HILOGD("extra info is empty!");
+    }
+
+    nlohmann::json extraInfoJson = nlohmann::json::parse(extraInfo, nullptr, false);
+    if (!extraInfoJson.is_discarded()) {
+        uint32_t accessToken = extraInfoJson[EXTRO_INFO_JSON_KEY_ACCESS_TOKEN];
+        callerInfo.accessToken = accessToken;
+        HILOGD("parse extra info, accessTokenID = %{public}d", accessToken);
+    }
+
+    FreeInstallInfo info = {
+        .want = *want,
+        .abilityInfo = abilityInfo,
+        .requestCode = requestCode,
+        .callerInfo = callerInfo,
+        .accountInfo = accountInfo
+    };
+    int32_t result = StartFreeInstallFromRemote(info, sessionId);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    int64_t end = GetTickCount();
+    PARCEL_WRITE_HELPER(reply, Int64, end - begin);
+    PARCEL_WRITE_HELPER(reply, String, package);
+    PARCEL_WRITE_HELPER(reply, String, deviceId);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::NotifyCompleteFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t sessionId = 0;
+    uint32_t resultCode = 0;
+    PARCEL_READ_HELPER(data, Int32, sessionId);
+    PARCEL_READ_HELPER(data, Uint32, resultCode);
+    int32_t result = NotifyCompleteFreeInstallFromRemote(sessionId, resultCode);
+    HILOGI("NotifyCompleteFreeInstallFromRemoteInner result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 } // namespace DistributedSchedule
