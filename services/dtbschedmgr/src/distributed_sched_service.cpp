@@ -232,8 +232,7 @@ int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDevi
     }
     OHOS::AAFwk::Want want;
     want.SetParams(wantParams);
-    bool isFreeInstall = false;
-    want.GetBoolParam("isFreeInstall", isFreeInstall);
+    bool isFreeInstall = want.GetBoolParam("isFreeInstall", true);
     dschedContinuation_->PushCallback(missionId, callback, isFreeInstall);
     int32_t result = ContinueToAbilityManager(dstDeviceId, missionId);
     HILOGI("ContinueLocalMission result: %{public}d!", result);

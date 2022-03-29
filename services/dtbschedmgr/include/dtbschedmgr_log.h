@@ -68,7 +68,7 @@ enum {
      * Result(29360128) for invalid parameters.
      */
     INVALID_PARAMETERS_ERR = DMS_SERVICE_ERR_OFFSET,
-     /**
+    /**
      * Result(29360129) for no response when RPC call.
      */
     RPC_CALL_NORESPONSE_ERR = 29360129,
