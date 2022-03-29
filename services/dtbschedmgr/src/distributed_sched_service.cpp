@@ -20,6 +20,7 @@
 
 #include "ability_connection_wrapper_stub.h"
 #include "ability_manager_client.h"
+#include "ability_manager_errors.h"
 #include "adapter/dnetwork_adapter.h"
 #include "bundle/bundle_manager_internal.h"
 #include "connect_death_recipient.h"
@@ -27,6 +28,8 @@
 #include "distributed_sched_adapter.h"
 #include "distributed_sched_dumper.h"
 #include "distributed_sched_permission.h"
+#include "dms_callback_session.h"
+#include "dms_free_install_callback.h"
 #include "dtbschedmgr_device_info_storage.h"
 #include "dtbschedmgr_log.h"
 #include "element_name.h"
@@ -50,6 +53,7 @@ namespace {
 const std::string TAG = "DistributedSchedService";
 const std::u16string CONNECTION_CALLBACK_INTERFACE_TOKEN = u"ohos.abilityshell.DistributedConnection";
 const std::u16string ABILITY_MANAGER_SERVICE_TOKEN = u"ohos.aafwk.AbilityManager";
+const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.aafwk.IAtomicServiceStatusCallback";
 constexpr int32_t IAbilityManager_CONTINUE_ABILITY = 1104;
 constexpr int32_t IAbilityManager_NOTIFY_CONTINUATION_RESULT = 1102;
 constexpr int32_t IAbilityManager_CLEAN_MISSION = 45;
@@ -58,6 +62,7 @@ constexpr int32_t BIND_CONNECT_TIMEOUT = 500; // 500ms
 constexpr int32_t MAX_DISTRIBUTED_CONNECT_NUM = 600;
 constexpr int32_t SYSTEM_UID = 1000;
 constexpr int32_t INVALID_CALLER_UID = -1;
+constexpr int32_t IASS_CALLBACK_ON_REMOTE_FREE_INSTALL_DONE = 1;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(DistributedSchedService);
@@ -78,8 +83,17 @@ void DistributedSchedService::OnStart()
         HILOGW("continuationCallback timeout.");
         NotifyContinuationCallbackResult(missionId, CONTINUE_ABILITY_TIMEOUT_ERR);
     };
+
+    DmsCallbackSessionInitCallbackFunc freeCallback = [this] (int32_t sessionId) {
+        HILOGW("DmsCallbackSessionInitCallbackFunc timeout.");
+        // TODO Add freeinstall timeout error code.
+        NotifyCompleteFreeInstallFromRemote(sessionId, AAFwk::DMS_FREE_INSTALL_TIMEOUT);
+    };
+
     dschedContinuation_ = std::make_shared<DSchedContinuation>();
+    dmsCallbackSession_ = std::make_shared<DmsCallbackSession>();
     dschedContinuation_->Init(continuationCallback);
+    dmsCallbackSession_->Init(freeCallback);
     HILOGI("OnStart start service success.");
 }
 
@@ -206,7 +220,7 @@ int32_t DistributedSchedService::ContinueToAbilityManager(const std::string& dev
 }
 
 int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDeviceId, int32_t missionId,
-    const sptr<IRemoteObject>& callback)
+    const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
 {
     if (dschedContinuation_ == nullptr) {
         HILOGE("continuation object null!");
@@ -216,7 +230,10 @@ int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDevi
         HILOGE("ContinueLocalMission already in progress!");
         return INVALID_PARAMETERS_ERR;
     }
-    dschedContinuation_->PushCallback(missionId, callback);
+    OHOS::AAFwk::Want want;
+    want.SetParams(wantParams);
+    bool isFreeInstall = want.GetBoolParam("isFreeInstall", true);
+    dschedContinuation_->PushCallback(missionId, callback, isFreeInstall);
     int32_t result = ContinueToAbilityManager(dstDeviceId, missionId);
     HILOGI("ContinueLocalMission result: %{public}d!", result);
     return result;
@@ -249,7 +266,7 @@ int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId,
     }
 
     if (srcDeviceId == localDevId) {
-        return ContinueLocalMission(dstDeviceId, missionId, callback);
+        return ContinueLocalMission(dstDeviceId, missionId, callback, wantParams);
     } else if (dstDeviceId == localDevId) {
         return ContinueRemoteMission(srcDeviceId, dstDeviceId, missionId, callback, wantParams);
     } else {
@@ -301,12 +318,21 @@ int32_t DistributedSchedService::StartContinuation(const OHOS::AAFwk::Want& want
     newWant.SetParam("sessionId", sessionId);
     newWant.SetParam("deviceId", devId);
     int32_t result = ERR_OK;
-    result = StartRemoteAbility(newWant, callerUid, 0, accessToken);
-    if (result != ERR_OK) {
-        HILOGE("continue ability failed, errorCode = %{public}d", result);
-        return result;
+    bool flag = dschedContinuation_->IsFreeInstall(sessionId);
+    if (flag) {
+        auto callback = dschedContinuation_->PopCallback(missionId);
+        result = StartRemoteFreeInstall(newWant, callerUid, 0, accessToken, callback);
+        if (result != ERR_OK) {
+            HILOGD("continue free install success, result = %{public}d", result);
+            return result;
+        }
+    } else {
+        result = StartRemoteAbility(newWant, callerUid, 0, accessToken);
+        if (result != ERR_OK) {
+            HILOGE("continue ability failed, errorCode = %{public}d", result);
+            return result;
+        }
     }
-
     HILOGD("[PerformanceTest] StartContinuation end");
     return result;
 }
@@ -334,6 +360,17 @@ int32_t DistributedSchedService::NotifyContinuationResultFromRemote(int32_t sess
 {
     if (sessionId <= 0) {
         HILOGE("NotifyContinuationResultFromRemote sessionId:%{public}d invalid!", sessionId);
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    if (dschedContinuation_ == nullptr) {
+        HILOGE("NotifyContinuationResultFromRemote continue object is nullptr!");
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    auto abilityToken = dschedContinuation_->PopAbilityToken(sessionId);
+    if (abilityToken == nullptr) {
+        HILOGE("NotifyContinuationResultFromRemote abilityToken is nullptr!");
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
 
@@ -1374,6 +1411,181 @@ void CallerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& remote)
 {
     HILOGI("CallerDeathRecipient OnRemoteDied called");
     DistributedSchedAdapter::GetInstance().ProcessCallerDied(remote.promote());
+}
+
+int32_t DistributedSchedService::StartRemoteFreeInstall(const OHOS::AAFwk::Want& want,
+    int32_t callerUid, int32_t requestCode, uint32_t accessToken, const sptr<IRemoteObject>& callback)
+{
+    HILOGI("StartRemoteFreeInstall begin");
+    std::string localDeviceId;
+    std::string deviceId = want.GetElement().GetDeviceID();
+    if (!GetLocalDeviceId(localDeviceId) || !CheckDeviceId(localDeviceId, deviceId)) {
+        HILOGE("check deviceId failed");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    if (IPCSkeleton::GetCallingUid() != SYSTEM_UID) {
+        HILOGE("check uid failed");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    sptr<IDistributedSched> remoteDms = GetRemoteDms(deviceId);
+    if (remoteDms == nullptr) {
+        HILOGE("get remoteDms failed");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    if (callback == nullptr) {
+        HILOGE("get callback failed");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    CallerInfo callerInfo = {};
+    callerInfo.sourceDeviceId = localDeviceId;
+    callerInfo.uid = callerUid;
+    callerInfo.accessToken = accessToken;
+
+    if (dmsCallbackSession_ == nullptr) {
+        HILOGE("StartRemoteFreeInstall callbackSession object null!");
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    int32_t sessionId = dmsCallbackSession_->GenerateSessionId();
+    bool isContinue = ((want.GetFlags() & AAFwk::Want::FLAG_ABILITY_CONTINUATION) != 0);
+    dmsCallbackSession_->PushCallback(sessionId, callback, isContinue);
+    if (isContinue) {
+        dmsCallbackSession_->SetContinuationSessionMap(sessionId, want.GetIntParam("sessionId", -1));
+    }
+    AccountInfo accountInfo = {};
+    AppExecFwk::AbilityInfo abilityInfo = {};
+    FreeInstallInfo info = {
+        .want = want,
+        .abilityInfo = abilityInfo,
+        .requestCode = requestCode,
+        .callerInfo = callerInfo,
+        .accountInfo = accountInfo
+    };
+    int32_t result = remoteDms->StartFreeInstallFromRemote(info, sessionId);
+    if (result != ERR_OK) {
+        dmsCallbackSession_->PopCallback(sessionId);
+        NotifyFreeInstall(sessionId, requestCode);
+    }
+    return isContinue ? result : ERR_OK;
+}
+
+int32_t DistributedSchedService::StartFreeInstallFromRemote(const FreeInstallInfo& info, int32_t sessionId)
+{
+    HILOGI("StartFreeInstallFromRemote begin");
+    std::string localDeviceId;
+    std::string deviceId = info.want.GetElement().GetDeviceID();
+    if (!GetLocalDeviceId(localDeviceId) ||
+        !CheckDeviceIdFromRemote(localDeviceId, deviceId, info.callerInfo.sourceDeviceId)) {
+        HILOGE("check deviceId failed");
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    // TODO Add new way for permission check.
+    ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->Connect();
+    if (err != ERR_OK) {
+        HILOGE("connect ability server failed %{public}d", err);
+        return err;
+    }
+
+    std::vector<int> ids;
+    ErrCode ret = OsAccountManager::QueryActiveOsAccountIds(ids);
+    if (ret != ERR_OK || ids.empty()) {
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    sptr<DmsFreeInstallCallback> callback = new DmsFreeInstallCallback(sessionId, info.callerInfo, info.want);
+    err = AAFwk::AbilityManagerClient::GetInstance()->FreeInstallAbilityFromRemote(info.want,
+        callback, ids[0], info.requestCode);
+    if (err != ERR_OK) {
+        HILOGE("FreeInstallAbilityFromRemote failed %{public}d", err);
+    }
+
+    return err;
+}
+
+int32_t DistributedSchedService::NotifyCompleteFreeInstall(const std::string& deviceId, int32_t sessionId,
+    int32_t resultCode)
+{
+    HILOGI("NotifyCompleteFreeInstall begin");
+    if (sessionId <= 0) {
+        HILOGE("NotifyCompleteFreeInstall sessionId invalid!");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    sptr<IDistributedSched> remoteDms = GetRemoteDms(deviceId);
+    if (remoteDms == nullptr) {
+        HILOGE("NotifyCompleteFreeInstall get remote dms null!");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    return remoteDms->NotifyCompleteFreeInstallFromRemote(sessionId, resultCode);
+}
+
+int32_t DistributedSchedService::NotifyCompleteFreeInstallFromRemote(int32_t sessionId, int32_t resultCode)
+{
+    HILOGI("NotifyCompleteFreeInstallFromRemote begin sessionId = %{public}d, resultCode = %{public}d",
+        sessionId, resultCode);
+    if (dmsCallbackSession_ == nullptr || dschedContinuation_ == nullptr) {
+        HILOGE("NotifyCompleteFreeInstallFromRemote callbackSession object null!");
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+    bool isContinue = dmsCallbackSession_->GetContinueFlag(sessionId);
+    if (!isContinue) {
+        return NotifyFreeInstall(sessionId, resultCode);
+    }
+    int32_t continuationSessionId = dmsCallbackSession_->GetContinuaionSessionId(sessionId);
+    // auto callback = dmsCallbackSession_->PopCallback(sessionId);
+    if (resultCode == ERR_OK) {
+        NotifyContinuationCallbackResult(sessionId, CONTINUE_FREE_INSTALL_SECUESS);
+        HILOGD("switch continue free install success");
+    } else {
+        NotifyContinuationCallbackResult(sessionId, resultCode);
+        if (dschedContinuation_->PopAbilityToken(continuationSessionId) == nullptr) {
+            HILOGW("switch continue free install PopCallback failed");
+        }
+        HILOGE("switch continue free install failed");
+    }
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::NotifyFreeInstall(int32_t sessionId, int32_t resultCode)
+{
+    auto callback = dmsCallbackSession_->PopCallback(sessionId);
+    if (callback == nullptr) {
+        HILOGE("NotifyCompleteFreeInstallFromRemote PopCallback object null!");
+        return NO_CONNECT_CALLBACK_ERR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN)) {
+        HILOGE("Write interface token failed.");
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    if (!data.WriteInt32(resultCode)) {
+        HILOGE("Write resultCode error.");
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    Want want;
+    if (!data.WriteParcelable(&want)) {
+        HILOGE("Write want error.");
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    int32_t userId = 0;
+    if (!data.WriteInt32(userId)) {
+        HILOGE("Write userId error.");
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return callback->SendRequest(IASS_CALLBACK_ON_REMOTE_FREE_INSTALL_DONE, data, reply, option);
 }
 } // namespace DistributedSchedule
 } // namespace OHOS

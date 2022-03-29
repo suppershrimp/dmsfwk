@@ -23,6 +23,7 @@
 
 #include "distributed_sched_stub.h"
 #include "distributed_sched_continuation.h"
+#include "dms_callback_session.h"
 #include "iremote_object.h"
 #include "iremote_proxy.h"
 #include "mission/distributed_mission_info.h"
@@ -75,6 +76,7 @@ public:
         int32_t status, uint32_t accessToken) override;
     void NotifyCompleteContinuation(const std::u16string& devId, int32_t sessionId, bool isSuccess) override;
     int32_t NotifyContinuationResultFromRemote(int32_t sessionId, bool isSuccess) override;
+    int32_t NotifyFreeInstall(int32_t sessionId, int32_t resultCode);
     int32_t ConnectRemoteAbility(const OHOS::AAFwk::Want& want, const sptr<IRemoteObject>& connect,
         int32_t callerUid, int32_t callerPid, uint32_t accessToken) override;
     int32_t DisconnectRemoteAbility(const sptr<IRemoteObject>& connect, int32_t callerUid,
@@ -121,6 +123,11 @@ public:
         const CallerInfo& callerInfo) override;
     void ProcessCallerDied(const sptr<IRemoteObject>& connect);
     void ProcessCalleeDied(const sptr<IRemoteObject>& connect);
+    int32_t StartRemoteFreeInstall(const OHOS::AAFwk::Want& want,
+        int32_t callerUid, int32_t requestCode, uint32_t accessToken, const sptr<IRemoteObject>& callback) override;
+    int32_t StartFreeInstallFromRemote(const FreeInstallInfo& info, int32_t sessionId) override;
+    int32_t NotifyCompleteFreeInstallFromRemote(int32_t sessionId, int32_t resultCode)override;
+    int32_t NotifyCompleteFreeInstall(const std::string& deviceId, int32_t sessionId, int32_t resultCode);
 private:
     DistributedSchedService();
     bool Init();
@@ -150,7 +157,7 @@ private:
     int32_t CleanMission(int32_t missionId);
     sptr<IRemoteObject> GetAbilityManagerProxy();
     int32_t ContinueLocalMission(const std::string& dstDeviceId, int32_t missionId,
-        const sptr<IRemoteObject>& callback);
+        const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams);
     int32_t ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId, int32_t missionId,
         const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams);
     int32_t TryStartRemoteAbilityByCall(const OHOS::AAFwk::Want& want, const sptr<IRemoteObject>& connect,
@@ -167,6 +174,7 @@ private:
     std::mutex calleeLock_;
     std::map<sptr<IRemoteObject>, ConnectInfo> calleeMap_;
     sptr<IRemoteObject::DeathRecipient> callerDeathRecipient_;
+    std::shared_ptr<DmsCallbackSession> dmsCallbackSession_;
 };
 
 class ConnectAbilitySession {

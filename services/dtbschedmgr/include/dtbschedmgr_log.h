@@ -68,7 +68,7 @@ enum {
      * Result(29360128) for invalid parameters.
      */
     INVALID_PARAMETERS_ERR = DMS_SERVICE_ERR_OFFSET,
-     /**
+    /**
      * Result(29360129) for no response when RPC call.
      */
     RPC_CALL_NORESPONSE_ERR = 29360129,
@@ -168,6 +168,10 @@ enum {
      * Result(29360153) for DistributedSched Service Continue Ability Timeout Error.
      */
     CONTINUE_ABILITY_TIMEOUT_ERR = 29360153,
+    /**
+     * Result(29360189) for DistributedSched Service Continue Ability success code.
+     */
+    CONTINUE_FREE_INSTALL_SECUESS = 29360189,
     /**
      * Result(29360154) for DistributedSched Service Notify Complete Continuation abilityToken null.
      */
