@@ -37,9 +37,10 @@ public:
     bool IsInContinuationProgress(int32_t missionId);
     void SetTimeOut(int32_t missionId);
     void RemoveTimeOut(int32_t missionId);
-    bool PushCallback(int32_t missionId, const sptr<IRemoteObject>& callback);
+    bool PushCallback(int32_t missionId, const sptr<IRemoteObject>& callback, bool isFreeInstall);
     sptr<IRemoteObject> PopCallback(int32_t missionId);
     int32_t NotifyMissionCenterResult(int32_t missionId, int32_t isSuccess);
+    bool IsFreeInstall(int32_t missionId);
 
 private:
     class ContinuationHandler : public AppExecFwk::EventHandler {
@@ -61,6 +62,7 @@ private:
     int32_t currSessionId_ = 1;
     std::map<int32_t, sptr<IRemoteObject>> continuationMap_;
     std::map<int32_t, sptr<IRemoteObject>> callbackMap_;
+    std::map<int32_t, bool> freeInstall_;
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
