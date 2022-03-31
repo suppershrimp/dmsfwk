@@ -117,6 +117,17 @@ void DSchedContinuation::RemoveTimeOut(int32_t missionId)
     continuationHandler_->RemoveEvent(missionId);
 }
 
+bool DSchedContinuation::IsFreeInstall(int32_t missionId)
+{
+    std::lock_guard<std::mutex> autoLock(continuationLock_);
+    auto iter = freeInstall_.find(missionId);
+    if (iter != freeInstall_.end()) {
+        HILOGE("continue free install, missionId:%{public}d exist!", missionId);
+        return true;
+    }
+    return false;
+}
+
 bool DSchedContinuation::IsInContinuationProgress(int32_t missionId)
 {
     std::lock_guard<std::mutex> autoLock(continuationLock_);
@@ -128,7 +139,7 @@ bool DSchedContinuation::IsInContinuationProgress(int32_t missionId)
     return false;
 }
 
-bool DSchedContinuation::PushCallback(int32_t missionId, const sptr<IRemoteObject>& callback)
+bool DSchedContinuation::PushCallback(int32_t missionId, const sptr<IRemoteObject>& callback, bool isFreeInstall)
 {
     if (callback == nullptr) {
         HILOGE("PushCallback callback null!");
@@ -148,6 +159,7 @@ bool DSchedContinuation::PushCallback(int32_t missionId, const sptr<IRemoteObjec
     }
 
     std::lock_guard<std::mutex> autoLock(continuationLock_);
+    freeInstall_[missionId] = isFreeInstall;
     auto iterSession = callbackMap_.find(missionId);
     if (iterSession != callbackMap_.end()) {
         HILOGE("PushCallback missionId:%{public}d exist!", missionId);
