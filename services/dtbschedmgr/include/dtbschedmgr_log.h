@@ -169,6 +169,10 @@ enum {
      */
     CONTINUE_ABILITY_TIMEOUT_ERR = 29360153,
     /**
+     * Result(29360189) for DistributedSched Service Continue Ability success code.
+     */
+    CONTINUE_FREE_INSTALL_SECUESS = 29360189,
+    /**
      * Result(29360154) for DistributedSched Service Notify Complete Continuation abilityToken null.
      */
     ABILITYTOKEN_NULL = 29360154,
