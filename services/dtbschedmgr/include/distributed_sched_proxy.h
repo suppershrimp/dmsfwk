@@ -80,6 +80,11 @@ public:
         const CallerInfo& callerInfo, const AccountInfo& accountInfo) override;
     int32_t ReleaseAbilityFromRemote(const sptr<IRemoteObject>& connect, const AppExecFwk::ElementName &element,
         const CallerInfo& callerInfo) override;
+    int32_t StartRemoteFreeInstall(const OHOS::AAFwk::Want& want,
+        int32_t callerUid, int32_t requestCode, uint32_t accessToken, const sptr<IRemoteObject>& callback) override;
+    int32_t StartFreeInstallFromRemote(const FreeInstallInfo& info, int64_t taskId) override;
+    int32_t NotifyCompleteFreeInstallFromRemote(int64_t taskId, int32_t resultCode) override;
+
 private:
     bool CallerInfoMarshalling(const CallerInfo& callerInfo, MessageParcel& data);
     static inline BrokerDelegator<DistributedSchedProxy> delegator_;

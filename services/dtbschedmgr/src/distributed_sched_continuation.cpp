@@ -70,18 +70,20 @@ bool DSchedContinuation::PushAbilityToken(int32_t sessionId, const sptr<IRemoteO
 
 sptr<IRemoteObject> DSchedContinuation::PopAbilityToken(int32_t sessionId)
 {
+    HILOGI("DSchedContinuation PopAbilityToken start!");
+    sptr<IRemoteObject> abilityToken = nullptr;
     if (sessionId <= 0) {
         HILOGE("PopAbilityToken sessionId invalid");
-        return nullptr;
+        return abilityToken;
     }
 
     std::lock_guard<std::mutex> autoLock(continuationLock_);
     auto iter = continuationMap_.find(sessionId);
     if (iter == continuationMap_.end()) {
         HILOGW("PopAbilityToken not found sessionId:%{public}d", sessionId);
-        return nullptr;
+        return abilityToken;
     }
-    sptr<IRemoteObject> abilityToken = iter->second;
+    abilityToken = iter->second;
     (void)continuationMap_.erase(iter);
     if (continuationHandler_ != nullptr) {
         continuationHandler_->RemoveEvent(sessionId);
@@ -117,6 +119,17 @@ void DSchedContinuation::RemoveTimeOut(int32_t missionId)
     continuationHandler_->RemoveEvent(missionId);
 }
 
+bool DSchedContinuation::IsFreeInstall(int32_t missionId)
+{
+    std::lock_guard<std::mutex> autoLock(continuationLock_);
+    auto iter = freeInstall_.find(missionId);
+    if (iter != freeInstall_.end()) {
+        HILOGE("continue free install, missionId:%{public}d exist!", missionId);
+        return true;
+    }
+    return false;
+}
+
 bool DSchedContinuation::IsInContinuationProgress(int32_t missionId)
 {
     std::lock_guard<std::mutex> autoLock(continuationLock_);
@@ -128,8 +141,9 @@ bool DSchedContinuation::IsInContinuationProgress(int32_t missionId)
     return false;
 }
 
-bool DSchedContinuation::PushCallback(int32_t missionId, const sptr<IRemoteObject>& callback)
+bool DSchedContinuation::PushCallback(int32_t missionId, const sptr<IRemoteObject>& callback, bool isFreeInstall)
 {
+    HILOGI("DSchedContinuation PushCallback start!");
     if (callback == nullptr) {
         HILOGE("PushCallback callback null!");
         return false;
@@ -148,12 +162,15 @@ bool DSchedContinuation::PushCallback(int32_t missionId, const sptr<IRemoteObjec
     }
 
     std::lock_guard<std::mutex> autoLock(continuationLock_);
-    auto iterSession = callbackMap_.find(missionId);
-    if (iterSession != callbackMap_.end()) {
+    if (isFreeInstall) {
+        freeInstall_[missionId] = isFreeInstall;
+    }
+    auto iterSession = continuationMap_.find(missionId);
+    if (iterSession != continuationMap_.end()) {
         HILOGE("PushCallback missionId:%{public}d exist!", missionId);
         return false;
     }
-    (void)callbackMap_.emplace(missionId, callback);
+    (void)continuationMap_.emplace(missionId, callback);
     return true;
 }
 
@@ -167,6 +184,21 @@ sptr<IRemoteObject> DSchedContinuation::PopCallback(int32_t missionId)
     }
     sptr<IRemoteObject> callback = iter->second;
     (void)callbackMap_.erase(iter);
+    if (continuationHandler_ != nullptr) {
+        continuationHandler_->RemoveEvent(missionId);
+    }
+    return callback;
+}
+
+sptr<IRemoteObject> DSchedContinuation::PopCallbackNotRemove(int32_t missionId)
+{
+    std::lock_guard<std::mutex> autoLock(continuationLock_);
+    auto iter = continuationMap_.find(missionId);
+    if (iter == continuationMap_.end()) {
+        HILOGW("PopCallbackNotRemove not found missionId:%{public}d", missionId);
+        return nullptr;
+    }
+    sptr<IRemoteObject> callback = iter->second;
     if (continuationHandler_ != nullptr) {
         continuationHandler_->RemoveEvent(missionId);
     }

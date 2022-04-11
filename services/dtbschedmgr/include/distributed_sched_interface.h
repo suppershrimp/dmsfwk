@@ -18,6 +18,7 @@
 
 #include <vector>
 #include "ability_info.h"
+#include "ability_manager_interface.h"
 #include "caller_info.h"
 #include "iremote_broker.h"
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
@@ -39,6 +40,14 @@ public:
     struct AccountInfo {
         int32_t accountType = DIFF_ACCOUNT_TYPE;
         std::vector<std::string> groupIdList;
+    };
+
+    struct FreeInstallInfo {
+        OHOS::AAFwk::Want want;
+        OHOS::AppExecFwk::AbilityInfo abilityInfo;
+        int32_t requestCode = OHOS::AAFwk::DEFAULT_INVAL_VALUE;
+        CallerInfo callerInfo;
+        AccountInfo accountInfo;
     };
 
     virtual int32_t StartRemoteAbility(const OHOS::AAFwk::Want& want, int32_t callerUid, int32_t requestCode,
@@ -91,6 +100,19 @@ public:
         const CallerInfo& callerInfo, const AccountInfo& accountInfo) = 0;
     virtual int32_t ReleaseAbilityFromRemote(const sptr<IRemoteObject>& connect, const AppExecFwk::ElementName &element,
         const CallerInfo& callerInfo) = 0;
+    virtual int32_t StartRemoteFreeInstall(const OHOS::AAFwk::Want& want, int32_t callerUid, int32_t requestCode,
+        uint32_t accessToken, const sptr<IRemoteObject> &callback)
+    {
+        return 0;
+    }
+    virtual int32_t StartFreeInstallFromRemote(const FreeInstallInfo &info, int64_t taskId)
+    {
+        return 0;
+    }
+    virtual int32_t NotifyCompleteFreeInstallFromRemote(int64_t taskId, int32_t resultCode)
+    {
+        return 0;
+    }
     enum {
         START_REMOTE_ABILITY = 1,
         STOP_REMOTE_ABILITY = 3,
@@ -137,6 +159,10 @@ public:
         RELEASE_REMOTE_ABILITY = 151,
         START_ABILITY_BY_CALL_FROM_REMOTE = 152,
         RELEASE_ABILITY_FROM_REMOTE = 153,
+
+        START_REMOTE_FREE_INSTALL = 200,
+        START_FREE_INSTALL_FROM_REMOTE = 51,
+        NOTIFY_COMPLETE_FREE_INSTALL_FROM_REMOTE = 52,
     };
 };
 } // namespace DistributedSchedule

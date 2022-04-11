@@ -92,6 +92,11 @@ DistributedSchedStub::DistributedSchedStub()
     localFuncsMap_[RELEASE_REMOTE_ABILITY] = &DistributedSchedStub::ReleaseRemoteAbilityInner;
     remoteFuncsMap_[START_ABILITY_BY_CALL_FROM_REMOTE] = &DistributedSchedStub::StartAbilityByCallFromRemoteInner;
     remoteFuncsMap_[RELEASE_ABILITY_FROM_REMOTE] = &DistributedSchedStub::ReleaseAbilityFromRemoteInner;
+
+    localFuncsMap_[START_REMOTE_FREE_INSTALL] = &DistributedSchedStub::StartRemoteFreeInstallInner;
+    remoteFuncsMap_[START_FREE_INSTALL_FROM_REMOTE] = &DistributedSchedStub::StartFreeInstallFromRemoteInner;
+    remoteFuncsMap_[NOTIFY_COMPLETE_FREE_INSTALL_FROM_REMOTE] =
+        &DistributedSchedStub::NotifyCompleteFreeInstallFromRemoteInner;
 }
 
 DistributedSchedStub::~DistributedSchedStub()
@@ -155,7 +160,6 @@ int32_t DistributedSchedStub::StartAbilityFromRemoteInner(MessageParcel& data, M
         HILOGW("request DENIED!");
         return DMS_PERMISSION_DENIED;
     }
-
     shared_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
     if (want == nullptr) {
         HILOGW("want readParcelable failed!");
@@ -830,6 +834,100 @@ int32_t DistributedSchedStub::ReleaseAbilityFromRemoteInner(MessageParcel& data,
     PARCEL_READ_HELPER(data, String, extraInfo);
     int32_t result = ReleaseAbilityFromRemote(connect, *element, callerInfo);
     HILOGI("result %{public}d", result);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+int32_t DistributedSchedStub::StartRemoteFreeInstallInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!CheckCallingUid()) {
+        HILOGW("request DENIED!");
+        return DMS_PERMISSION_DENIED;
+    }
+
+    shared_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
+    if (want == nullptr) {
+        HILOGE("want readParcelable failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+    int32_t callerUid = 0;
+    int32_t requestCode = 0;
+    uint32_t accessToken = 0;
+    PARCEL_READ_HELPER(data, Int32, callerUid);
+    PARCEL_READ_HELPER(data, Int32, requestCode);
+    PARCEL_READ_HELPER(data, Uint32, accessToken);
+    sptr<IRemoteObject> callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        HILOGE("read callback failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+    auto &dsPermission = DistributedSchedPermission::GetInstance();
+    auto checkRet = dsPermission.CheckPermission(accessToken, PERMISSION_DISTRIBUTED_DATASYNC);
+    if (checkRet != ERR_OK) {
+        HILOGE("check data_sync permission is not ok! accessToken = %{public}d", accessToken);
+        return DMS_PERMISSION_DENIED;
+    }
+    int32_t result = StartRemoteFreeInstall(*want, callerUid, requestCode, accessToken, callback);
+    HILOGI("StartRemoteFreeInstallInner result = %{public}d", result);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::StartFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply)
+{
+    shared_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
+    if (want == nullptr) {
+        HILOGE("want readParcelable failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+    int64_t begin = GetTickCount();
+    CallerInfo callerInfo = {.accessToken = 0};
+    callerInfo.callerType = CALLER_TYPE_HARMONY;
+    AccountInfo accountInfo = {};
+    int64_t taskId = 0;
+
+    PARCEL_READ_HELPER(data, Int32, callerInfo.uid);
+    PARCEL_READ_HELPER(data, String, callerInfo.sourceDeviceId);
+    accountInfo.accountType = data.ReadInt32();
+    PARCEL_READ_HELPER(data, StringVector, &accountInfo.groupIdList);
+    callerInfo.callerAppId = data.ReadString();
+    PARCEL_READ_HELPER(data, Int64, taskId);
+    shared_ptr<AAFwk::Want> newWant(data.ReadParcelable<AAFwk::Want>());
+    std::string extraInfo = data.ReadString();
+    if (extraInfo.empty()) {
+        HILOGD("extra info is empty!");
+    }
+
+    nlohmann::json extraInfoJson = nlohmann::json::parse(extraInfo, nullptr, false);
+    if (!extraInfoJson.is_discarded()) {
+        uint32_t accessToken = extraInfoJson[EXTRO_INFO_JSON_KEY_ACCESS_TOKEN];
+        callerInfo.accessToken = accessToken;
+        HILOGD("parse extra info, accessTokenID = %{public}d", accessToken);
+    }
+
+    FreeInstallInfo info = {
+        .want = *want,
+        .callerInfo = callerInfo,
+        .accountInfo = accountInfo
+    };
+    int32_t result = StartFreeInstallFromRemote(info, taskId);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    int64_t end = GetTickCount();
+    PARCEL_WRITE_HELPER(reply, Int64, end - begin);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::NotifyCompleteFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply)
+{
+    int64_t taskId = 0;
+    int32_t resultCode = 0;
+    PARCEL_READ_HELPER(data, Int64, taskId);
+    PARCEL_READ_HELPER(data, Int32, resultCode);
+    int32_t result = NotifyCompleteFreeInstallFromRemote(taskId, resultCode);
+    HILOGI("NotifyCompleteFreeInstallFromRemoteInner result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 } // namespace DistributedSchedule
