@@ -112,6 +112,7 @@ bool DistributedSchedPermission::GetRelatedGroups(const std::string& udid,
 {
     for (const auto& bundleName : bundleNames) {
         std::string returnGroups;
+        std::string returnGroups1;
         if (!DistributedSchedAdapter::GetInstance().GetRelatedGroups(udid, bundleName, returnGroups)) {
             continue;
         }
