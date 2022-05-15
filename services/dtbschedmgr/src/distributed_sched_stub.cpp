@@ -86,7 +86,6 @@ DistributedSchedStub::DistributedSchedStub()
     remoteFuncsMap_[NOTIFY_MISSIONS_CHANGED_FROM_REMOTE] = &DistributedSchedStub::NotifyMissionsChangedFromRemoteInner;
     remoteFuncsMap_[NOTIFY_SWITCH_CHANGED_FROM_REMOTE] = &DistributedSchedStub::UpdateOsdSwitchValueFromRemoteInner;
 #endif
-    remoteFuncsMap_[CONTINUE_MISSION] = &DistributedSchedStub::ContinueMissionInner;
     // request codes for call ability
     localFuncsMap_[START_REMOTE_ABILITY_BY_CALL] = &DistributedSchedStub::StartRemoteAbilityByCallInner;
     localFuncsMap_[RELEASE_REMOTE_ABILITY] = &DistributedSchedStub::ReleaseRemoteAbilityInner;
