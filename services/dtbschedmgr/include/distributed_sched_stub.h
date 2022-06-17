@@ -80,6 +80,8 @@ private:
     int32_t StartRemoteFreeInstallInner(MessageParcel& data, MessageParcel& reply);
     int32_t StartFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t NotifyCompleteFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply);
+    int32_t StartRemoteShareFormInner(MessageParcel &data, MessageParcel &reply);
+    int32_t StartShareFormFromRemoteInner(MessageParcel &data, MessageParcel &reply);
     int32_t RegisterDistributedComponentListenerInner(MessageParcel& data, MessageParcel& reply);
     int32_t GetDistributedComponentListInner(MessageParcel& data, MessageParcel& reply);
 

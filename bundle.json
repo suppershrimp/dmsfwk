@@ -28,6 +28,7 @@
           "distributeddatamgr",
           "dsoftbus_standard",
           "eventhandler",
+          "form_fwk",
           "hiviewdfx_hilog_native",
           "ipc",
           "multimedia_image_standard",
