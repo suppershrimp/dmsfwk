@@ -20,6 +20,9 @@
 #include "ability_info.h"
 #include "ability_manager_interface.h"
 #include "caller_info.h"
+#include "continuation_extra_params.h"
+#include "continuation_result.h"
+#include "device_connect_status.h"
 #include "iremote_broker.h"
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
 #include "mission_info.h"
@@ -30,6 +33,10 @@
 
 namespace OHOS {
 namespace DistributedSchedule {
+namespace {
+constexpr int32_t VALUE_NULL = -1; // no object in parcel
+constexpr int32_t VALUE_OBJECT = 1; // object exist in parcel
+}
 class IDistributedSched : public OHOS::IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedSchedule.IDistributedSched");
@@ -124,6 +131,22 @@ public:
     }
     virtual int32_t RegisterDistributedComponentListener(const sptr<IRemoteObject>& callback) = 0;
     virtual int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) = 0;
+    virtual int32_t Register(int32_t& token) = 0;
+    virtual int32_t Register(
+        const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams, int32_t& token) = 0;
+    virtual int32_t Unregister(int32_t token) = 0;
+    virtual int32_t RegisterDeviceSelectionCallback(
+        int32_t token, const std::string& cbType, const sptr<IRemoteObject>& notifier) = 0;
+    virtual int32_t UnregisterDeviceSelectionCallback(int32_t token, const std::string& cbType) = 0;
+    virtual int32_t UpdateConnectStatus(int32_t token, const std::string& deviceId,
+        const AAFwk::DeviceConnectStatus& deviceConnectStatus) = 0;
+    virtual int32_t StartDeviceManager(int32_t token) = 0;
+    virtual int32_t StartDeviceManager(
+        int32_t token, const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams) = 0;
+    virtual int32_t OnDeviceConnect(int32_t token, std::vector<AAFwk::ContinuationResult>& continuationResults) = 0;
+    virtual int32_t OnDeviceDisconnect(int32_t token, const std::vector<std::string>& deviceIds) = 0;
+    virtual int32_t OnDeviceCancel(int32_t token) = 0;
+
     enum {
         START_REMOTE_ABILITY = 1,
         STOP_REMOTE_ABILITY = 3,
@@ -180,6 +203,16 @@ public:
         // request code for upload distributed component info
         REGISTER_DISTRIBUTED_COMPONENT_LISTENER = 160,
         GET_DISTRIBUTED_COMPONENT_LIST = 161,
+        // request code for continuation manager
+        REGISTER = 250,
+        UNREGISTER = 251,
+        REGISTER_DEVICE_SELECTION_CALLBACK = 252,
+        UNREGISTER_DEVICE_SELECTION_CALLBACK = 253,
+        UPDATE_CONNECT_STATUS = 254,
+        START_DEVICE_MANAGER = 255,
+        DEVICE_CONNECT = 256,
+        DEVICE_DISCONNECT = 257,
+        DEVICE_CANCEL = 258,
     };
 };
 } // namespace DistributedSchedule

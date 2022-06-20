@@ -71,6 +71,16 @@ DistributedSchedStub::DistributedSchedStub()
     localFuncsMap_[STOP_SYNC_MISSIONS] = &DistributedSchedStub::StopSyncRemoteMissionsInner;
     localFuncsMap_[SWITCH_CHANGED] = &DistributedSchedStub::NotifyOsdSwitchChangedInner;
     localFuncsMap_[GET_CACHED_SUPPORTED_OSD] = &DistributedSchedStub::GetCachedOsdSwitchInner;
+
+    localFuncsMap_[REGISTER] = &DistributedSchedStub::RegisterInner;
+    localFuncsMap_[UNREGISTER] = &DistributedSchedStub::UnregisterInner;
+    localFuncsMap_[REGISTER_DEVICE_SELECTION_CALLBACK] = &DistributedSchedStub::RegisterDeviceSelectionCallbackInner;
+    localFuncsMap_[UNREGISTER_DEVICE_SELECTION_CALLBACK] = &DistributedSchedStub::UnregisterDeviceSelectionCallbackInner;
+    localFuncsMap_[UPDATE_CONNECT_STATUS] = &DistributedSchedStub::UpdateConnectStatusInner;
+    localFuncsMap_[START_DEVICE_MANAGER] = &DistributedSchedStub::StartDeviceManagerInner;
+    localFuncsMap_[DEVICE_CONNECT] = &DistributedSchedStub::OnDeviceConnectInner;
+    localFuncsMap_[DEVICE_DISCONNECT] = &DistributedSchedStub::OnDeviceDisconnectInner;
+    localFuncsMap_[DEVICE_CANCEL] = &DistributedSchedStub::OnDeviceCancelInner;
 #endif
     remoteFuncsMap_[START_ABILITY_FROM_REMOTE] = &DistributedSchedStub::StartAbilityFromRemoteInner;
     remoteFuncsMap_[SEND_RESULT_FROM_REMOTE] = &DistributedSchedStub::SendResultFromRemoteInner;
@@ -999,6 +1009,148 @@ int32_t DistributedSchedStub::NotifyCompleteFreeInstallFromRemoteInner(MessagePa
     int32_t result = NotifyCompleteFreeInstallFromRemote(taskId, resultCode);
     HILOGI("result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+int32_t DistributedSchedStub::RegisterInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t empty = VALUE_NULL;
+    PARCEL_READ_HELPER(data, Int32, empty);
+    int32_t token = -1;
+    int32_t result;
+    if (empty == VALUE_OBJECT) {
+        std::shared_ptr<ContinuationExtraParams> continuationExtraParams(
+            data.ReadParcelable<ContinuationExtraParams>());
+        if (continuationExtraParams == nullptr) {
+            HILOGE("ContinuationExtraParams readParcelable failed!");
+            return ERR_NULL_OBJECT;
+        }
+        result = Register(continuationExtraParams, token);
+    } else {
+        result = Register(token);
+    }
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    PARCEL_WRITE_HELPER(reply, Int32, token);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::UnregisterInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t token = -1;
+    PARCEL_READ_HELPER(data, Int32, token);
+    int32_t result = Unregister(token);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::RegisterDeviceSelectionCallbackInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t token = -1;
+    PARCEL_READ_HELPER(data, Int32, token);
+    std::string cbType;
+    PARCEL_READ_HELPER(data, String, cbType);
+    if (cbType.empty()) {
+        HILOGE("cbType unmarshalling failed!");
+        return ERR_NULL_OBJECT;
+    }
+    sptr<IRemoteObject> notifier = data.ReadRemoteObject();
+    if (notifier == nullptr) {
+        HILOGE("notifier unmarshalling failed!");
+        return ERR_NULL_OBJECT;
+    }
+    int32_t result = RegisterDeviceSelectionCallback(token, cbType, notifier);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::UnregisterDeviceSelectionCallbackInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t token = -1;
+    PARCEL_READ_HELPER(data, Int32, token);
+    std::string cbType;
+    PARCEL_READ_HELPER(data, String, cbType);
+    if (cbType.empty()) {
+        HILOGE("cbType unmarshalling failed!");
+        return ERR_NULL_OBJECT;
+    }
+    int32_t result = UnregisterDeviceSelectionCallback(token, cbType);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::UpdateConnectStatusInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t token = -1;
+    PARCEL_READ_HELPER(data, Int32, token);
+    std::string deviceId;
+    PARCEL_READ_HELPER(data, String, deviceId);
+    DeviceConnectStatus deviceConnectStatus = static_cast<DeviceConnectStatus>(data.ReadInt32());
+    int32_t result = UpdateConnectStatus(token, deviceId, deviceConnectStatus);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::StartDeviceManagerInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t token = -1;
+    PARCEL_READ_HELPER(data, Int32, token);
+    int32_t empty = VALUE_NULL;
+    PARCEL_READ_HELPER(data, Int32, empty);
+    int32_t result;
+    if (empty == VALUE_OBJECT) {
+        std::shared_ptr<ContinuationExtraParams> continuationExtraParams(
+            data.ReadParcelable<ContinuationExtraParams>());
+        if (continuationExtraParams == nullptr) {
+            HILOGE("ContinuationExtraParams readParcelable failed!");
+            return ERR_NULL_OBJECT;
+        }
+        result = StartDeviceManager(token, continuationExtraParams);
+    } else {
+        result = StartDeviceManager(token);
+    }
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::OnDeviceConnectInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t token = -1;
+    PARCEL_READ_HELPER(data, Int32, token);
+    std::vector<ContinuationResult> continuationResults;
+    if (!ContinuationResult::ReadContinuationResultsFromParcel(data, continuationResults)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    int32_t result = OnDeviceConnect(token, continuationResults);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::OnDeviceDisconnectInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t token = -1;
+    PARCEL_READ_HELPER(data, Int32, token);
+    std::vector<std::u16string> deviceIds;
+    PARCEL_READ_HELPER(data, String16Vector, &deviceIds); // use u16string, because from app.
+    int32_t result = OnDeviceDisconnect(token, ContinationManagerUtils::Str16VecToStr8Vec(deviceIds));
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::OnDeviceCancelInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t token = -1;
+    PARCEL_READ_HELPER(data, Int32, token);
+    int32_t result = OnDeviceCancel(token);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    return ERR_NONE;
 }
 } // namespace DistributedSchedule
 } // namespace OHOS
