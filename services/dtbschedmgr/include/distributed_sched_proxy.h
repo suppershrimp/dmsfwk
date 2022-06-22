@@ -89,6 +89,19 @@ public:
 
     int32_t RegisterDistributedComponentListener(const sptr<IRemoteObject>& callback) override;
     int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) override;
+    int32_t Register(
+        const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams, int32_t& token) override;
+    int32_t Unregister(int32_t token) override;
+    int32_t RegisterDeviceSelectionCallback(
+        int32_t token, const std::string& cbType, const sptr<IRemoteObject>& notifier) override;
+    int32_t UnregisterDeviceSelectionCallback(int32_t token, const std::string& cbType) override;
+    int32_t UpdateConnectStatus(int32_t token, const std::string& deviceId,
+        const DeviceConnectStatus& deviceConnectStatus) override;
+    int32_t StartDeviceManager(
+        int32_t token, const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams = nullptr) override;
+    int32_t OnDeviceConnect(int32_t token, const std::vector<ContinuationResult>& continuationResults) override;
+    int32_t OnDeviceDisconnect(int32_t token, const std::vector<std::string>& deviceIds) override;
+    int32_t OnDeviceCancel(int32_t token) override;
 private:
     bool CallerInfoMarshalling(const CallerInfo& callerInfo, MessageParcel& data);
     static inline BrokerDelegator<DistributedSchedProxy> delegator_;

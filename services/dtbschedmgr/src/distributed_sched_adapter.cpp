@@ -388,5 +388,25 @@ int32_t DistributedSchedAdapter::GetOsdSwitch()
 void DistributedSchedAdapter::OnOsdEventOccur(int32_t flag)
 {
 }
+
+void DistributedSchedAdapter::ProcessNotifierDied(const sptr<IRemoteObject>& notifier)
+{
+    if (dmsAdapterHandler_ == nullptr) {
+        HILOGE("dmsAdapterHandler is nullptr");
+        return;
+    }
+    if (notifier == nullptr) {
+        HILOGE("notifier is nullptr");
+        return;
+    }
+    HILOGD("process notifier died");
+    auto callback = [notifier] () {
+        HILOGD("called.");
+        DistributedSchedService::GetInstance().ProcessNotifierDied(notifier);
+    };
+    if (!dmsAdapterHandler_->PostTask(callback)) {
+        HILOGE("PostTask failed");
+    }
+}
 } // namespace DistributedSchedule
 } // namespace OHOS
