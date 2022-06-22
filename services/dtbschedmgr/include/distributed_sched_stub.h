@@ -39,6 +39,8 @@ protected:
 #endif
 
 private:
+    void InitLocalFuncsMap();
+    void InitRemoteFuncsMap();
     int32_t StartRemoteAbilityInner(MessageParcel& data, MessageParcel& reply);
     int32_t StartAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t SendResultFromRemoteInner(MessageParcel& data, MessageParcel& reply);
@@ -82,6 +84,16 @@ private:
     int32_t NotifyCompleteFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t RegisterDistributedComponentListenerInner(MessageParcel& data, MessageParcel& reply);
     int32_t GetDistributedComponentListInner(MessageParcel& data, MessageParcel& reply);
+
+    int32_t RegisterInner(MessageParcel& data, MessageParcel& reply);
+    int32_t UnregisterInner(MessageParcel& data, MessageParcel& reply);
+    int32_t RegisterDeviceSelectionCallbackInner(MessageParcel& data, MessageParcel& reply);
+    int32_t UnregisterDeviceSelectionCallbackInner(MessageParcel& data, MessageParcel& reply);
+    int32_t UpdateConnectStatusInner(MessageParcel& data, MessageParcel& reply);
+    int32_t StartDeviceManagerInner(MessageParcel& data, MessageParcel& reply);
+    int32_t OnDeviceConnectInner(MessageParcel& data, MessageParcel& reply);
+    int32_t OnDeviceDisconnectInner(MessageParcel& data, MessageParcel& reply);
+    int32_t OnDeviceCancelInner(MessageParcel& data, MessageParcel& reply);
 
     bool CallerInfoUnmarshalling(CallerInfo& callerInfo, MessageParcel& data);
     using DistributedSchedFunc = int32_t(DistributedSchedStub::*)(MessageParcel& data, MessageParcel& reply);
