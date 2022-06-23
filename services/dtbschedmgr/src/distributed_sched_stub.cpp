@@ -95,6 +95,8 @@ DistributedSchedStub::DistributedSchedStub()
     localFuncsMap_[RELEASE_REMOTE_ABILITY] = &DistributedSchedStub::ReleaseRemoteAbilityInner;
     remoteFuncsMap_[START_ABILITY_BY_CALL_FROM_REMOTE] = &DistributedSchedStub::StartAbilityByCallFromRemoteInner;
     remoteFuncsMap_[RELEASE_ABILITY_FROM_REMOTE] = &DistributedSchedStub::ReleaseAbilityFromRemoteInner;
+    localFuncsMap_[START_REMOTE_SHARE_FORM] = &DistributedSchedStub::StartRemoteShareFormInner;
+    remoteFuncsMap_[START_SHARE_FORM_FROM_REMOTE] = &DistributedSchedStub::StartShareFormFromRemoteInner;
     localFuncsMap_[REGISTER_DISTRIBUTED_COMPONENT_LISTENER] =
         &DistributedSchedStub::RegisterDistributedComponentListenerInner;
     localFuncsMap_[GET_DISTRIBUTED_COMPONENT_LIST] = &DistributedSchedStub::GetDistributedComponentListInner;
@@ -877,6 +879,23 @@ int32_t DistributedSchedStub::ReleaseAbilityFromRemoteInner(MessageParcel& data,
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
+int32_t DistributedSchedStub::StartRemoteShareFormInner(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("SHAREFORM:: func call");
+    std::string deviceId = "";
+    PARCEL_READ_HELPER(data, String, deviceId);
+    shared_ptr<AppExecFwk::FormShareInfo> formShareInfo(data.ReadParcelable<AppExecFwk::FormShareInfo>());
+    if (formShareInfo == nullptr) {
+        HILOGW("SHARE_FORM readParcelable failed!");
+        PARCEL_WRITE_REPLY_NOERROR(reply, Int32, static_cast<int32_t>(ERR_FLATTEN_OBJECT));
+        return ERR_FLATTEN_OBJECT;
+    }
+
+    int32_t result = StartRemoteShareForm(deviceId, *formShareInfo);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
 int32_t DistributedSchedStub::RegisterDistributedComponentListenerInner(MessageParcel& data, MessageParcel& reply)
 {
     if (!CheckCallingUid()) {
@@ -885,6 +904,29 @@ int32_t DistributedSchedStub::RegisterDistributedComponentListenerInner(MessageP
     }
     sptr<IRemoteObject> callback = data.ReadRemoteObject();
     int32_t result = RegisterDistributedComponentListener(callback);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+int32_t DistributedSchedStub::StartShareFormFromRemoteInner(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGD("SHAREFORM:: func call");
+    if (!CheckCallingUid()) {
+        HILOGW("request DENIED!");
+        PARCEL_WRITE_REPLY_NOERROR(reply, Int32, static_cast<int32_t>(DMS_PERMISSION_DENIED));
+        return DMS_PERMISSION_DENIED;
+    }
+
+    std::string deviceId = "";
+    PARCEL_READ_HELPER(data, String, deviceId);
+    shared_ptr<AppExecFwk::FormShareInfo> formShareInfo(data.ReadParcelable<AppExecFwk::FormShareInfo>());
+    if (formShareInfo == nullptr) {
+        HILOGW("SHARE_FORM readParcelable failed!");
+        PARCEL_WRITE_REPLY_NOERROR(reply, Int32, static_cast<int32_t>(ERR_FLATTEN_OBJECT));
+        return ERR_FLATTEN_OBJECT;
+    }
+
+    int32_t result = StartShareFormFromRemote(deviceId, *formShareInfo);
     HILOGI("result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
