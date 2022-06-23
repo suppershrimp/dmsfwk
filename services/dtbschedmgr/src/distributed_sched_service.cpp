@@ -24,6 +24,9 @@
 #include "adapter/dnetwork_adapter.h"
 #include "bundle/bundle_manager_internal.h"
 #include "connect_death_recipient.h"
+#include "continuationManager/app_connection_stub.h"
+#include "continuationManager/device_selection_notifier_proxy.h"
+#include "continuationManager/notifier_death_recipient.h"
 #include "datetime_ex.h"
 #include "distributed_sched_adapter.h"
 #include "distributed_sched_dumper.h"
@@ -42,6 +45,7 @@
 #include "mission/distributed_sched_mission_manager.h"
 #endif
 #include "os_account_manager.h"
+#include "parameters.h"
 #include "parcel_helper.h"
 #include "string_ex.h"
 #include "system_ability_definition.h"
@@ -60,6 +64,7 @@ const std::u16string CONNECTION_CALLBACK_INTERFACE_TOKEN = u"ohos.abilityshell.D
 const std::u16string COMPONENT_CHANGE_INTERFACE_TOKEN = u"ohos.rms.DistributedComponent";
 const std::u16string ABILITY_MANAGER_SERVICE_TOKEN = u"ohos.aafwk.AbilityManager";
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.aafwk.IAtomicServiceStatusCallback";
+const std::u16string HIPLAY_PANEL_INTERFACE_TOKEN = u"ohos.hiplay.panel";
 const std::string BUNDLE_NAME_KEY = "bundleName";
 const std::string VERSION_CODE_KEY = "version";
 const std::string PID_KEY = "pid";
@@ -67,14 +72,22 @@ const std::string UID_KEY = "uid";
 const std::string COMPONENT_TYPE_KEY = "componentType";
 const std::string DEVICE_TYPE_KEY = "deviceType";
 const std::string CHANGE_TYPE_KEY = "changeType";
+const std::string TOKEN_KEY = "distributedsched.token.key";
+const std::string DEFAULT_TOKEN_VALUE = "0";
+const std::string PANEL_NAME_KEY = "const.distributedsched.panelname";
+const std::string DEFAULT_PANEL_NAME_VALUE = "";
 constexpr int32_t BIND_CONNECT_RETRY_TIMES = 3;
 constexpr int32_t BIND_CONNECT_TIMEOUT = 500; // 500ms
 constexpr int32_t MAX_DISTRIBUTED_CONNECT_NUM = 600;
+constexpr int32_t MAX_REGISTER_NUM = 600;
 constexpr int32_t INVALID_CALLER_UID = -1;
 constexpr int32_t IASS_CALLBACK_ON_REMOTE_FREE_INSTALL_DONE = 1;
 constexpr int32_t DISTRIBUTED_COMPONENT_ADD = 1;
 constexpr int32_t DISTRIBUTED_COMPONENT_REMOVE = 2;
 constexpr int32_t REPORT_DISTRIBUTED_COMPONENT_CHANGE_CODE = 1;
+constexpr int32_t MAX_SPLIT_VARS = 2;
+constexpr int32_t START_DEVICE_MANAGER_CODE = 1;
+constexpr int32_t UPDATE_CONNECT_STATUS_CODE = 2;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(DistributedSchedService);
@@ -129,13 +142,22 @@ bool DistributedSchedService::Init()
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
     DistributedSchedMissionManager::GetInstance().InitDataStorage();
 #endif
+    std::string tokenStr = system::GetParameter(TOKEN_KEY, DEFAULT_TOKEN_VALUE);
+    if (!tokenStr.empty()) {
+        token_.store(std::stoi(tokenStr));
+    }
     connectDeathRecipient_ = sptr<IRemoteObject::DeathRecipient>(new ConnectDeathRecipient());
     callerDeathRecipient_ = sptr<IRemoteObject::DeathRecipient>(new CallerDeathRecipient());
     callerDeathRecipientForLocalDevice_ = sptr<IRemoteObject::DeathRecipient>(
         new CallerDeathRecipient(IDistributedSched::CALLER));
+    notifierDeathRecipient_ = sptr<IRemoteObject::DeathRecipient>(new NotifierDeathRecipient());
     if (componentChangeHandler_ == nullptr) {
         auto runner = AppExecFwk::EventRunner::Create("DmsComponentChange");
         componentChangeHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
+    }
+    if (continuationHandler_ == nullptr) {
+        auto runner = AppExecFwk::EventRunner::Create("continuationManager");
+        continuationHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
     }
     return true;
 }
@@ -1898,6 +1920,633 @@ int32_t DistributedSchedService::NotifyFreeInstallResult(const CallbackTaskItem 
     MessageParcel reply;
     MessageOption option;
     return item.callback->SendRequest(IASS_CALLBACK_ON_REMOTE_FREE_INSTALL_DONE, data, reply, option);
+}
+
+int32_t DistributedSchedService::Register(int32_t& token)
+{
+    HILOGD("called");
+    uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
+    if (IsAccessTokenRegisterMaxTimes(accessToken)) {
+        return REGISTER_EXCEED_MAX_TIMES;
+    }
+    int32_t tToken = -1;
+    tToken = token_.load();
+    if (++tToken > std::numeric_limits<int32_t>::max()) {
+        tToken = 1;
+    }
+    token_.store(tToken);
+    // update tokenMap_
+    std::lock_guard<std::mutex> tokenMapLock(tokenMapMutex_);
+    {
+        tokenMap_[accessToken].emplace_back(tToken);
+    }
+    // save at parameters
+    system::SetParameter(TOKEN_KEY, std::to_string(tToken));
+    token = tToken;
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::Register(
+    const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams, int32_t& token)
+{
+    HILOGD("called");
+    // param: continuationExtraParams unused
+    uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
+    if (IsAccessTokenRegisterMaxTimes(accessToken)) {
+        return REGISTER_EXCEED_MAX_TIMES;
+    }
+    int32_t tToken = -1;
+    tToken = token_.load();
+    if (++tToken > std::numeric_limits<int32_t>::max()) {
+        tToken = 1;
+    }
+    token_.store(tToken);
+    // update tokenMap_
+    std::lock_guard<std::mutex> tokenMapLock(tokenMapMutex_);
+    {
+        tokenMap_[accessToken].emplace_back(tToken);
+    }
+    // save at parameters
+    system::SetParameter(TOKEN_KEY, std::to_string(tToken));
+    token = tToken;
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::Unregister(int32_t token)
+{
+    HILOGD("called");
+    uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
+    if (!IsTokenRegistered(accessToken, token)) {
+        return TOKEN_HAS_NOT_REGISTERED;
+    }
+    // update callbackMap_ by token
+    std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+    {
+        if (IfNotifierRegistered(token)) {
+            callbackMap_.erase(token);
+        }
+    }
+    // update connectMap_ by token
+    std::lock_guard<std::mutex> connectMapLock(connectMapMutex_);
+    {
+        auto iter = connectMap_.find(token);
+        if (iter != connectMap_.end()) {
+            // disconnect to app when third-party app called unregister
+            if (HandleDisconnectAbility(iter->second)) {
+                connectMap_.erase(iter);
+            }
+        }
+    }
+    // update tokenMap_ by token
+    std::lock_guard<std::mutex> tokenMapLock(tokenMapMutex_);
+    {
+        for (auto iter = tokenMap_.begin(); iter != tokenMap_.end();) {
+            for (auto it = iter->second.begin(); it != iter->second.end();) {
+                if (*it == token) {
+                    it = iter->second.erase(it);
+                } else {
+                    it++;
+                }
+            }
+            if (iter->second.empty()) {
+                tokenMap_.erase(iter++);
+            } else {
+                iter++;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::RegisterDeviceSelectionCallback(
+    int32_t token, const std::string& cbType, const sptr<IRemoteObject>& notifier)
+{
+    HILOGD("called");
+    uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
+    if (!IsTokenRegistered(accessToken, token)) {
+        return TOKEN_HAS_NOT_REGISTERED;
+    }
+    if (cbType != EVENT_CONNECT && cbType != EVENT_DISCONNECT) {
+        HILOGE("type: %{public}s not support!", cbType.c_str());
+        return UNKNOWN_CALLBACK_TYPE;
+    }
+    if (IfNotifierRegistered(token, cbType)) {
+        return CALLBACK_HAS_REGISTERED;
+    }
+    std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+    {
+        auto iter = callbackMap_.find(token);
+        if (iter != callbackMap_.end()) { // registered at least once
+            if (iter->second == nullptr) {
+                return ERR_NULL_OBJECT;
+            }
+           iter->second->SetNotifier(cbType, notifier);
+        } else { // never registered
+            std::unique_ptr<NotifierInfo> notifierInfo = std::make_unique<NotifierInfo>();
+            notifierInfo->SetNotifier(cbType, notifier);
+            callbackMap_[token] = std::move(notifierInfo);
+            notifier->AddDeathRecipient(notifierDeathRecipient_);
+        }
+        HILOGD("token %{public}d register success", token);
+    }
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::UnregisterDeviceSelectionCallback(int32_t token, const std::string& cbType)
+{
+    HILOGD("called");
+    uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
+    if (!IsTokenRegistered(accessToken, token)) {
+        return TOKEN_HAS_NOT_REGISTERED;
+    }
+    if (cbType != EVENT_CONNECT && cbType != EVENT_DISCONNECT) {
+        HILOGE("type: %{public}s not support!", cbType.c_str());
+        return UNKNOWN_CALLBACK_TYPE;
+    }
+    if (!IfNotifierRegistered(token, cbType)) {
+        return CALLBACK_HAS_NOT_REGISTERED;
+    }
+    std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+    {
+        auto iter = callbackMap_.find(token);
+        if (iter != callbackMap_.end()) {
+            auto& notifierMap = iter->second->GetNotifierMap();
+            auto it = notifierMap.find(cbType);
+            if (it != notifierMap.end()) {
+                it->second->RemoveDeathRecipient(notifierDeathRecipient_);
+                notifierMap.erase(it);
+            }
+        }
+    }
+    HILOGD("token %{public}d unregister success", token);
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::UpdateConnectStatus(int32_t token, const std::string& deviceId,
+    const DeviceConnectStatus& deviceConnectStatus)
+{
+    HILOGD("called");
+    uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
+    if (!IsTokenRegistered(accessToken, token)) {
+        return TOKEN_HAS_NOT_REGISTERED;
+    }
+    if (deviceId.empty()) {
+        HILOGE("deviceId is empty");
+        return ERR_NULL_OBJECT;
+    }
+    if (static_cast<int32_t>(deviceConnectStatus) < static_cast<int32_t>(DeviceConnectStatus::IDLE) ||
+        static_cast<int32_t>(deviceConnectStatus) > static_cast<int32_t>(DeviceConnectStatus::DISCONNECTING)) {
+        HILOGE("deviceConnectStatus is invalid");
+        return INVALID_CONNECT_STATUS;
+    }
+    std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+    {
+        if (IfNotifierRegistered(token)) {
+            std::shared_ptr<ConnectStatusInfo> connectStatusInfo =
+                std::make_shared<ConnectStatusInfo>(deviceId, deviceConnectStatus);
+            callbackMap_[token]->SetConnectStatusInfo(connectStatusInfo);
+        } else {
+            std::unique_ptr<NotifierInfo> notifierInfo = std::make_unique<NotifierInfo>();
+            std::shared_ptr<ConnectStatusInfo> connectStatusInfo =
+                std::make_shared<ConnectStatusInfo>(deviceId, deviceConnectStatus);
+            notifierInfo->SetConnectStatusInfo(connectStatusInfo);
+            callbackMap_[token] = std::move(notifierInfo);
+        }
+    }
+    // sendRequest status(token, connectStatusInfo) to app by app proxy when appProxy_ is not null.
+    if (appProxy_ != nullptr) {
+        HandleUpdateConnectStatus(token, deviceId, deviceConnectStatus);
+    }
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::StartDeviceManager(int32_t token)
+{
+    HILOGD("called");
+    uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
+    if (!IsTokenRegistered(accessToken, token)) {
+        return TOKEN_HAS_NOT_REGISTERED;
+    }
+    // 1. connect to app and get the app proxy if appProxy_ is null, otherwise start device manager directly.
+    if (appProxy_ != nullptr) {
+        HandleStartDeviceManager(appProxy_, token);
+        return ERR_OK;
+    }
+    AAFwk::Want want;
+    // get bundleName and abilityName from parameter
+    std::string panelName = system::GetParameter(PANEL_NAME_KEY, DEFAULT_PANEL_NAME_VALUE);
+    if (panelName.empty()) {
+        HILOGE("get panelName from parameter failed");
+        return PANEL_NAME_NOT_CONFIGURED;
+    }
+    std::vector<std::string> nameVector;
+    SplitStr(panelName, "_", nameVector);
+    if (nameVector.size() != MAX_SPLIT_VARS) {
+        HILOGE("parse panelName failed");
+        return PANEL_NAME_NOT_CONFIGURED;
+    }
+    want.SetElementName(nameVector[0],  nameVector[1]);
+    sptr<IRemoteObject> connect = new APPConnectionStub(token);
+    int32_t errCode = DistributedSchedAdapter::GetInstance().ConnectAbility(want, connect, this);
+    if (errCode != ERR_OK) {
+        HILOGE("token %{public}d connect to app failed", token);
+        return CONNECT_ABILITY_FAILED;
+    }
+    // update connectMap_
+    std::lock_guard<std::mutex> connectMapLock(connectMapMutex_);
+    {
+        connectMap_[token] = connect;
+    }
+    // 2. sendRequest data(token, filter, dmsStub, connectStatusInfo) to app by app proxy when connect callback.
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::StartDeviceManager(
+    int32_t token, const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams)
+{
+    HILOGD("called");
+    uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
+    if (!IsTokenRegistered(accessToken, token)) {
+        return TOKEN_HAS_NOT_REGISTERED;
+    }
+    // 1. connect to app and get the app proxy if appProxy_ is null, otherwise start device manager directly.
+    if (appProxy_ != nullptr) {
+        HandleStartDeviceManager(appProxy_, token, continuationExtraParams);
+        return ERR_OK;
+    }
+    AAFwk::Want want;
+    // get bundleName and abilityName from parameter
+    std::string panelName = system::GetParameter(PANEL_NAME_KEY, DEFAULT_PANEL_NAME_VALUE);
+    if (panelName.empty()) {
+        HILOGE("get panelName from parameter failed");
+        return PANEL_NAME_NOT_CONFIGURED;
+    }
+    std::vector<std::string> nameVector;
+    SplitStr(panelName, "_", nameVector);
+    if (nameVector.size() != MAX_SPLIT_VARS) {
+        HILOGE("parse panelName failed");
+        return PANEL_NAME_NOT_CONFIGURED;
+    }
+    want.SetElementName(nameVector[0],  nameVector[1]);
+    sptr<IRemoteObject> connect = new APPConnectionStub(token, continuationExtraParams);
+    int32_t errCode = DistributedSchedAdapter::GetInstance().ConnectAbility(want, connect, this);
+    if (errCode != ERR_OK) {
+        HILOGE("token %{public}d connect to app failed", token);
+        return CONNECT_ABILITY_FAILED;
+    }
+    // update connectMap_
+    std::lock_guard<std::mutex> connectMapLock(connectMapMutex_);
+    {
+        connectMap_[token] = connect;
+    }
+    // 2. sendRequest data(token, filter, dmsStub, connectStatusInfo) to app by app proxy when connect callback.
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::OnDeviceConnect(int32_t token,
+    std::vector<AAFwk::ContinuationResult>& continuationResults)
+{
+    if (!DisconnectAbility(token)) {
+        return INVALID_PARAMETERS_ERR;
+    }
+    // device connect callback to napi
+    if (!IfNotifierRegistered(token, EVENT_CONNECT)) {
+        return CALLBACK_HAS_NOT_REGISTERED;
+    }
+    std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+    {
+        auto& notifierMap = callbackMap_[token]->GetNotifierMap();
+        auto it = notifierMap.find(EVENT_CONNECT);
+        if (it != notifierMap.end()) {
+            if (!HandleDeviceConnect(it->second, continuationResults)) {
+                return INVALID_PARAMETERS_ERR;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::OnDeviceDisconnect(int32_t token, const std::vector<std::string>& deviceIds)
+{
+    if (!DisconnectAbility(token)) {
+        return INVALID_PARAMETERS_ERR;
+    }
+    // device disconnect callback to napi
+    if (!IfNotifierRegistered(token, EVENT_DISCONNECT)) {
+        return CALLBACK_HAS_NOT_REGISTERED;
+    }
+    std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+    {
+        auto& notifierMap = callbackMap_[token]->GetNotifierMap();
+        auto it = notifierMap.find(EVENT_DISCONNECT);
+        if (it != notifierMap.end()) {
+            if (!HandleDeviceDisconnect(it->second, deviceIds)) {
+                return INVALID_PARAMETERS_ERR;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+int32_t DistributedSchedService::OnDeviceCancel(int32_t token)
+{
+    if (!DisconnectAbility(token)) {
+        return INVALID_PARAMETERS_ERR;
+    }
+    return ERR_OK;
+}
+
+bool DistributedSchedService::DisconnectAbility(int32_t token)
+{
+    // disconnect to app
+    std::lock_guard<std::mutex> connectMapLock(connectMapMutex_);
+    {
+        auto iter = connectMap_.find(token);
+        if (iter != connectMap_.end()) {
+            if (HandleDisconnectAbility(iter->second)) {
+                connectMap_.erase(iter);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool DistributedSchedService::HandleDisconnectAbility(const sptr<IRemoteObject>& connect)
+{
+    if (continuationHandler_ == nullptr) {
+        HILOGE("continuationHandler_ is nullptr");
+        return false;
+    }
+    auto func = [connect] () {
+        HILOGD("called.");
+        int32_t errCode = DistributedSchedAdapter::GetInstance().DisconnectAbility(connect);
+        if (errCode != ERR_OK) {
+            HILOGE("DisconnectAbility failed");
+            return;
+        }
+    };
+    if (!continuationHandler_->PostTask(func)) {
+        HILOGE("continuationHandler_ postTask failed");
+        return false;
+    }
+    return true;
+}
+
+bool DistributedSchedService::IsAccessTokenRegisterMaxTimes(uint32_t accessToken)
+{
+    std::lock_guard<std::mutex> tokenMapLock(tokenMapMutex_);
+    {
+        auto iter = tokenMap_.find(accessToken);
+        if (iter != tokenMap_.end() && iter->second.size() >= MAX_REGISTER_NUM) {
+            HILOGE("accessToken %{public}u registered too much times", accessToken);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool DistributedSchedService::IsTokenRegistered(uint32_t accessToken, int32_t token)
+{
+    std::lock_guard<std::mutex> tokenMapLock(tokenMapMutex_);
+    {
+        auto iter = tokenMap_.find(accessToken);
+        if (iter == tokenMap_.end()) {
+            HILOGE("accessToken %{public}u has not registered", accessToken);
+            return false;
+        }
+        for (auto it = iter->second.begin(); it != iter->second.end(); it++) {
+            if (*it == token) {
+                return true;
+            }
+        }
+        HILOGE("token %{public}d has not registered", token);
+        return false;
+    }
+}
+
+bool DistributedSchedService::IfNotifierRegistered(int32_t token) {
+    // must be in callbackMapLock scope
+    auto iter = callbackMap_.find(token);
+    if (iter == callbackMap_.end()) {
+        HILOGE("never registered, token: %{public}d ", token);
+        return false;
+    }
+    if (iter->second == nullptr) {
+        HILOGE("notifierInfo is nullptr, token: %{public}d ", token);
+        return false;
+    }
+    return true;
+}
+
+bool DistributedSchedService::IfNotifierRegistered(int32_t token, const std::string& cbType)
+{
+    std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+    {
+        if (!IfNotifierRegistered(token)) {
+            return false;
+        }
+        auto& notifierMap = callbackMap_[token]->GetNotifierMap();
+        auto it = notifierMap.find(cbType);
+        if (it != notifierMap.end()) {
+            HILOGD("token: %{public}d cbType:%{public}s has already registered", token, cbType.c_str());
+            return true;
+        }
+    }
+    HILOGE("token: %{public}d cbType:%{public}s has not registered", token, cbType.c_str());
+    return false;
+}
+
+bool DistributedSchedService::HandleDeviceConnect(const sptr<IRemoteObject>& notifier,
+    std::vector<AAFwk::ContinuationResult>& continuationResults)
+{
+    if (continuationHandler_ == nullptr) {
+        HILOGE("continuationHandler_ is nullptr");
+        return false;
+    }
+    auto func = [notifier, continuationResults]() {
+        HILOGD("called.");
+        auto proxy = std::make_unique<DeviceSelectionNotifierProxy>(notifier);
+        proxy->OnDeviceConnect(continuationResults);
+    };
+    if (!continuationHandler_->PostTask(func)) {
+        HILOGE("continuationHandler_ postTask failed");
+        return false;
+    }
+    return true;
+}
+
+bool DistributedSchedService::HandleDeviceDisconnect(const sptr<IRemoteObject>& notifier,
+    const std::vector<std::string>& deviceIds)
+{
+    if (continuationHandler_ == nullptr) {
+        HILOGE("continuationHandler_ is nullptr");
+        return false;
+    }
+    auto func = [notifier, deviceIds]() {
+        HILOGD("called.");
+        auto proxy = std::make_unique<DeviceSelectionNotifierProxy>(notifier);
+        proxy->OnDeviceDisconnect(deviceIds);
+    };
+    if (!continuationHandler_->PostTask(func)) {
+        HILOGE("continuationHandler_ postTask failed");
+        return false;
+    }
+    return true;
+}
+
+void DistributedSchedService::HandleStartDeviceManager(const sptr<IRemoteObject>& appProxy, int32_t token,
+    const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams)
+{
+    appProxy_ = appProxy;
+    if (appProxy_ == nullptr) {
+        return;
+    }
+    if (continuationHandler_ == nullptr) {
+        HILOGE("continuationHandler_ is nullptr");
+        return;
+    }
+    auto func = [this, token, continuationExtraParams]() {
+        HILOGD("called.");
+        MessageParcel data;
+        if (!data.WriteInterfaceToken(HIPLAY_PANEL_INTERFACE_TOKEN)) {
+            HILOGE("WriteInterfaceToken failed");
+            return;
+        }
+        PARCEL_WRITE_HELPER_NORET(data, Int32, token);
+        if (continuationExtraParams == nullptr) {
+            PARCEL_WRITE_HELPER_NORET(data, Int32, VALUE_NULL);
+        } else {
+            PARCEL_WRITE_HELPER_NORET(data, Int32, VALUE_OBJECT);
+            PARCEL_WRITE_HELPER_NORET(data, Parcelable, continuationExtraParams.get());
+        }
+        PARCEL_WRITE_HELPER_NORET(data, RemoteObject, this);
+        // query whether the connect status needs to be send
+        std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+        {
+            if (IfNotifierRegistered(token)) {
+                std::shared_ptr<ConnectStatusInfo> connectStatusInfo = callbackMap_[token]->GetConnectStatusInfo();
+                if (connectStatusInfo == nullptr) {
+                    PARCEL_WRITE_HELPER_NORET(data, Int32, VALUE_NULL);
+                } else {
+                    PARCEL_WRITE_HELPER_NORET(data, Int32, VALUE_OBJECT);
+                    // use u16string, because send to app
+                    PARCEL_WRITE_HELPER_NORET(data, String16, Str8ToStr16(connectStatusInfo->GetDeviceId()));
+                    PARCEL_WRITE_HELPER_NORET(data, Int32,
+                        static_cast<int32_t>(connectStatusInfo->GetDeviceConnectStatus()));
+                }
+            } else {
+                PARCEL_WRITE_HELPER_NORET(data, Int32, VALUE_NULL);
+            }
+        }
+        MessageParcel reply;
+        MessageOption option;
+        int32_t result = appProxy_->SendRequest(START_DEVICE_MANAGER_CODE, data, reply, option);
+        HILOGD("result is %{public}d", result);
+    };
+    if (!continuationHandler_->PostTask(func)) {
+        HILOGE("continuationHandler_ postTask failed");
+        return;
+    }
+}
+
+void DistributedSchedService::HandleUpdateConnectStatus(int32_t token, std::string deviceId,
+    const DeviceConnectStatus& deviceConnectStatus)
+{
+    if (continuationHandler_ == nullptr) {
+        HILOGE("continuationHandler_ is nullptr");
+        return;
+    }
+    auto func = [this, token, deviceId, deviceConnectStatus]() {
+        HILOGD("called.");
+        MessageParcel data;
+        if (!data.WriteInterfaceToken(HIPLAY_PANEL_INTERFACE_TOKEN)) {
+            HILOGE("WriteInterfaceToken failed");
+            return;
+        }
+        PARCEL_WRITE_HELPER_NORET(data, Int32, token);
+        // use u16string, because send to app
+        PARCEL_WRITE_HELPER_NORET(data, String16, Str8ToStr16(deviceId));
+        PARCEL_WRITE_HELPER_NORET(data, Int32, static_cast<int32_t>(deviceConnectStatus));
+        MessageParcel reply;
+        MessageOption option;
+        int32_t result = appProxy_->SendRequest(UPDATE_CONNECT_STATUS_CODE, data, reply, option);
+        HILOGD("result is %{public}d", result);
+    };
+    if (!continuationHandler_->PostTask(func)) {
+        HILOGE("continuationHandler_ postTask failed");
+        return;
+    }
+}
+
+bool DistributedSchedService::QueryTokenByNotifier(const sptr<IRemoteObject>& notifier, int32_t& token)
+{
+    std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+    {
+        for (auto iter = callbackMap_.begin(); iter != callbackMap_.end(); iter++) {
+            if (iter->second == nullptr) {
+                return false;
+            }
+            auto& notifierMap = iter->second->GetNotifierMap();
+            for (auto it = notifierMap.begin(); it != notifierMap.end(); it++) {
+                if (it->second == notifier) {
+                    token = iter->first;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+void DistributedSchedService::ProcessNotifierDied(const sptr<IRemoteObject>& notifier)
+{
+    // update cache when third-party app died
+    if (notifier == nullptr) {
+        return;
+    }
+    // query token in callbackMap_ by notifier
+    int32_t token = -1;
+    if (!QueryTokenByNotifier(notifier, token)) {
+        HILOGE("QueryTokenByNotifier failed");
+        return;
+    }
+    // update callbackMap_ by token
+    std::lock_guard<std::mutex> callbackMapLock(callbackMapMutex_);
+    {
+        if (IfNotifierRegistered(token)) {
+            callbackMap_.erase(token);
+        }
+    }
+    // update connectMap_ by token
+    std::lock_guard<std::mutex> connectMapLock(connectMapMutex_);
+    {
+        auto iter = connectMap_.find(token);
+        if (iter != connectMap_.end()) {
+            // disconnect to app when third-party app called unregister
+            if (HandleDisconnectAbility(iter->second)) {
+                connectMap_.erase(iter);
+            }
+        }
+    }
+    // update tokenMap_ by token
+    std::lock_guard<std::mutex> tokenMapLock(tokenMapMutex_);
+    {
+        for (auto iter = tokenMap_.begin(); iter != tokenMap_.end();) {
+            for (auto it = iter->second.begin(); it != iter->second.end();) {
+                if (*it == token) {
+                    it = iter->second.erase(it);
+                } else {
+                    it++;
+                }
+            }
+            if (iter->second.empty()) {
+                tokenMap_.erase(iter++);
+            } else {
+                iter++;
+            }
+        }
+    }
 }
 } // namespace DistributedSchedule
 } // namespace OHOS

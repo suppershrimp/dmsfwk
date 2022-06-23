@@ -87,6 +87,21 @@ public:
     int32_t StartFreeInstallFromRemote(const FreeInstallInfo& info, int64_t taskId) override;
     int32_t NotifyCompleteFreeInstallFromRemote(int64_t taskId, int32_t resultCode) override;
     int32_t NotifyCompleteFreeInstall(const FreeInstallInfo& info, int64_t taskId, int32_t resultCode);
+    int32_t Register(int32_t& token) override;
+    int32_t Register(
+        const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams, int32_t& token) override;
+    int32_t Unregister(int32_t token) override;
+    int32_t RegisterDeviceSelectionCallback(
+        int32_t token, const std::string& cbType, const sptr<IRemoteObject>& notifier) override;
+    int32_t UnregisterDeviceSelectionCallback(int32_t token, const std::string& cbType) override;
+    int32_t UpdateConnectStatus(int32_t token, const std::string& deviceId,
+        const AAFwk::DeviceConnectStatus& deviceConnectStatus) override;
+    int32_t StartDeviceManager(int32_t token) override;
+    int32_t StartDeviceManager(
+        int32_t token, const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams) override;
+    int32_t OnDeviceConnect(int32_t token, const AAFwk::ContinuationResult& continuationResult) override;
+    int32_t OnDeviceDisconnect(int32_t token, const std::string& deviceId) override;
+    int32_t OnDeviceCancel(int32_t token) override;
 private:
     bool expectedTrue_ = false;
 };

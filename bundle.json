@@ -40,6 +40,7 @@
       "build": {
         "sub_component": [
           "//foundation/distributedschedule/dmsfwk/etc/init:etc",
+          "//foundation/distributedschedule/dmsfwk/etc/param:param_files",
           "//foundation/distributedschedule/dmsfwk/etc/profile:distributedsched_trust",
           "//foundation/distributedschedule/dmsfwk/sa_profile:dms_sa_profile",
           "//foundation/distributedschedule/dmsfwk/services/dtbschedmgr:distributedschedsvr"

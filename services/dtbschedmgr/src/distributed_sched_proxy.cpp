@@ -912,6 +912,207 @@ int32_t DistributedSchedProxy::GetDistributedComponentList(std::vector<std::stri
     PARCEL_READ_HELPER(reply, StringVector, &distributedComponents);
     return ERR_NONE;
 }
+
+int32_t DistributedSchedProxy::Register(int32_t& token)
+{
+    HILOGD("called.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is null");
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, Int32, VALUE_NULL);
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(REGISTER, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("SendRequest error = %{public}d", error);
+        return error;
+    }
+    int32_t result = reply.ReadInt32();
+    if (result != ERR_NONE) {
+        HILOGE("result = %{public}d", result);
+        return result;
+    }
+    PARCEL_READ_HELPER(reply, Int32, token);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedProxy::Register(
+    const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams, int32_t& token)
+{
+    HILOGD("called.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is null");
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, Int32, VALUE_OBJECT);
+    PARCEL_WRITE_HELPER(data, Parcelable, continuationExtraParams.get());
+    MessageParcel reply;
+    MessageOption option;
+    int32_t error = remote->SendRequest(REGISTER, data, reply, option);
+    if (error != ERR_NONE) {
+        HILOGE("SendRequest error = %{public}d", error);
+        return error;
+    }
+    int32_t result = reply.ReadInt32();
+    if (result != ERR_NONE) {
+        HILOGE("result = %{public}d", result);
+        return result;
+    }
+    PARCEL_READ_HELPER(reply, Int32, token);
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedProxy::Unregister(int32_t token)
+{
+    HILOGD("called.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is null");
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, Int32, token);
+    MessageParcel reply;
+    PARCEL_TRANSACT_SYNC_RET_INT(remote, UNREGISTER, data, reply);
+}
+
+int32_t DistributedSchedProxy::RegisterDeviceSelectionCallback(
+    int32_t token, const std::string& cbType, const sptr<IRemoteObject>& notifier)
+{
+    HILOGD("called.");
+    if (cbType.empty()) {
+        HILOGE("cbType is empty");
+        return ERR_NULL_OBJECT;
+    }
+    if (notifier == nullptr) {
+        HILOGE("notifier is nullptr");
+        return ERR_NULL_OBJECT;
+    }
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is null");
+        return ERR_NULL_OBJECT;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, Int32, token);
+    PARCEL_WRITE_HELPER(data, String, cbType);
+    PARCEL_WRITE_HELPER(data, RemoteObject, notifier);
+    MessageParcel reply;
+    PARCEL_TRANSACT_SYNC_RET_INT(remote, REGISTER_DEVICE_SELECTION_CALLBACK, data, reply);
+}
+
+int32_t DistributedSchedProxy::UnregisterDeviceSelectionCallback(int32_t token, const std::string& cbType)
+{
+    HILOGD("called.");
+    if (cbType.empty()) {
+        HILOGE("cbType is empty");
+        return ERR_NULL_OBJECT;
+    }
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is null");
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, Int32, token);
+    PARCEL_WRITE_HELPER(data, String, cbType);
+    MessageParcel reply;
+    PARCEL_TRANSACT_SYNC_RET_INT(remote, UNREGISTER_DEVICE_SELECTION_CALLBACK, data, reply);
+}
+
+int32_t DistributedSchedProxy::UpdateConnectStatus(int32_t token, const std::string& deviceId,
+    const DeviceConnectStatus& deviceConnectStatus)
+{
+    HILOGD("called.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is null");
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, Int32, token);
+    PARCEL_WRITE_HELPER(data, String, deviceId);
+    PARCEL_WRITE_HELPER(data, Int32, static_cast<int32_t>(deviceConnectStatus));
+    MessageParcel reply;
+    PARCEL_TRANSACT_SYNC_RET_INT(remote, UPDATE_CONNECT_STATUS, data, reply);
+}
+
+int32_t DistributedSchedProxy::StartDeviceManager(int32_t token)
+{
+    HILOGD("called.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is null");
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, Int32, token);
+    PARCEL_WRITE_HELPER(data, Int32, VALUE_NULL);
+    MessageParcel reply;
+    PARCEL_TRANSACT_SYNC_RET_INT(remote, START_DEVICE_MANAGER, data, reply);
+}
+
+int32_t DistributedSchedProxy::StartDeviceManager(
+    int32_t token, const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams)
+{
+    HILOGD("called.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote is null");
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, Int32, token);
+    PARCEL_WRITE_HELPER(data, Int32, VALUE_OBJECT);
+    PARCEL_WRITE_HELPER(data, Parcelable, continuationExtraParams.get());
+    MessageParcel reply;
+    PARCEL_TRANSACT_SYNC_RET_INT(remote, START_DEVICE_MANAGER, data, reply);
+}
+
+int32_t DistributedSchedProxy::OnDeviceConnect(int32_t token,
+    std::vector<AAFwk::ContinuationResult>& continuationResults)
+{
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedProxy::OnDeviceDisconnect(int32_t token, const std::vector<std::string>& deviceIds)
+{
+    return ERR_NONE;
+}
+
+int32_t DistributedSchedProxy::OnDeviceCancel(int32_t token)
+{
+    return ERR_NONE;
+}
 } // namespace DistributedSchedule
 } // namespace OHOS
-

@@ -21,6 +21,7 @@
 #include <set>
 #include <unordered_map>
 
+#include "continuationManager/notifier_info.h"
 #include "distributed_sched_stub.h"
 #include "distributed_sched_continuation.h"
 #include "dms_callback_task.h"
@@ -138,6 +139,27 @@ public:
     int32_t NotifyCompleteFreeInstall(const FreeInstallInfo& info, int64_t taskId, int32_t resultCode);
     int32_t RegisterDistributedComponentListener(const sptr<IRemoteObject>& callback) override;
     int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) override;
+    int32_t Register(int32_t& token) override;
+    int32_t Register(
+        const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams, int32_t& token) override;
+    int32_t Unregister(int32_t token) override;
+    int32_t RegisterDeviceSelectionCallback(
+        int32_t token, const std::string& cbType, const sptr<IRemoteObject>& notifier) override;
+    int32_t UnregisterDeviceSelectionCallback(int32_t token, const std::string& cbType) override;
+    int32_t UpdateConnectStatus(int32_t token, const std::string& deviceId,
+        const AAFwk::DeviceConnectStatus& deviceConnectStatus) override;
+    int32_t StartDeviceManager(int32_t token) override;
+    int32_t StartDeviceManager(
+        int32_t token, const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams) override;
+    int32_t OnDeviceConnect(int32_t token, std::vector<AAFwk::ContinuationResult>& continuationResults) override;
+    int32_t OnDeviceDisconnect(int32_t token, const std::vector<std::string>& deviceIds) override;
+    int32_t OnDeviceCancel(int32_t token) override;
+
+    void HandleStartDeviceManager(const sptr<IRemoteObject>& appProxy, int32_t token,
+        const std::shared_ptr<AAFwk::ContinuationExtraParams>& continuationExtraParams = nullptr);
+    void HandleUpdateConnectStatus(int32_t token, std::string deviceId,
+        const AAFwk::DeviceConnectStatus& deviceConnectStatus);
+    void ProcessNotifierDied(const sptr<IRemoteObject>& notifier);
 private:
     DistributedSchedService();
     bool Init();
@@ -187,6 +209,16 @@ private:
     void GetConnectComponentList(std::vector<std::string>& distributedComponents);
     void GetCallComponentList(std::vector<std::string>& distributedComponents);
     void ProcessFreeInstallOffline(const std::string& deviceId);
+    bool IsAccessTokenRegisterMaxTimes(uint32_t accessToken);
+    bool IsTokenRegistered(uint32_t accessToken, int32_t token);
+    bool IfNotifierRegistered(int32_t token);
+    bool IfNotifierRegistered(int32_t token, const std::string& cbType);
+    bool QueryTokenByNotifier(const sptr<IRemoteObject>& notifier, int32_t& token);
+    bool DisconnectAbility(int32_t token);
+    bool HandleDeviceConnect(const sptr<IRemoteObject>& notifier,
+        std::vector<AAFwk::ContinuationResult>& continuationResults);
+    bool HandleDeviceDisconnect(const sptr<IRemoteObject>& notifier, const std::vector<std::string>& deviceIds);
+    bool HandleDisconnectAbility(const sptr<IRemoteObject>& connect);
 
     std::shared_ptr<DSchedContinuation> dschedContinuation_;
     std::map<sptr<IRemoteObject>, std::list<ConnectAbilitySession>> distributedConnectAbilityMap_;
@@ -204,6 +236,16 @@ private:
     std::mutex callerLock_;
     std::map<sptr<IRemoteObject>, std::list<ConnectAbilitySession>> callerMap_;
     sptr<IRemoteObject::DeathRecipient> callerDeathRecipientForLocalDevice_;
+    std::atomic<int32_t> token_ {0};
+    std::mutex tokenMapMutex_;
+    std::map<uint32_t, std::vector<int32_t>> tokenMap_;
+    std::mutex callbackMapMutex_;
+    std::map<int32_t, std::unique_ptr<NotifierInfo>> callbackMap_;
+    sptr<IRemoteObject::DeathRecipient> notifierDeathRecipient_;
+    sptr<IRemoteObject> appProxy_;
+    std::shared_ptr<AppExecFwk::EventHandler> continuationHandler_;
+    std::mutex connectMapMutex_;
+    std::map<int32_t, sptr<IRemoteObject>> connectMap_;
 };
 
 class ConnectAbilitySession {

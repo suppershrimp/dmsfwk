@@ -70,6 +70,16 @@ private:
     int32_t NotifyMissionsChangedFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t NotifyOsdSwitchChangedInner(MessageParcel& data, MessageParcel& reply);
     int32_t UpdateOsdSwitchValueFromRemoteInner(MessageParcel& data, MessageParcel& reply);
+
+    int32_t RegisterInner(MessageParcel& data, MessageParcel& reply);
+    int32_t UnregisterInner(MessageParcel& data, MessageParcel& reply);
+    int32_t RegisterDeviceSelectionCallbackInner(MessageParcel& data, MessageParcel& reply);
+    int32_t UnregisterDeviceSelectionCallbackInner(MessageParcel& data, MessageParcel& reply);
+    int32_t UpdateConnectStatusInner(MessageParcel& data, MessageParcel& reply);
+    int32_t StartDeviceManagerInner(MessageParcel& data, MessageParcel& reply);
+    int32_t OnDeviceConnectInner(MessageParcel& data, MessageParcel& reply);
+    int32_t OnDeviceDisconnectInner(MessageParcel& data, MessageParcel& reply);
+    int32_t OnDeviceCancelInner(MessageParcel& data, MessageParcel& reply);
 #endif
     bool CheckCallingUid();
     bool EnforceInterfaceToken(MessageParcel& data);
