@@ -96,3 +96,4 @@ private:
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
+#endif // MOCK_DISTRIBUTED_SCHED_H
