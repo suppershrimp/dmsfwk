@@ -62,6 +62,7 @@ public:
     bool InitHichainService();
     bool CheckAccessToGroup(const std::string& groupId, const std::string& targetBundleName);
     bool GetRelatedGroups(const std::string& udid, const std::string& bundleName, std::string& returnGroups);
+    void ProcessNotifierDied(const sptr<IRemoteObject>& notifier);
 private:
     void ProcessDeviceOffline(const std::string& deviceId);
 

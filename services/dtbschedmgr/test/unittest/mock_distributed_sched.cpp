@@ -236,5 +236,55 @@ int32_t MockDistributedSched::NotifyCompleteFreeInstall(
 {
     return ERR_NONE;
 }
+
+int32_t MockDistributedSched::Register(
+    const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams, int32_t& token)
+{
+    return ERR_NONE;
+}
+
+int32_t MockDistributedSched::Unregister(int32_t token)
+{
+    return ERR_NONE;
+}
+
+int32_t MockDistributedSched::RegisterDeviceSelectionCallback(
+    int32_t token, const std::string& cbType, const sptr<IRemoteObject>& notifier)
+{
+    return ERR_NONE;
+}
+
+int32_t MockDistributedSched::UnregisterDeviceSelectionCallback(int32_t token, const std::string& cbType)
+{
+    return ERR_NONE;
+}
+
+int32_t MockDistributedSched::UpdateConnectStatus(int32_t token, const std::string& deviceId,
+    const DeviceConnectStatus& deviceConnectStatus)
+{
+    return ERR_NONE;
+}
+
+int32_t MockDistributedSched::StartDeviceManager(
+    int32_t token, const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams)
+{
+    return ERR_NONE;
+}
+
+int32_t MockDistributedSched::OnDeviceConnect(int32_t token,
+    const std::vector<ContinuationResult>& continuationResults)
+{
+    return ERR_NONE;
+}
+
+int32_t MockDistributedSched::OnDeviceDisconnect(int32_t token, const std::vector<std::string>& deviceIds)
+{
+    return ERR_NONE;
+}
+
+int32_t MockDistributedSched::OnDeviceCancel(int32_t token)
+{
+    return ERR_NONE;
+}
 } // namespace DistributedSchedule
 } // namespace OHOS

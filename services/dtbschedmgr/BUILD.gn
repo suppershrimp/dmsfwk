@@ -22,7 +22,11 @@ group("unittest") {
 
 config("distributed_sched_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include/",
+    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/continuation_manager/include/",
+    "//foundation/distributedschedule/dmsfwk/interfaces/innerkits/common/include/",
+  ]
   if (dmsfwk_standard_mission_manager) {
     defines = [ "SUPPORT_DISTRIBUTED_MISSION_MANAGER" ]
   }
@@ -36,9 +40,18 @@ ohos_shared_library("distributedschedsvr") {
     "src/adapter/dnetwork_adapter.cpp",
     "src/bundle/bundle_manager_internal.cpp",
     "src/connect_death_recipient.cpp",
+    "src/continuationManager/app_connection_stub.cpp",
+    "src/continuationManager/connect_status_info.cpp",
+    "src/continuationManager/continuation_extra_params.cpp",
+    "src/continuationManager/continuation_result.cpp",
+    "src/continuationManager/device_selection_notifier_proxy.cpp",
+    "src/continuationManager/device_selection_notifier_stub.cpp",
+    "src/continuationManager/notifier_death_recipient.cpp",
+    "src/continuationManager/notifier_info.cpp",
     "src/deviceManager/dms_device_info.cpp",
     "src/distributed_device_node_listener.cpp",
     "src/distributed_sched_adapter.cpp",
+    "src/distributed_sched_client.cpp",
     "src/distributed_sched_continuation.cpp",
     "src/distributed_sched_dumper.cpp",
     "src/distributed_sched_permission.cpp",
@@ -64,6 +77,8 @@ ohos_shared_library("distributedschedsvr") {
     "bundle_framework:appexecfwk_core",
     "device_auth:deviceauth_sdk",
     "distributeddatamgr:distributeddata_inner",
+    "dmsfwk_standard:common_sdk",
+    "dmsfwk_standard:continuation_manager",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
@@ -71,6 +86,7 @@ ohos_shared_library("distributedschedsvr") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
+    "startup_l2:syspara",
     "utils_base:utils",
   ]
 
