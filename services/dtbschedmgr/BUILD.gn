@@ -22,7 +22,10 @@ group("unittest") {
 
 config("distributed_sched_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "../base/include/",
+  ]
   if (dmsfwk_standard_mission_manager) {
     defines = [ "SUPPORT_DISTRIBUTED_MISSION_MANAGER" ]
   }
@@ -51,6 +54,9 @@ ohos_shared_library("distributedschedsvr") {
 
   configs = [ ":distributed_sched_config" ]
 
+  deps =
+      [ "//foundation/distributedschedule/dmsfwk/services/base:dmsbaseinner" ]
+
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
@@ -60,7 +66,6 @@ ohos_shared_library("distributedschedsvr") {
     "bundle_framework:appexecfwk_core",
     "device_auth:deviceauth_sdk",
     "distributeddatamgr:distributeddata_inner",
-    "dmsfwk_standard:dmsbaseinner",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
