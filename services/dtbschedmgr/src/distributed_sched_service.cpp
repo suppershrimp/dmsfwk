@@ -1823,7 +1823,7 @@ int32_t DistributedSchedService::StartAbility(const OHOS::AAFwk::Want& want, int
     if (ret != ERR_OK || ids.empty()) {
         return INVALID_PARAMETERS_ERR;
     }
-    if (requestCode != DEFAULT_REQUEST_CODE) {
+    if (requestCode > DEFAULT_REQUEST_CODE) {
         HILOGI("StartAbilityForResult start");
         sptr<IRemoteObject> dmsTokenCallback = new DmsTokenCallback();
         err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, dmsTokenCallback, requestCode, ids[0]);
