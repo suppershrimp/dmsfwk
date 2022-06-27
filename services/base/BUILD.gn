@@ -20,12 +20,11 @@ config("distributed_sched_config") {
 }
 
 ohos_shared_library("dmsbaseinner") {
-  install_enable = true
   sources = [
-    "../../../services/base/src/adapter/dnetwork_adapter.cpp",
-    "../../../services/base/src/deviceManager/dms_device_info.cpp",
-    "../../../services/base/src/distributed_device_node_listener.cpp",
-    "../../../services/base/src/dtbschedmgr_device_info_storage.cpp",
+    "src/adapter/dnetwork_adapter.cpp",
+    "src/deviceManager/dms_device_info.cpp",
+    "src/distributed_device_node_listener.cpp",
+    "src/dtbschedmgr_device_info_storage.cpp",
   ]
 
   configs = [ ":distributed_sched_config" ]

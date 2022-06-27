@@ -25,8 +25,10 @@ dsched_configs =
 
 config("test_config") {
   visibility = [ ":*" ]
-  include_dirs =
-      [ "//foundation/distributedschedule/dmsfwk/utils/native/include" ]
+  include_dirs = [
+    "//foundation/distributedschedule/dmsfwk/services/base/include",
+    "//foundation/distributedschedule/dmsfwk/utils/native/include",
+  ]
 }
 
 dsched_external_deps = [
@@ -37,7 +39,6 @@ dsched_external_deps = [
   "bundle_framework:appexecfwk_core",
   "device_auth:deviceauth_sdk",
   "distributeddatamgr:distributeddata_inner",
-  "dmsfwk_standard:dmsbaseinner",
   "dsoftbus:softbus_client",
   "eventhandler:libeventhandler",
   "hiviewdfx_hilog_native:libhilog",
@@ -53,6 +54,7 @@ if (dmsfwk_standard_mission_manager) {
 }
 
 dsched_public_deps = [
+  "//foundation/distributedschedule/dmsfwk/services/base:dmsbaseinner",
   "//third_party/googletest:gmock_main",
   "//third_party/googletest:gtest_main",
   "//third_party/libxml2:libxml2",
