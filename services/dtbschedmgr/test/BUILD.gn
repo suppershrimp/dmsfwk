@@ -41,6 +41,7 @@ dsched_external_deps = [
   "dsoftbus:softbus_client",
   "eventhandler:libeventhandler",
   "hiviewdfx_hilog_native:libhilog",
+  "form_fwk:form_manager",
   "ipc:ipc_core",
   "os_account:os_account_innerkits",
   "safwk:system_ability_fwk",

@@ -126,6 +126,10 @@ public:
         const CallerInfo& callerInfo, const AccountInfo& accountInfo) override;
     int32_t ReleaseAbilityFromRemote(const sptr<IRemoteObject>& connect, const AppExecFwk::ElementName &element,
         const CallerInfo& callerInfo) override;
+    int32_t StartRemoteShareForm(const std::string &remoteDeviceId,
+        const AppExecFwk::FormShareInfo &formShareInfo) override;
+    int32_t StartShareFormFromRemote(
+        const std::string &remoteDeviceId, const AppExecFwk::FormShareInfo &formShareInfo) override;
     void ProcessCallerDied(const sptr<IRemoteObject>& connect, int32_t deviceType);
     void ProcessCalleeDied(const sptr<IRemoteObject>& connect);
     int32_t StartRemoteFreeInstall(const OHOS::AAFwk::Want& want, int32_t callerUid, int32_t requestCode,
@@ -159,6 +163,7 @@ private:
     static int32_t GetUidLocked(const std::list<ConnectAbilitySession>& sessionList);
     int32_t TryConnectRemoteAbility(const OHOS::AAFwk::Want& want,
         const sptr<IRemoteObject>& connect, const CallerInfo& callerInfo);
+    sptr<IRemoteObject> GetFormMgrProxy();
     int32_t CleanMission(int32_t missionId);
     int32_t SetCallerInfo(int32_t callerUid, std::string localDeviceId, uint32_t accessToken, CallerInfo& callerInfo);
     int32_t SetWantForContinuation(AAFwk::Want& newWant, int32_t missionId);
@@ -192,6 +197,7 @@ private:
     std::mutex distributedLock_;
     std::mutex connectLock_;
     sptr<IRemoteObject::DeathRecipient> connectDeathRecipient_;
+    sptr<IRemoteObject> formMgrProxy_;
     std::mutex calleeLock_;
     std::map<sptr<IRemoteObject>, ConnectInfo> calleeMap_;
     sptr<IRemoteObject::DeathRecipient> callerDeathRecipient_;
