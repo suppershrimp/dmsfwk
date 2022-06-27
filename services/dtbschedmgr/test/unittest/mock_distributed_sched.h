@@ -82,6 +82,10 @@ public:
         const CallerInfo& callerInfo) override;
     int32_t RegisterDistributedComponentListener(const sptr<IRemoteObject>& callback) override;
     int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) override;
+    int32_t StartRemoteShareForm(const std::string &remoteDeviceId,
+        const OHOS::AppExecFwk::FormShareInfo &formShareInfo) override;
+    int32_t StartShareFormFromRemote(
+        const std::string &remoteDeviceId, const OHOS::AppExecFwk::FormShareInfo &formShareInfo) override;
     int32_t StartRemoteFreeInstall(const OHOS::AAFwk::Want& want, int32_t callerUid, int32_t requestCode,
         uint32_t accessToken, const sptr<IRemoteObject>& callback) override;
     int32_t StartFreeInstallFromRemote(const FreeInstallInfo& info, int64_t taskId) override;
@@ -92,5 +96,4 @@ private:
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
-
 #endif // MOCK_DISTRIBUTED_SCHED_H
