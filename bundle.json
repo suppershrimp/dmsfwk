@@ -71,6 +71,7 @@
             }
         ],
         "test": [
+          "//foundation/distributedschedule/dmsfwk/services/dtbabilitymgr:unittest",
           "//foundation/distributedschedule/dmsfwk/services/dtbschedmgr:unittest"
         ]
       }

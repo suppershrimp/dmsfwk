@@ -1,0 +1,73 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//build/ohos_var.gni")
+import("//build/test.gni")
+
+module_output_path = "dmsfwk_standard/dtbabilitymgrtest"
+
+distributed_service = "//foundation/distributedschedule/dmsfwk/services"
+
+config("test_config") {
+  visibility = [ ":*" ]
+  include_dirs =
+      [ "//foundation/distributedschedule/dmsfwk/utils/native/include" ]
+}
+
+dsched_configs =
+    [ "${distributed_service}/dtbabilitymgr:distributed_ability_manager_config" ]
+
+dsched_external_deps = [
+  "access_token:libaccesstoken_sdk",
+  "device_auth:deviceauth_sdk",
+  "dmsfwk_standard:dmsbaseinner",
+  "dsoftbus:softbus_client",
+  "eventhandler:libeventhandler",
+  "hiviewdfx_hilog_native:libhilog",
+  "ipc:ipc_core",
+  "safwk:system_ability_fwk",
+  "samgr_standard:samgr_proxy",
+  "utils_base:utils",
+]
+
+dsched_public_deps = [
+  "//third_party/googletest:gmock_main",
+  "//third_party/googletest:gtest_main",
+]
+
+dtbabilitymgr_sources = [
+  "${distributed_service}/dtbabilitymgr/src/distributed_ability_manager_service.cpp",
+  "${distributed_service}/dtbabilitymgr/src/distributed_ability_manager_stub.cpp",
+]
+
+ohos_unittest("dtbabilitymgrtest") {
+  module_out_path = module_output_path
+  sources = [ "unittest/distributed_ability_manager_service_test.cpp" ]
+  sources += dtbabilitymgr_sources
+  configs = [ ":test_config" ]
+  configs += dsched_configs
+  if (is_standard_system) {
+    external_deps = dsched_external_deps
+    public_deps = dsched_public_deps
+  }
+  part_name = "dmsfwk_standard"
+  subsystem_name = "distributedschedule"
+}
+
+group("unittest") {
+  testonly = true
+  deps = [
+    ":dtbabilitymgrtest",
+  ]
+}
