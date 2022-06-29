@@ -55,7 +55,7 @@ ohos_shared_library("distributedschedsvr") {
   configs = [ ":distributed_sched_config" ]
 
   external_deps = [
-    "ability_base:want", 
+    "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
@@ -77,7 +77,7 @@ ohos_shared_library("distributedschedsvr") {
   ]
 
   if (dmsfwk_standard_form_share) {
-     external_deps += [ "form_fwk:form_manager" ]
+    external_deps += [ "form_fwk:form_manager" ]
   }
 
   if (dmsfwk_standard_mission_manager) {
