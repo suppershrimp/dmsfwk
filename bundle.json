@@ -16,6 +16,7 @@
       "subsystem": "distributedschedule",
       "adapted_system_type": [ "standard" ],
       "features" : [
+        "dmsfwk_standard_form_share",
         "dmsfwk_standard_mission_manager"
       ],
       "hisysevent_config": [
@@ -31,6 +32,7 @@
           "distributeddatamgr",
           "dsoftbus",
           "eventhandler",
+          "form_fwk",
           "hisysevent_native",
           "hitrace_native",
           "hiviewdfx_hilog_native",

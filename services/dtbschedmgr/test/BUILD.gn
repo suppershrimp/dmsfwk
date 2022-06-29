@@ -50,6 +50,10 @@ dsched_external_deps = [
   "utils_base:utils",
 ]
 
+if (dmsfwk_standard_form_share) {
+  dsched_external_deps += [ "form_fwk:form_manager" ]
+}
+
 if (dmsfwk_standard_mission_manager) {
   dsched_external_deps += [ "multimedia_image_standard:image_native" ]
 }
@@ -109,6 +113,21 @@ ohos_unittest("distributedschedsvrtest") {
   subsystem_name = "distributedschedule"
 }
 
+ohos_unittest("distributedcalltest") {
+  module_out_path = module_output_path
+
+  sources = [ "unittest/distributed_sched_call_test.cpp" ]
+  sources += dtbschedmgr_sources
+  configs = [ ":test_config" ]
+  configs += dsched_configs
+  if (is_standard_system) {
+    external_deps = dsched_external_deps
+    public_deps = dsched_public_deps
+  }
+  part_name = "dmsfwk_standard"
+  subsystem_name = "distributedschedule"
+}
+
 ohos_unittest("dschedcontinuetest") {
   module_out_path = module_output_path
 
@@ -126,6 +145,10 @@ ohos_unittest("dschedcontinuetest") {
 
   if (dmsfwk_standard_mission_manager) {
     defines = [ "SUPPORT_DISTRIBUTED_MISSION_MANAGER" ]
+  }
+
+  if (dmsfwk_standard_form_share) {
+    defines += [ "SUPPORT_DISTRIBUTED_FORM_SHARE" ]
   }
 
   part_name = "dmsfwk_standard"
@@ -223,6 +246,7 @@ group("unittest") {
   testonly = true
   deps = [
     ":bundlemanagerinternaltest",
+    ":distributedcalltest",
     ":distributedschedsvrtest",
     ":dschedconnecttest",
     ":dschedcontinuetest",
