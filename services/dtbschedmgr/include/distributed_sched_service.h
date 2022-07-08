@@ -197,7 +197,9 @@ private:
     std::mutex distributedLock_;
     std::mutex connectLock_;
     sptr<IRemoteObject::DeathRecipient> connectDeathRecipient_;
+#ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
     sptr<IRemoteObject> formMgrProxy_;
+#endif
     std::mutex calleeLock_;
     std::map<sptr<IRemoteObject>, ConnectInfo> calleeMap_;
     sptr<IRemoteObject::DeathRecipient> callerDeathRecipient_;

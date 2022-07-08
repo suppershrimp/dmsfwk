@@ -225,7 +225,7 @@ int32_t MockDistributedSched::NotifyCompleteFreeInstall(
 {
     return ERR_NONE;
 }
-
+#ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
 int32_t MockDistributedSched::StartRemoteShareForm(const std::string &remoteDeviceId,
     const OHOS::AppExecFwk::FormShareInfo &formShareInfo)
 {
@@ -237,5 +237,6 @@ int32_t MockDistributedSched::StartShareFormFromRemote(
 {
     return ERR_NONE;
 }
+#endif
 } // namespace DistributedSchedule
 } // namespace OHOS
