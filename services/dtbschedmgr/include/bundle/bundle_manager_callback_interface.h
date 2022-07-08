@@ -13,24 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_DISTRIBUTED_ABILITY_MANAGER_NOTIFIER_DEATH_RECIPIENT_H
-#define OHOS_DISTRIBUTED_ABILITY_MANAGER_NOTIFIER_DEATH_RECIPIENT_H
+#ifndef OHOS_DISTRIBUTED_BUNDLE_MANANGER_CALLBACK_INTERFACE_H
+#define OHOS_DISTRIBUTED_BUNDLE_MANANGER_CALLBACK_INTERFACE_H
 
-#include "dms_notifier.h"
-#include "iremote_object.h"
+#include <iremote_broker.h>
 
 namespace OHOS {
 namespace DistributedSchedule {
-class NotifierDeathRecipient : public IRemoteObject::DeathRecipient {
+/**
+ * @class IDmsBundleManagerCallback
+ * IDmsBundleManagerCallback is used to notify caller ability that free install is complete.
+ */
+class IDmsBundleManagerCallback : public IRemoteBroker {
 public:
-    explicit NotifierDeathRecipient(const sptr<DmsNotifier>& dmsNotifier);
-    ~NotifierDeathRecipient() override = default;
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.DistributedSchedule.IDmsBundleManagerCallback");
 
-    void OnRemoteDied(const wptr<IRemoteObject>& remote) override;
-
-private:
-    sptr<DmsNotifier> dmsNotifier_;
+protected:
+    enum IDmsBundleManagerCallbackCmd {
+        ON_QUERY_INSTALLATION_DONE = 1,
+    };
 };
-} // namespace DistributedSchedule
-} // namespace OHOS
-#endif // OHOS_DISTRIBUTED_ABILITY_MANAGER_NOTIFIER_DEATH_RECIPIENT_H
+}  // namespace DistributedSchedule
+}  // namespace OHOS
+#endif  // OHOS_DISTRIBUTED_BUNDLE_MANANGER_CALLBACK_INTERFACE_H

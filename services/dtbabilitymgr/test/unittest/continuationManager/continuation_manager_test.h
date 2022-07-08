@@ -13,13 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_DISTRIBUTED_SCHED_CONTINUATION_MANAGER_TEST_H
-#define OHOS_DISTRIBUTED_SCHED_CONTINUATION_MANAGER_TEST_H
+#ifndef OHOS_DISTRIBUTED_ABILITY_MANAGER_CONTINUATION_MANAGER_TEST_H
+#define OHOS_DISTRIBUTED_ABILITY_MANAGER_CONTINUATION_MANAGER_TEST_H
 
 #include "gtest/gtest.h"
 
 #include "device_selection_notifier_stub.h"
-#include "distributed_sched_proxy.h"
+#define private public
+#include "distributed_ability_manager_service.h"
+#undef private
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -30,10 +32,7 @@ public:
     void SetUp() override;
     void TearDown() override;
 
-    sptr<IDistributedSched> GetDms();
-    void InitContinuationHandler();
-private:
-    sptr<IDistributedSched> proxy_;
+    sptr<DistributedAbilityManagerService> dtbabilitymgrService_;
 };
 
 class DeviceSelectionNotifierTest : public DeviceSelectionNotifierStub {
@@ -46,4 +45,4 @@ public:
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
-#endif // OHOS_DISTRIBUTED_SCHED_CONTINUATION_MANAGER_TEST_H
+#endif // OHOS_DISTRIBUTED_ABILITY_MANAGER_CONTINUATION_MANAGER_TEST_H
