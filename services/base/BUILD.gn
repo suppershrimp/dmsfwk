@@ -49,6 +49,6 @@ ohos_shared_library("dmsbaseinner") {
     "samgr_standard:samgr_proxy",
     "utils_base:utils",
   ]
-  part_name = "dmsfwk_standard"
+  part_name = "dmsfwk"
   subsystem_name = "distributedschedule"
 }

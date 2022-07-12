@@ -27,12 +27,12 @@ ohos_prebuilt_para("dms.para") {
   source = "dms.para"
   module_install_dir = "etc/param"
   subsystem_name = "distributedschedule"
-  part_name = "dmsfwk_standard"
+  part_name = "dmsfwk"
 }
 
 ohos_prebuilt_para("dms.para.dac") {
   source = "dms.para.dac"
   module_install_dir = "etc/param"
   subsystem_name = "distributedschedule"
-  part_name = "dmsfwk_standard"
+  part_name = "dmsfwk"
 }

@@ -62,6 +62,6 @@ ohos_shared_library("distributed_ability_manager_svr") {
   deps =
       [ "//foundation/distributedschedule/dmsfwk/services/base:dmsbaseinner" ]
 
-  part_name = "dmsfwk_standard"
+  part_name = "dmsfwk"
   subsystem_name = "distributedschedule"
 }

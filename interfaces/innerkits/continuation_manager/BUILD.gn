@@ -42,5 +42,5 @@ ohos_shared_library("continuation_manager") {
   ]
 
   subsystem_name = "distributedschedule"
-  part_name = "dmsfwk_standard"
+  part_name = "dmsfwk"
 }
