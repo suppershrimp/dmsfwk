@@ -12,11 +12,11 @@
     "scripts": {},
     "license": "Apache License 2.0",
     "component": {
-      "name": "dmsfwk_standard",
+      "name": "dmsfwk",
       "subsystem": "distributedschedule",
       "adapted_system_type": [ "standard" ],
       "features" : [
-        "dmsfwk_standard_mission_manager"
+        "dmsfwk_mission_manager"
       ],
       "hisysevent_config": [
         "//foundation/distributedschedule/dmsfwk/hisysevent.yaml"

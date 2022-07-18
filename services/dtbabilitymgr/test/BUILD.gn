@@ -16,7 +16,7 @@ import("//build/ohos_var.gni")
 import("//build/test.gni")
 import("//foundation/distributedschedule/dmsfwk/dmsfwk.gni")
 
-module_output_path = "dmsfwk_standard/distributed_ability_manager_svr_test"
+module_output_path = "dmsfwk/distributed_ability_manager_svr_test"
 
 distributed_service = "//foundation/distributedschedule/dmsfwk/services"
 
@@ -76,7 +76,7 @@ ohos_unittest("continuationmanagertest") {
     external_deps = dtbabilitymgr_external_deps
     public_deps = dtbabilitymgr_public_deps
   }
-  part_name = "dmsfwk_standard"
+  part_name = "dmsfwk"
 }
 
 group("unittest") {
