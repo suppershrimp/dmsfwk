@@ -143,6 +143,8 @@ Status DistributedDataStorage::GetKvStore()
         .encrypt = false,
         .autoSync = true,
         .kvStoreType = KvStoreType::SINGLE_VERSION,
+        .area = 1,
+        .baseDir = "/data/service/el1/public/database/DistributedSchedule"
     };
     Status status = dataManager_.GetSingleKvStore(options, appId_, storeId_, kvStorePtr_);
     if (status != Status::SUCCESS) {
