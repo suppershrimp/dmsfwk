@@ -29,4 +29,4 @@ Distributed Scheduler is used for cross-device component management. It allows t
 
 distributedschedule\_dms\_fwk
 
-distributedschedule\_dms\_fwk\_lite
+[distributedschedule\_dms\_fwk\_lite](https://gitee.com/openharmony/distributedschedule_dms_fwk_lite/blob/master/README.md)
