@@ -36,6 +36,9 @@
 #include "dtbschedmgr_log.h"
 #include "element_name.h"
 #include "file_ex.h"
+#ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
+#include "form_mgr_interface.h"
+#endif
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
@@ -47,9 +50,6 @@
 #include "parcel_helper.h"
 #include "string_ex.h"
 #include "system_ability_definition.h"
-#ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
-#include "form_mgr_interface.h"
-#endif
 
 namespace OHOS {
 namespace DistributedSchedule {

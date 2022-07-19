@@ -20,6 +20,9 @@
 #include "ability_info.h"
 #include "ability_manager_interface.h"
 #include "caller_info.h"
+#ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
+#include "form_share_info.h"
+#endif
 #include "iremote_broker.h"
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
 #include "mission_info.h"
@@ -27,9 +30,6 @@
 #include "mission_snapshot.h"
 #endif
 #include "want.h"
-#ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
-#include "form_share_info.h"
-#endif
 
 namespace OHOS {
 namespace DistributedSchedule {
