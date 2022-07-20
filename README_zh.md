@@ -37,4 +37,4 @@
 
 distributedschedule\_dms\_fwk
 
-distributedschedule\_dms\_fwk\_lite
+[distributedschedule\_dms\_fwk\_lite](https://gitee.com/openharmony/distributedschedule_dms_fwk_lite#/openharmony/distributedschedule_dms_fwk_lite/blob/master/zh-cn_topic_0000001115719369.md)
