@@ -1,9 +1,9 @@
 {
-    "name": "@ohos/distributedschedule_dms_fwk",
+    "name": "@ohos/systemabilitymgr_dms_fwk",
     "description": "distributed ability manager service",
     "version": "3.1",
     "license": "Apache License 2.0",
-    "repository": "https://gitee.com/openharmony/distributedschedule_dms_fwk",
+    "repository": "https://gitee.com/openharmony/systemabilitymgr_dms_fwk",
     "publishAs": "code-segment",
     "segment": {
       "destPath": "foundation/ability/dmsfwk"
@@ -41,7 +41,7 @@
           "napi",
           "os_account",
           "safwk",
-          "samgr_standard",
+          "samgr",
           "startup_l2",
           "utils_base"
         ],
