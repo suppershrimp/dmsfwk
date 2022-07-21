@@ -86,18 +86,18 @@ constexpr int64_t CHECK_REMOTE_INSTALL_ABILITY = 40000;
 }
 
 extern "C" {
-void OnStart()
+SYMBOL_EXPORT void OnStart()
 {
     DistributedSchedService::GetInstance().OnStart();
 }
 
-int32_t OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
+SYMBOL_EXPORT int32_t OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
     MessageOption& option)
 {
     return DistributedSchedService::GetInstance().OnRemoteRequest(code, data, reply, option);
 }
 
-void DeviceOnlineNotify(const std::string& deviceId)
+SYMBOL_EXPORT void DeviceOnlineNotify(const std::string& deviceId)
 {
     DistributedSchedAdapter::GetInstance().DeviceOnline(deviceId);
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
@@ -105,7 +105,7 @@ void DeviceOnlineNotify(const std::string& deviceId)
 #endif
 }
 
-void DeviceOfflineNotify(const std::string& deviceId)
+SYMBOL_EXPORT void DeviceOfflineNotify(const std::string& deviceId)
 {
     DistributedSchedAdapter::GetInstance().DeviceOffline(deviceId);
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
@@ -113,13 +113,13 @@ void DeviceOfflineNotify(const std::string& deviceId)
 #endif
 }
 
-int32_t ConnectAbility(const sptr<DmsNotifier>& dmsNotifier, int32_t token,
+SYMBOL_EXPORT int32_t ConnectAbility(const sptr<DmsNotifier>& dmsNotifier, int32_t token,
     const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams)
 {
     return DistributedSchedService::GetInstance().ConnectAbility(dmsNotifier, token, continuationExtraParams);
 }
 
-int32_t DisconnectAbility()
+SYMBOL_EXPORT int32_t DisconnectAbility()
 {
     return DistributedSchedService::GetInstance().DisconnectAbility();
 }

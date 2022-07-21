@@ -34,6 +34,8 @@
 #endif
 #include "single_instance.h"
 
+#define SYMBOL_EXPORT __attribute__ ((visibility("default")))
+
 namespace OHOS {
 namespace DistributedSchedule {
 class ConnectAbilitySession;

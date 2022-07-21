@@ -20,15 +20,16 @@ module_output_path = "dmsfwk/distributed_ability_manager_svr_test"
 
 distributed_service = "//foundation/ability/dmsfwk/services"
 
-dtbabilitymgr_configs = [
-  "${distributed_service}/dtbabilitymgr:distributed_ability_manager_config",
-]
-
 config("test_config") {
   visibility = [ ":*" ]
   include_dirs = [
+    "include/",
+    "../base/include/",
+    "//foundation/ability/dmsfwk/interfaces/innerkits/common/include/",
+    "//foundation/ability/dmsfwk/interfaces/innerkits/continuation_manager/include/",
     "//foundation/ability/dmsfwk/utils/native/include",
     "//foundation/ability/dmsfwk/services/base/include",
+    "//foundation/ability/dmsfwk/services/dtbabilitymgr/include",
   ]
 }
 
@@ -51,6 +52,7 @@ dtbabilitymgr_public_deps = [
 ]
 
 dtbabilitymgr_sources = [
+  "${distributed_service}/dtbabilitymgr/src/continuationManager/app_device_callback_stub.cpp",
   "${distributed_service}/dtbabilitymgr/src/continuationManager/connect_status_info.cpp",
   "${distributed_service}/dtbabilitymgr/src/continuationManager/continuation_extra_params.cpp",
   "${distributed_service}/dtbabilitymgr/src/continuationManager/continuation_result.cpp",
@@ -69,9 +71,6 @@ ohos_unittest("continuationmanagertest") {
   sources = [ "unittest/continuationManager/continuation_manager_test.cpp" ]
   sources += dtbabilitymgr_sources
   configs = [ ":test_config" ]
-  configs += dtbabilitymgr_configs
-  deps =
-      [ "${distributed_service}/dtbabilitymgr:distributed_ability_manager_svr" ]
   if (is_standard_system) {
     external_deps = dtbabilitymgr_external_deps
     public_deps = dtbabilitymgr_public_deps
