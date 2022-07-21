@@ -15,6 +15,11 @@
 
 #include "continuation_result.h"
 
+#include <cstddef>
+#include <iosfwd>
+#include <new>
+#include <vector>
+
 #include "dtbschedmgr_log.h"
 #include "string_ex.h"
 
@@ -122,10 +127,7 @@ bool ContinuationResult::WriteContinuationResultsToParcel(Parcel& parcel,
 {
     size_t size = continuationResults.size();
     if (size == 0) {
-        if (!parcel.WriteInt32(VALUE_NULL)) {
-            return false;
-        }
-        return true;
+        return parcel.WriteInt32(VALUE_NULL);
     }
     if (!parcel.WriteInt32(VALUE_OBJECT)) {
         return false;

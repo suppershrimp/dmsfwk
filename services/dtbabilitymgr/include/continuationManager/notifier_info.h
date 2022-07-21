@@ -16,10 +16,16 @@
 #ifndef OHOS_DISTRIBUTED_ABILITY_MANAGER_NOTIFIER_INFO_H
 #define OHOS_DISTRIBUTED_ABILITY_MANAGER_NOTIFIER_INFO_H
 
+#include <functional>
+#include <iosfwd>
 #include <map>
+#include <memory>
+#include <string>
 
 #include "connect_status_info.h"
 #include "iremote_object.h"
+#include "notifier_death_recipient.h"
+#include "refbase.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -29,9 +35,13 @@ public:
     ~NotifierInfo() = default;
 
     using NotifierMap = std::map<std::string, sptr<IRemoteObject>>;
-    NotifierMap& GetNotifierMap();
-    sptr<IRemoteObject> GetNotifier(const std::string& cbType);
+    sptr<IRemoteObject> GetNotifier(const std::string& cbType) const;
     void SetNotifier(const std::string& cbType, const sptr<IRemoteObject>& notifier);
+    void DeleteNotifier(const std::string& cbType);
+    bool QueryNotifier(const sptr<IRemoteObject>& notifier) const;
+    bool IsNotifierMapEmpty();
+    void RemoveDeathRecipient(const sptr<IRemoteObject::DeathRecipient>& notifierDeathRecipient,
+        const std::string& cbType = std::string());
     std::shared_ptr<ConnectStatusInfo> GetConnectStatusInfo() const;
     void SetConnectStatusInfo(const std::shared_ptr<ConnectStatusInfo>& connectStatusInfo);
 private:
