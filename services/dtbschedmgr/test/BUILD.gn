@@ -118,7 +118,10 @@ ohos_unittest("distributedschedsvrtest") {
 ohos_unittest("distributedcalltest") {
   module_out_path = module_output_path
 
-  sources = [ "unittest/distributed_sched_call_test.cpp" ]
+  sources = [
+    "unittest/distributed_sched_call_test.cpp",
+    "unittest/mock_component_listener_stub.cpp",
+  ]
   sources += dtbschedmgr_sources
   configs = [ ":test_config" ]
   configs += dsched_configs

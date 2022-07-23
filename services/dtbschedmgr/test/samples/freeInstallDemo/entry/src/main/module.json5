@@ -1,0 +1,85 @@
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "srcEntrance": "./ets/Application/AbilityStage.ts",
+    "description": "$string:entry_desc",
+    "mainElement": "MainAbility",
+    "deviceTypes": [
+      "phone"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "uiSyntax": "ets",
+    "abilities": [
+      {
+        "name": "MainAbility",
+        "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+        "description": "$string:MainAbility_desc",
+        "icon": "$media:icon",
+        "label": "$string:MainAbility_label",
+        "visible": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "MainAbilitySecond",
+        "srcEntrance": "./ets/MainAbilitySecond/MainAbilitySecond.ts",
+        "description": "$string:MainAbilitySecond_desc",
+        "icon": "$media:icon",
+        "label": "$string:MainAbilitySecond_label"
+      }
+    ],
+    "extensionAbilities": [
+      {
+        "name": "com.open.harmony.packagemag.ServiceAbilitySecond",
+        "srcEntrance": "./ets/ServiceAbilitySecond/ServiceAbilitySecond.ts",
+        "label": "$string:form_FormAbility_label",
+        "description": "$string:form_FormAbility_desc",
+        "type": "service",
+        "metadata": [
+          {
+            "name": "ohos.extension.form",
+            "resource": "$profile:form_config"
+          }
+        ]
+      },
+      {
+        "name": "com.open.harmony.packagemag.ServiceAbility",
+        "srcEntrance": "./ets/ServiceAbility/ServiceAbility.ts",
+        "label": "$string:form_ServiceAbility_label",
+        "description": "$string:form_ServiceAbility_desc",
+        "type": "service",
+        "metadata": [
+          {
+            "name": "ohos.extension.form",
+            "resource": "$profile:form_config"
+          }
+        ]
+      }
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED",
+      },
+      {
+        "name": "ohos.permission.GET_BUNDLE_INFO",
+      },
+      {
+        "name": "ohos.permission.CHANGE_ABILITY_ENABLED_STATE",
+      },
+      {
+        "name": "ohos.permission.DISTRIBUTED_DATASYNC"
+      }
+    ]
+  }
+}

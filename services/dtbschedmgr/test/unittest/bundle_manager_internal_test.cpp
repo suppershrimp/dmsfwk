@@ -30,6 +30,7 @@ namespace OHOS {
 namespace DistributedSchedule {
 namespace {
 const string GROUP_ID = "TEST_GROUP_ID";
+constexpr int32_t INVALID_UID = -1;
 }
 
 void BundleManagerInternalTest::SetUpTestCase()
@@ -257,6 +258,20 @@ HWTEST_F(BundleManagerInternalTest, BundleManagerCallBackTest_002, TestSize.Leve
     int32_t ret = callback->OnQueryInstallationFinished(resultCode, missionId, versionCode);
     EXPECT_TRUE(ERR_OK != ret);
     DTEST_LOG << "BundleManagerCallBackTest BundleManagerCallBackTest_002 end "<< std::endl;
+}
+
+/**
+ * @tc.name: BundleManagerGetUidFromBms_001
+ * @tc.desc: test GetUidFromBms with illegal bundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(BundleManagerInternalTest, BundleManagerGetUidFromBms_001, TestSize.Level1)
+{
+    DTEST_LOG << "BundleManagerCallBackTest BundleManagerGetUidFromBms_001 begin" << std::endl;
+    std::string mockBundleName = "dms.test.mockbundlename";
+    int32_t uid = BundleManagerInternal::GetUidFromBms(mockBundleName);
+    EXPECT_EQ(uid, INVALID_UID);
+    DTEST_LOG << "BundleManagerCallBackTest BundleManagerGetUidFromBms_001 end "<< std::endl;
 }
 }
 }
