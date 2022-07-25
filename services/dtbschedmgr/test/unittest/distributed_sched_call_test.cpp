@@ -23,6 +23,7 @@
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "mock_component_listener_stub.h"
 #include "system_ability_definition.h"
 #include "test_log.h"
 #undef private
@@ -669,6 +670,99 @@ HWTEST_F(DistributedSchedCallTest, CallAbility_020, TestSize.Level1)
     EXPECT_EQ(result, INVALID_REMOTE_PARAMETERS_ERR_CODE);
 
     DTEST_LOG << "DistributedSchedServiceTest CallAbility_020 end " << std::endl;
+}
+
+/**
+ * @tc.name: UploadComponent_001
+ * @tc.desc: Call RegisterDistributedComponentListener with illegal callback
+ * @tc.type: FUNC
+ * @tc.require: AR000H0TS8
+ */
+HWTEST_F(DistributedSchedCallTest, UploadComponent_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedSchedServiceTest UploadComponent_001 start " << std::endl;
+    sptr<IRemoteObject> callback = nullptr;
+    int32_t result = DistributedSchedService::GetInstance().RegisterDistributedComponentListener(callback);
+    EXPECT_EQ(result, INVALID_PARAMETERS_ERR_CODE);
+    DTEST_LOG << "DistributedSchedServiceTest UploadComponent_001 end " << std::endl;
+}
+
+/**
+ * @tc.name: UploadComponent_002
+ * @tc.desc: Call RegisterDistributedComponentListener with legal callback
+ * @tc.type: FUNC
+ * @tc.require: AR000H0TS8
+ */
+HWTEST_F(DistributedSchedCallTest, UploadComponent_002, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedSchedServiceTest UploadComponent_002 start " << std::endl;
+    sptr<IRemoteObject> callback = new MockComponentListenerStub();
+    int32_t result = DistributedSchedService::GetInstance().RegisterDistributedComponentListener(callback);
+    EXPECT_EQ(result, 0);
+    DTEST_LOG << "DistributedSchedServiceTest UploadComponent_002 end " << std::endl;
+}
+
+/**
+ * @tc.name: UploadComponent_003
+ * @tc.desc: Call GetDistributedComponentList get empty list
+ * @tc.type: FUNC
+ * @tc.require: AR000H0TS8
+ */
+HWTEST_F(DistributedSchedCallTest, UploadComponent_003, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedSchedServiceTest UploadComponent_003 start " << std::endl;
+    std::vector<std::string> distributedComponents;
+    int32_t result = DistributedSchedService::GetInstance().GetDistributedComponentList(distributedComponents);
+    EXPECT_EQ(result, 0);
+    EXPECT_EQ(distributedComponents.size(), static_cast<size_t>(0));
+    DTEST_LOG << "DistributedSchedServiceTest UploadComponent_003 end " << std::endl;
+}
+
+/**
+ * @tc.name: UploadComponent_004
+ * @tc.desc: Call GetDistributedComponentList get connect component
+ * @tc.type: FUNC
+ * @tc.require: AR000H0TS8
+ */
+HWTEST_F(DistributedSchedCallTest, UploadComponent_004, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedSchedServiceTest UploadComponent_004 start " << std::endl;
+
+    OHOS::AAFwk::Want want;
+    want.SetElementName("", "ohos.demo.bundleName", "abilityName");
+    auto& distributedLock = DistributedSchedService::GetInstance().distributedLock_;
+
+    /**
+     * @tc.steps: step1. add one session and check the map
+     * @tc.expected: step1. can find the newly-added connect session
+     */
+    sptr<IRemoteObject> connect = new AbilityCallCallbackTest();
+    AddSession(connect, "123_local_device_id", "123_remote_device_id", want);
+    {
+        std::lock_guard<std::mutex> autoLock(distributedLock);
+        std::vector<std::string> distributedComponents;
+        int32_t result = DistributedSchedService::GetInstance().GetDistributedComponentList(
+            distributedComponents);
+        EXPECT_EQ(result, 0);
+        EXPECT_EQ(distributedComponents.size(), static_cast<size_t>(1));
+    }
+
+    /**
+     * @tc.steps: step2. process connect died and then check the map
+     * @tc.expected: step2. the connect session is removed
+     */
+    DistributedSchedService::GetInstance().ProcessConnectDied(connect);
+    {
+        std::lock_guard<std::mutex> autoLock(distributedLock);
+        std::vector<std::string> distributedComponents;
+        int32_t result = DistributedSchedService::GetInstance().GetDistributedComponentList(
+            distributedComponents);
+        EXPECT_EQ(result, 0);
+        EXPECT_EQ(distributedComponents.size(), static_cast<size_t>(0));
+    }
+
+    RemoveSession(connect);
+    DTEST_LOG << "DistributedSchedServiceTest UploadComponent_004 end " << std::endl;
 }
 
 void DistributedSchedCallTest::AddSession(const sptr<IRemoteObject>& connect,
