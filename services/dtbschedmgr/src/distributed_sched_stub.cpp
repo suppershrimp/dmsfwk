@@ -123,7 +123,12 @@ int32_t DistributedSchedStub::OnRemoteRequest(uint32_t code,
             return DMS_PERMISSION_DENIED;
         }
         if (func != nullptr) {
-            return (this->*func)(data, reply);
+            int64_t begin = GetTickCount();
+            HILOGD("[PerformanceTest] code = %{public}d begin", code);
+            int32_t errCode = (this->*func)(data, reply);
+            HILOGD("[PerformanceTest] code = %{public}d end, spend %{public}" PRId64 " ms",
+            code, GetTickCount() - begin);
+            return errCode;
         }
     }
 

@@ -17,6 +17,7 @@
 
 #include "ability_connection_wrapper_proxy.h"
 #include "distributed_sched_adapter.h"
+#include "datetime_ex.h"
 #include "dtbschedmgr_log.h"
 #include "ipc_types.h"
 
@@ -43,7 +44,7 @@ AbilityConnectionWrapperStub::AbilityConnectionWrapperStub(sptr<IRemoteObject> c
 int32_t AbilityConnectionWrapperStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
     MessageParcel& reply, MessageOption& option)
 {
-    HILOGD("AbilityConnectionWrapperStub::OnRemoteRequest code = %{public}u", code);
+    HILOGD("[PerformanceTest] AbilityConnectionWrapperStub::OnRemoteRequest code = %{public}u", code);
     std::u16string descriptor = IAbilityConnection::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
@@ -83,25 +84,32 @@ void AbilityConnectionWrapperStub::OnAbilityConnectDone(const AppExecFwk::Elemen
     const sptr<IRemoteObject>& remoteObject, int32_t resultCode)
 {
     auto proxy = std::make_unique<AbilityConnectionWrapperProxy>(distributedConnection_);
+    int64_t begin = GetTickCount();
     if (isCall_) {
         HILOGD("OnAbilityConnectDone get caller callback");
         AppExecFwk::ElementName elementWithDeviceId(localDeviceId_, element.GetBundleName(), element.GetAbilityName());
         proxy->OnAbilityConnectDone(elementWithDeviceId, remoteObject, resultCode);
+        HILOGD("[PerformanceTest] OnAbilityConnectDone by call spend %{public}" PRId64 " ms", GetTickCount() - begin);
         return;
     }
     proxy->OnAbilityConnectDone(element, remoteObject, resultCode);
+    HILOGD("[PerformanceTest] OnAbilityConnectDone spend %{public}" PRId64 " ms", GetTickCount() - begin);
 }
 
 void AbilityConnectionWrapperStub::OnAbilityDisconnectDone(const AppExecFwk::ElementName& element,
     int32_t resultCode)
 {
+    int64_t begin = GetTickCount();
     if (isCall_) {
         HILOGD("OnAbilityDisconnectDone release caller");
         DistributedSchedAdapter::GetInstance().ProcessCalleeDied(distributedConnection_);
+        HILOGD("[PerformanceTest] OnAbilityDisconnectDone by call spend %{public}" PRId64 " ms",
+            GetTickCount() - begin);
         return;
     }
     auto proxy = std::make_unique<AbilityConnectionWrapperProxy>(distributedConnection_);
     proxy->OnAbilityDisconnectDone(element, resultCode);
+    HILOGD("[PerformanceTest] OnAbilityDisconnectDone by call spend %{public}" PRId64 " ms", GetTickCount() - begin);
 }
 } // namespace DistributedSchedule
 } // namespace OHOS

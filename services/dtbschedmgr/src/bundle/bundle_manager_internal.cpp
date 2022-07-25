@@ -15,6 +15,7 @@
 
 #include "bundle/bundle_manager_internal.h"
 #include "bundle/bundle_manager_callback_stub.h"
+#include "datetime_ex.h"
 #include "distributed_sched_adapter.h"
 #include "dtbschedmgr_log.h"
 #include "ipc_skeleton.h"
@@ -31,6 +32,7 @@ const std::string TAG = "BundleManagerInternal";
 IMPLEMENT_SINGLE_INSTANCE(BundleManagerInternal);
 bool BundleManagerInternal::GetCallerAppIdFromBms(int32_t callingUid, std::string& appId)
 {
+    int64_t begin = GetTickCount();
     std::vector<std::string> bundleNameList;
     if (!GetBundleNameListFromBms(callingUid, bundleNameList)) {
         HILOGE("GetBundleNameListFromBms failed");
@@ -41,11 +43,14 @@ bool BundleManagerInternal::GetCallerAppIdFromBms(int32_t callingUid, std::strin
         return false;
     }
     // getting an arbitrary bundlename for they sharing a same appId, here we get the first one
-    return GetCallerAppIdFromBms(bundleNameList.front(), appId);
+    bool ret = GetCallerAppIdFromBms(bundleNameList.front(), appId);
+    HILOGD("[PerformanceTest] GetCallerAppIdFromBms by uid spend %{public}" PRId64 " ms", GetTickCount() - begin);
+    return ret;
 }
 
 bool BundleManagerInternal::GetCallerAppIdFromBms(const std::string& bundleName, std::string& appId)
 {
+    int64_t begin = GetTickCount();
     auto bundleMgr = GetBundleManager();
     if (bundleMgr == nullptr) {
         HILOGE("failed to get bms");
@@ -57,18 +62,22 @@ bool BundleManagerInternal::GetCallerAppIdFromBms(const std::string& bundleName,
         return false;
     }
     appId = bundleMgr->GetAppIdByBundleName(bundleName, ids[0]);
+    HILOGD("[PerformanceTest] GetCallerAppIdFromBms by bundleName spend %{public}" PRId64 " ms",
+        GetTickCount() - begin);
     HILOGD("appId:%s", appId.c_str());
     return true;
 }
 
 bool BundleManagerInternal::GetBundleNameListFromBms(int32_t callingUid, std::vector<std::string>& bundleNameList)
 {
+    int64_t begin = GetTickCount();
     auto bundleMgr = GetBundleManager();
     if (bundleMgr == nullptr) {
         HILOGE("failed to get bms");
         return false;
     }
     bool result = bundleMgr->GetBundlesForUid(callingUid, bundleNameList);
+    HILOGD("[PerformanceTest] GetBundleNameListFromBms spend %{public}" PRId64 " ms", GetTickCount() - begin);
     if (!result) {
         HILOGE("GetBundlesForUid failed, result: %{public}d", result);
         return false;
@@ -169,6 +178,7 @@ bool BundleManagerInternal::IsSameAppId(const std::string& callerAppId, const st
 int32_t BundleManagerInternal::GetLocalBundleInfo(const std::string& bundleName,
     AppExecFwk::BundleInfo &localBundleInfo)
 {
+    int64_t begin = GetTickCount();
     auto bms = GetBundleManager();
     if (bms == nullptr) {
         HILOGE("get bundle manager failed");
@@ -181,8 +191,10 @@ int32_t BundleManagerInternal::GetLocalBundleInfo(const std::string& bundleName,
         HILOGE("QueryActiveOsAccountIds failed");
         return INVALID_PARAMETERS_ERR;
     }
-    if (!bms->GetBundleInfo(bundleName, AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT,
-        localBundleInfo, ids[0])) {
+    bool res = bms->GetBundleInfo(bundleName, AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT,
+        localBundleInfo, ids[0]);
+    HILOGD("[PerformanceTest] GetLocalBundleInfo spend %{public}" PRId64 " ms", GetTickCount() - begin);
+    if (!res) {
         HILOGE("get local bundle info failed");
         return INVALID_PARAMETERS_ERR;
     }
@@ -204,7 +216,9 @@ int32_t BundleManagerInternal::CheckRemoteBundleInfoForContinuation(const std::s
         return INVALID_PARAMETERS_ERR;
     }
 
+    int64_t begin = GetTickCount();
     bool isInstalled = bms->GetDistributedBundleInfo(dstDeviceId, bundleName, remoteBundleInfo);
+    HILOGD("[PerformanceTest] GetDistributedBundleInfo spend %{public}" PRId64 " ms", GetTickCount() - begin);
     if (isInstalled) {
         return ERR_OK;
     }
@@ -222,6 +236,7 @@ int32_t BundleManagerInternal::CheckRemoteBundleInfoForContinuation(const std::s
 
 bool BundleManagerInternal::CheckIfRemoteCanInstall(const AAFwk::Want& want, int32_t missionId)
 {
+    int64_t begin = GetTickCount();
     std::string bundleName = want.GetElement().GetBundleName();
     std::string moduleName = want.GetElement().GetModuleName();
     std::string abilityName = want.GetElement().GetAbilityName();
@@ -247,6 +262,7 @@ bool BundleManagerInternal::CheckIfRemoteCanInstall(const AAFwk::Want& want, int
         return false;
     }
     bool ret = bms->CheckAbilityEnableInstall(newWant, missionId, ids[0], new DmsBundleManagerCallbackStub());
+    HILOGD("[PerformanceTest] CheckAbilityEnableInstall spend %{public}" PRId64 " ms", GetTickCount() - begin);
     if (ret != true) {
         HILOGE("CheckAbilityEnableInstall from bms failed");
     }
