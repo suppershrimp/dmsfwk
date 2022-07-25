@@ -1,0 +1,30 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "ohos": {
+    "org": "huawei",
+    "buildTool": "hvigor",
+    "directoryLevel": "module"
+  },
+  "description": "example description",
+  "repository": {},
+  "license": "ISC",
+  "dependencies": {},
+  "reqPermissions": [
+    {
+      "name": "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED",
+      "reason": "need use ohos.permission.GET_BUNDLE_INFO_PRIVILEGED"
+    },
+    {
+      "name": "ohos.permission.GET_BUNDLE_INFO",
+      "reason": "need use ohos.permission.GET_BUNDLE_INFO"
+    },
+    {
+      "name": "ohos.permission.CHANGE_ABILITY_ENABLED_STATE",
+      "reason": "need use ohos.permission.CHANGE_ABILITY_ENABLED_STATE"
+    },
+    {
+      "name": "ohos.permission.DISTRIBUTED_DATASYNC"
+    }
+  ]
+}
