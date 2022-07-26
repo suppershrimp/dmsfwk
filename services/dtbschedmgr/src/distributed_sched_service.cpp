@@ -62,6 +62,7 @@ const std::u16string CONNECTION_CALLBACK_INTERFACE_TOKEN = u"ohos.abilityshell.D
 const std::u16string COMPONENT_CHANGE_INTERFACE_TOKEN = u"ohos.rms.DistributedComponent";
 const std::u16string ABILITY_MANAGER_SERVICE_TOKEN = u"ohos.aafwk.AbilityManager";
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.aafwk.IAtomicServiceStatusCallback";
+const std::string PARAM_FREEINSTALL_UPGRADED = "ohos.freeinstall.params.upgraded";
 const std::string BUNDLE_NAME_KEY = "bundleName";
 const std::string VERSION_CODE_KEY = "version";
 const std::string PID_KEY = "pid";
@@ -1806,7 +1807,7 @@ int32_t DistributedSchedService::NotifyCompleteFreeInstall(
         HILOGE("taskId invalid!");
         return INVALID_PARAMETERS_ERR;
     }
-    if (resultCode != ERR_OK) {
+    if (resultCode != ERR_OK && !info.want.GetBoolParam(PARAM_FREEINSTALL_UPGRADED, false)) {
         HILOGE("free install failed, resultCode : %{public}d", resultCode);
         return HandleRemoteNotify(info, taskId, resultCode);
     }
