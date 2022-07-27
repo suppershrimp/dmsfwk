@@ -1,0 +1,8 @@
+{
+  "src": [
+    "pages/index",
+    "pages/startAbilityAndStartAbilityForResultBsb",
+    "pages/startAbilityKsb",
+    "pages/targetBundleList"
+  ]
+}
