@@ -57,6 +57,7 @@ void from_json(const nlohmann::json& jsonObject, GroupInfo& groupInfo)
 int32_t DistributedSchedPermission::CheckDPermission(const AAFwk::Want& want, const CallerInfo& callerInfo,
     const AccountInfo& accountInfo, const std::string& localDeviceId, bool needQueryExtension)
 {
+    int64_t begin = GetTickCount();
     if (localDeviceId.empty()) {
         return INVALID_PARAMETERS_ERR;
     }
@@ -86,13 +87,14 @@ int32_t DistributedSchedPermission::CheckDPermission(const AAFwk::Want& want, co
         HILOGE("CheckCustomPermission denied or failed! the caller component do not have permission");
         return DMS_COMPONENT_ACCESS_PERMISSION_DENIED;
     }
-    HILOGI("CheckDPermission success!!");
+    HILOGD("[PerformanceTest] CheckDPermission success, spend %{public}" PRId64 " ms", GetTickCount() - begin);
     return ERR_OK;
 }
 
 int32_t DistributedSchedPermission::GetAccountInfo(const std::string& remoteNetworkId,
     const CallerInfo& callerInfo, AccountInfo& accountInfo)
 {
+    int64_t begin = GetTickCount();
     if (remoteNetworkId.empty()) {
         HILOGE("remoteNetworkId is empty");
         return ERR_NULL_OBJECT;
@@ -102,7 +104,9 @@ int32_t DistributedSchedPermission::GetAccountInfo(const std::string& remoteNetw
         HILOGE("udid is empty");
         return ERR_NULL_OBJECT;
     }
-    if (!GetRelatedGroups(udid, callerInfo.bundleNames, accountInfo)) {
+    bool ret = GetRelatedGroups(udid, callerInfo.bundleNames, accountInfo);
+    HILOGD("[PerformanceTest] GetAccountInfo spend %{public}" PRId64 " ms", GetTickCount() - begin);
+    if (!ret) {
         HILOGE("GetRelatedGroups failed");
         return INVALID_PARAMETERS_ERR;
     }
@@ -219,7 +223,7 @@ bool DistributedSchedPermission::IsFoundationCall() const
 
 int32_t DistributedSchedPermission::CheckPermission(uint32_t accessToken, const std::string& permissionName) const
 {
-    HILOGI("called.");
+    HILOGI("[PerformanceTest] called.");
     // if called from xts, granted directly, no need to check permissions.
     if (IsNativeCall(accessToken)) {
         return ERR_OK;

@@ -65,8 +65,10 @@ void DistributedSchedAdapter::UnInit()
 int32_t DistributedSchedAdapter::ConnectAbility(const OHOS::AAFwk::Want& want,
     const sptr<IRemoteObject>& connect, const sptr<IRemoteObject>& callerToken)
 {
-    HILOGD("ConnectAbility");
+    HILOGD("[PerformanceTest] ConnectAbility");
+    int64_t begin = GetTickCount();
     ErrCode errCode = AAFwk::AbilityManagerClient::GetInstance()->Connect();
+    HILOGD("[PerformanceTest] AbilityManager connect spend %{public}" PRId64 " ms", GetTickCount() - begin);
     if (errCode != ERR_OK) {
         HILOGE("connect ability server failed, errCode=%{public}d", errCode);
         DmsHiSysEventReport::ReportFaultEvent(FaultEvent::CONNECT_REMOTE_ABILITY,
@@ -80,12 +82,14 @@ int32_t DistributedSchedAdapter::ConnectAbility(const OHOS::AAFwk::Want& want,
     }
     ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want,
         iface_cast<AAFwk::IAbilityConnection>(connect), callerToken, ids[0]);
+    HILOGD("[PerformanceTest] ConnectAbility end, spend %{public}" PRId64 " ms", GetTickCount() - begin);
     return ret;
 }
 
 int32_t DistributedSchedAdapter::DisconnectAbility(const sptr<IRemoteObject>& connect)
 {
-    HILOGD("DisconnectAbility");
+    HILOGD("[PerformanceTest] DisconnectAbility");
+    int64_t begin = GetTickCount();
     ErrCode errCode = AAFwk::AbilityManagerClient::GetInstance()->Connect();
     if (errCode != ERR_OK) {
         HILOGE("connect ability server failed, errCode=%{public}d", errCode);
@@ -95,6 +99,7 @@ int32_t DistributedSchedAdapter::DisconnectAbility(const sptr<IRemoteObject>& co
     }
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(
         iface_cast<AAFwk::IAbilityConnection>(connect));
+    HILOGD("[PerformanceTest] DisconnectAbility end, spend %{public}" PRId64 " ms", GetTickCount() - begin);
     return ret;
 }
 
@@ -217,7 +222,7 @@ int32_t DistributedSchedAdapter::ReleaseAbility(const sptr<IRemoteObject>& conne
 int32_t DistributedSchedAdapter::StartAbilityByCall(const OHOS::AAFwk::Want& want,
     const sptr<IRemoteObject>& connect, const sptr<IRemoteObject>& callerToken)
 {
-    HILOGD("ResolveAbility called");
+    HILOGD("[PerformanceTest] ResolveAbility called");
     ErrCode errCode = AAFwk::AbilityManagerClient::GetInstance()->Connect();
     if (errCode != ERR_OK) {
         HILOGE("ResolveAbility:connect ability server failed, errCode=%{public}d", errCode);
@@ -225,8 +230,10 @@ int32_t DistributedSchedAdapter::StartAbilityByCall(const OHOS::AAFwk::Want& wan
             EventErrorType::GET_ABILITY_MGR_FAILED);
         return errCode;
     }
+    int64_t begin = GetTickCount();
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbilityByCall(want,
         iface_cast<AAFwk::IAbilityConnection>(connect), callerToken);
+    HILOGD("[PerformanceTest] AbilityManager StartAbilityByCall spend %{public}" PRId64 " ms", GetTickCount() - begin);
     return ret;
 }
 
