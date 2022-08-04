@@ -1850,7 +1850,8 @@ int32_t DistributedSchedService::StartAbility(const OHOS::AAFwk::Want& want, int
         err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, dmsTokenCallback, requestCode, ids[0]);
     } else {
         HILOGI("StartAbility start");
-        err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, requestCode, ids[0]);
+        sptr<IRemoteObject> dmsTokenCallback = new DmsTokenCallback();
+        err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, dmsTokenCallback, requestCode, ids[0]);
     }
     if (err != ERR_OK) {
         HILOGE("StartAbility failed %{public}d", err);
