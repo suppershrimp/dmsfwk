@@ -146,6 +146,7 @@ int32_t MockDistributedSched::StopSyncRemoteMissions(const std::string& devId)
 {
     return ERR_NONE;
 }
+
 #endif
 
 int32_t MockDistributedSched::StartRemoteAbilityByCall(const OHOS::AAFwk::Want& want,
@@ -203,5 +204,18 @@ int32_t MockDistributedSched::NotifyCompleteFreeInstall(
 {
     return ERR_NONE;
 }
+#ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
+int32_t MockDistributedSched::StartRemoteShareForm(const std::string &remoteDeviceId,
+    const OHOS::AppExecFwk::FormShareInfo &formShareInfo)
+{
+    return ERR_NONE;
+}
+
+int32_t MockDistributedSched::StartShareFormFromRemote(
+    const std::string &remoteDeviceId, const OHOS::AppExecFwk::FormShareInfo &formShareInfo)
+{
+    return ERR_NONE;
+}
+#endif
 } // namespace DistributedSchedule
 } // namespace OHOS
