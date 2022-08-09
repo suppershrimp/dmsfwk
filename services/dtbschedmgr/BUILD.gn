@@ -63,6 +63,7 @@ ohos_shared_library("distributedschedsvr") {
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
     "device_auth:deviceauth_sdk",
     "distributeddatamgr:distributeddata_inner",
     "dmsfwk:continuation_manager",
@@ -76,7 +77,6 @@ ohos_shared_library("distributedschedsvr") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "utils_base:utils",
   ]
 
   deps = [ "//foundation/ability/dmsfwk/services/base:dmsbaseinner" ]
