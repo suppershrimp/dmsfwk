@@ -719,5 +719,9 @@ void DistributedAbilityManagerService::HandleNotifierDied(const sptr<IRemoteObje
         return;
     }
 }
+
+bool DistributedAbilityManagerService::IsDistributedSchedLoaded() {
+    return isLoaded_;
+}
 } // namespace DistributedSchedule
 } // namespace OHOS
