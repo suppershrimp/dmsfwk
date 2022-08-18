@@ -111,6 +111,11 @@ void DistributedSchedConnectTest::TearDownTestCase()
 void DistributedSchedConnectTest::SetUp()
 {
     DistributedSchedUtil::MockPermission();
+    if (DistributedSchedService::GetInstance().componentChangeHandler_ == nullptr) {
+        auto runner = AppExecFwk::EventRunner::Create("DmsComponentChange");
+        DistributedSchedService::GetInstance().componentChangeHandler_ =
+            std::make_shared<AppExecFwk::EventHandler>(runner);
+    }
 }
 
 void DistributedSchedConnectTest::TearDown()
