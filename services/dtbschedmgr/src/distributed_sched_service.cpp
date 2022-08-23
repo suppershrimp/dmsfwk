@@ -43,6 +43,7 @@
 #endif
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "mem_mgr_client.h"
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
 #include "mission/distributed_mission_info.h"
 #include "mission/distributed_sched_mission_manager.h"
@@ -1074,16 +1075,6 @@ int32_t DistributedSchedService::StartShareFormFromRemote(
 }
 #endif
 
-int32_t DistributedSchedService::RegisterDistributedComponentListener(const sptr<IRemoteObject>& callback)
-{
-    if (callback == nullptr) {
-        HILOGE("RegisterDistributedComponentListener callback is null");
-        return INVALID_PARAMETERS_ERR;
-    }
-    distributedComponentListener_ = callback;
-    return ERR_OK;
-}
-
 int32_t DistributedSchedService::GetDistributedComponentList(std::vector<std::string>& distributedComponents)
 {
     GetConnectComponentList(distributedComponents);
@@ -1165,8 +1156,14 @@ bool DistributedSchedService::HandleDistributedComponentChange(const std::string
 {
     HILOGI("DistributedSchedService::HandleDistributedComponentChange begin");
     auto func = [this, componentInfo]() {
-        BackgroundTaskMgr::BackgroundTaskMgrHelper::ReportStateChangeEvent(
-            BackgroundTaskMgr::EventType::DIS_COMP_CHANGE, componentInfo);
+        // BackgroundTaskMgr::BackgroundTaskMgrHelper::ReportStateChangeEvent(
+        //     BackgroundTaskMgr::EventType::DIS_COMP_CHANGE, componentInfo);
+        nlohmann::json componentInfoJson = nlohmann::json::parse(componentInfo);
+        if (componentInfoJson[DEVICE_TYPE_KEY] == IDistributedSched::CALLER) {
+            Memory::MemMgrClient::GetInstance().NotifyDistDevStatus(componentInfoJson[PID_KEY],
+                componentInfoJson[UID_KEY], componentInfoJson[BUNDLE_NAME_KEY],
+                componentInfoJson[CHANGE_TYPE_KEY] == 0);
+        }
     };
     if (componentChangeHandler_ == nullptr || !componentChangeHandler_->PostTask(func)) {
         HILOGE("HandleDistributedComponentChange handler postTask failed");

@@ -25,6 +25,7 @@ config("distributed_sched_config") {
   include_dirs = [
     "include",
     "../base/include/",
+
   ]
   if (dmsfwk_mission_manager) {
     defines = [ "SUPPORT_DISTRIBUTED_MISSION_MANAGER" ]
@@ -78,6 +79,7 @@ ohos_shared_library("distributedschedsvr") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "memmgr:memmgrclient",
     "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
