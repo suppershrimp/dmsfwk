@@ -1156,13 +1156,13 @@ bool DistributedSchedService::HandleDistributedComponentChange(const std::string
 {
     HILOGI("DistributedSchedService::HandleDistributedComponentChange begin");
     auto func = [this, componentInfo]() {
-        // BackgroundTaskMgr::BackgroundTaskMgrHelper::ReportStateChangeEvent(
-        //     BackgroundTaskMgr::EventType::DIS_COMP_CHANGE, componentInfo);
+        BackgroundTaskMgr::BackgroundTaskMgrHelper::ReportStateChangeEvent(
+            BackgroundTaskMgr::EventType::DIS_COMP_CHANGE, componentInfo);
         nlohmann::json componentInfoJson = nlohmann::json::parse(componentInfo);
         if (componentInfoJson[DEVICE_TYPE_KEY] == IDistributedSched::CALLER) {
             Memory::MemMgrClient::GetInstance().NotifyDistDevStatus(componentInfoJson[PID_KEY],
                 componentInfoJson[UID_KEY], componentInfoJson[BUNDLE_NAME_KEY],
-                componentInfoJson[CHANGE_TYPE_KEY] == 0);
+                componentInfoJson[CHANGE_TYPE_KEY] == DISTRIBUTED_COMPONENT_ADD);
         }
     };
     if (componentChangeHandler_ == nullptr || !componentChangeHandler_->PostTask(func)) {
