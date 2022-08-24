@@ -14,8 +14,13 @@
 declare_args() {
   dmsfwk_standard_form_share = true
   dmsfwk_mission_manager = true
+  dmsfwk_report_distributedcomponent_memmgr = true
   if (defined(global_parts_info) &&
       !defined(global_parts_info.multimedia_multimedia_image_standard)) {
     dmsfwk_mission_manager = false
+  }
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.resourceschedule_memmgr)) {
+    dmsfwk_report_distributedcomponent_memmgr = false
   }
 }

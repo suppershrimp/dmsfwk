@@ -43,7 +43,9 @@
 #endif
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#ifdef SUPPORT_DISTRIBUTEDCOMPONENT_TO_MEMMGR
 #include "mem_mgr_client.h"
+#endif
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
 #include "mission/distributed_mission_info.h"
 #include "mission/distributed_sched_mission_manager.h"
@@ -1156,14 +1158,16 @@ bool DistributedSchedService::HandleDistributedComponentChange(const std::string
 {
     HILOGI("DistributedSchedService::HandleDistributedComponentChange begin");
     auto func = [this, componentInfo]() {
-        BackgroundTaskMgr::BackgroundTaskMgrHelper::ReportStateChangeEvent(
-            BackgroundTaskMgr::EventType::DIS_COMP_CHANGE, componentInfo);
+        // BackgroundTaskMgr::BackgroundTaskMgrHelper::ReportStateChangeEvent(
+        //     BackgroundTaskMgr::EventType::DIS_COMP_CHANGE, componentInfo);
+#ifdef SUPPORT_DISTRIBUTEDCOMPONENT_TO_MEMMGR
         nlohmann::json componentInfoJson = nlohmann::json::parse(componentInfo);
         if (componentInfoJson[DEVICE_TYPE_KEY] == IDistributedSched::CALLER) {
             Memory::MemMgrClient::GetInstance().NotifyDistDevStatus(componentInfoJson[PID_KEY],
                 componentInfoJson[UID_KEY], componentInfoJson[BUNDLE_NAME_KEY],
                 componentInfoJson[CHANGE_TYPE_KEY] == DISTRIBUTED_COMPONENT_ADD);
         }
+#endif
     };
     if (componentChangeHandler_ == nullptr || !componentChangeHandler_->PostTask(func)) {
         HILOGE("HandleDistributedComponentChange handler postTask failed");

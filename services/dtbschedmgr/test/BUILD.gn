@@ -50,7 +50,6 @@ dsched_external_deps = [
   "hiviewdfx_hilog_native:libhilog",
   "init:libbegetutil",
   "ipc:ipc_core",
-  "memmgr:memmgrclient",
   "os_account:os_account_innerkits",
   "resource_management:global_resmgr",
   "safwk:system_ability_fwk",
@@ -63,6 +62,10 @@ if (dmsfwk_standard_form_share) {
 
 if (dmsfwk_mission_manager) {
   dsched_external_deps += [ "multimedia_image_standard:image_native" ]
+}
+
+if (dmsfwk_report_distributedcomponent_memmgr) {
+  dsched_external_deps += [ "memmgr:memmgrclient" ]
 }
 
 dsched_public_deps = [
@@ -127,6 +130,11 @@ ohos_unittest("distributedschedsvrtest") {
     external_deps = dsched_external_deps
     public_deps = dsched_public_deps
   }
+
+  if (dmsfwk_report_distributedcomponent_memmgr) {
+    defines = [ "SUPPORT_DISTRIBUTEDCOMPONENT_TO_MEMMGR" ]
+  }
+  
   part_name = "dmsfwk"
   subsystem_name = "ability"
 }
