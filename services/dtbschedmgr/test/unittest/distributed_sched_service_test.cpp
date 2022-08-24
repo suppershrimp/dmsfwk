@@ -752,6 +752,7 @@ HWTEST_F(DistributedSchedServiceTest, StartLocalAbility_004, TestSize.Level1)
  * @tc.name: HandleDistributedComponentChange_001
  * @tc.desc: HandleDistributedComponentChange when componentChangeHandler_ is nullptr
  * @tc.type: FUNC
+ * @tc.require: I5NOA1
  */
 HWTEST_F(DistributedSchedServiceTest, HandleDistributedComponentChange_001, TestSize.Level3)
 {
@@ -776,6 +777,7 @@ HWTEST_F(DistributedSchedServiceTest, HandleDistributedComponentChange_001, Test
  * @tc.name: HandleDistributedComponentChange_002
  * @tc.desc: HandleDistributedComponentChange with correct input
  * @tc.type: FUNC
+ * @tc.require: I5NOA1
  */
 HWTEST_F(DistributedSchedServiceTest, HandleDistributedComponentChange_002, TestSize.Level3)
 {
@@ -805,6 +807,7 @@ HWTEST_F(DistributedSchedServiceTest, HandleDistributedComponentChange_002, Test
  * @tc.name: HandleDistributedComponentChange_003
  * @tc.desc: HandleDistributedComponentChange when start by callee
  * @tc.type: FUNC
+ * @tc.require: I5NOA1
  */
 HWTEST_F(DistributedSchedServiceTest, HandleDistributedComponentChange_003, TestSize.Level3)
 {

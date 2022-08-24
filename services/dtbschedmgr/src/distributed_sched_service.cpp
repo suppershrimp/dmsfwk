@@ -1158,8 +1158,8 @@ bool DistributedSchedService::HandleDistributedComponentChange(const std::string
 {
     HILOGI("DistributedSchedService::HandleDistributedComponentChange begin");
     auto func = [this, componentInfo]() {
-        // BackgroundTaskMgr::BackgroundTaskMgrHelper::ReportStateChangeEvent(
-        //     BackgroundTaskMgr::EventType::DIS_COMP_CHANGE, componentInfo);
+        BackgroundTaskMgr::BackgroundTaskMgrHelper::ReportStateChangeEvent(
+            BackgroundTaskMgr::EventType::DIS_COMP_CHANGE, componentInfo);
 #ifdef SUPPORT_DISTRIBUTEDCOMPONENT_TO_MEMMGR
         nlohmann::json componentInfoJson = nlohmann::json::parse(componentInfo);
         if (componentInfoJson[DEVICE_TYPE_KEY] == IDistributedSched::CALLER) {
