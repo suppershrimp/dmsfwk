@@ -876,6 +876,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckCustomPermission_006, TestSize.Lev
  * @tc.name: CheckPermission_001
  * @tc.desc: call CheckPermission
  * @tc.type: FUNC
+ * @tc.require: I5NOA1
  */
 HWTEST_F(DistributedSchedPermissionTest, CheckPermission_001, TestSize.Level1)
 {
@@ -891,6 +892,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckPermission_001, TestSize.Level1)
  * @tc.name: CheckPermission_002
  * @tc.desc: call CheckPermission with invalid accessToken
  * @tc.type: FUNC
+ * @tc.require: I5NOA1
  */
 HWTEST_F(DistributedSchedPermissionTest, CheckPermission_002, TestSize.Level1)
 {
@@ -906,6 +908,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckPermission_002, TestSize.Level1)
  * @tc.name: CheckPermission_003
  * @tc.desc: call CheckPermission with invalid permission
  * @tc.type: FUNC
+ * @tc.require: I5NOA1
  */
 HWTEST_F(DistributedSchedPermissionTest, CheckPermission_003, TestSize.Level1)
 {
