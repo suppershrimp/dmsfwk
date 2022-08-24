@@ -99,7 +99,8 @@
         ],
         "test": [
           "//foundation/ability/dmsfwk/services/dtbschedmgr:unittest",
-          "//foundation/ability/dmsfwk/services/dtbabilitymgr:unittest"
+          "//foundation/ability/dmsfwk/services/dtbabilitymgr:unittest",
+          "//foundation/ability/dmsfwk/test/fuzztest/continuationmanager_fuzzer:fuzztest"
         ]
       }
     }
