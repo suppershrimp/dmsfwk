@@ -124,7 +124,6 @@ public:
     virtual int32_t StartShareFormFromRemote(
         const std::string& remoteDeviceId, const OHOS::AppExecFwk::FormShareInfo& formShareInfo) = 0;
 #endif
-    virtual int32_t RegisterDistributedComponentListener(const sptr<IRemoteObject>& callback) = 0;
     virtual int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) = 0;
     enum {
         START_REMOTE_ABILITY = 1,

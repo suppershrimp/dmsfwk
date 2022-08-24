@@ -138,7 +138,6 @@ public:
     int32_t StartFreeInstallFromRemote(const FreeInstallInfo& info, int64_t taskId) override;
     int32_t NotifyCompleteFreeInstallFromRemote(int64_t taskId, int32_t resultCode) override;
     int32_t NotifyCompleteFreeInstall(const FreeInstallInfo& info, int64_t taskId, int32_t resultCode);
-    int32_t RegisterDistributedComponentListener(const sptr<IRemoteObject>& callback) override;
     int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) override;
     void SetContinuationTimeout(int32_t missionId, int32_t timeout);
     void RemoveContinuationTimeout(int32_t missionId);
@@ -215,7 +214,6 @@ private:
     std::map<sptr<IRemoteObject>, ConnectInfo> calleeMap_;
     sptr<IRemoteObject::DeathRecipient> callerDeathRecipient_;
     std::shared_ptr<DmsCallbackTask> dmsCallbackTask_;
-    sptr<IRemoteObject> distributedComponentListener_;
     std::shared_ptr<AppExecFwk::EventHandler> componentChangeHandler_;
     std::mutex callerLock_;
     std::map<sptr<IRemoteObject>, std::list<ConnectAbilitySession>> callerMap_;

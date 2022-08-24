@@ -47,6 +47,13 @@ namespace {
     const std::string DMS_MISSION_ID = "dmsMissionId";
     const std::string DMS_SRC_NETWORK_ID = "dmsSrcNetworkId";
     const int DEFAULT_REQUEST_CODE = -1;
+    const std::string BUNDLE_NAME_KEY = "bundleName";
+    const std::string VERSION_CODE_KEY = "version";
+    const std::string PID_KEY = "pid";
+    const std::string UID_KEY = "uid";
+    const std::string COMPONENT_TYPE_KEY = "componentType";
+    const std::string DEVICE_TYPE_KEY = "deviceType";
+    const std::string CHANGE_TYPE_KEY = "changeType";
 }
 
 class DistributedSchedServiceTest : public testing::Test {
@@ -741,6 +748,91 @@ HWTEST_F(DistributedSchedServiceTest, StartLocalAbility_004, TestSize.Level1)
     int result2 = DistributedSchedService::GetInstance().StartLocalAbility(info2, 0, 0);
     DTEST_LOG << "result2:" << result2 << std::endl;
     DTEST_LOG << "DistributedSchedServiceTest StartLocalAbility_004 end" << std::endl;
+}
+
+/**
+ * @tc.name: HandleDistributedComponentChange_001
+ * @tc.desc: HandleDistributedComponentChange when componentChangeHandler_ is nullptr
+ * @tc.type: FUNC
+ * @tc.require: I5NOA1
+ */
+HWTEST_F(DistributedSchedServiceTest, HandleDistributedComponentChange_001, TestSize.Level3)
+{
+    DTEST_LOG << "DistributedSchedServiceTest HandleDistributedComponentChange_001 start" << std::endl;
+
+    nlohmann::json componentInfoJson;
+    componentInfoJson[PID_KEY] = 0;
+    componentInfoJson[UID_KEY] = 0;
+    componentInfoJson[BUNDLE_NAME_KEY] = std::string();
+    componentInfoJson[COMPONENT_TYPE_KEY] = 0;
+    componentInfoJson[DEVICE_TYPE_KEY] = 0;
+    componentInfoJson[CHANGE_TYPE_KEY] = 0;
+    std::string componentInfo = componentInfoJson.dump();
+
+    bool result = DistributedSchedService::GetInstance().HandleDistributedComponentChange(componentInfo);
+    EXPECT_EQ(true, result);
+
+    DTEST_LOG << "DistributedSchedServiceTest HandleDistributedComponentChange_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: HandleDistributedComponentChange_002
+ * @tc.desc: HandleDistributedComponentChange with correct input
+ * @tc.type: FUNC
+ * @tc.require: I5NOA1
+ */
+HWTEST_F(DistributedSchedServiceTest, HandleDistributedComponentChange_002, TestSize.Level3)
+{
+    DTEST_LOG << "DistributedSchedServiceTest HandleDistributedComponentChange_002 start" << std::endl;
+
+    nlohmann::json componentInfoJson;
+    componentInfoJson[PID_KEY] = 0;
+    componentInfoJson[UID_KEY] = 0;
+    componentInfoJson[BUNDLE_NAME_KEY] = std::string();
+    componentInfoJson[COMPONENT_TYPE_KEY] = 0;
+    componentInfoJson[DEVICE_TYPE_KEY] = 0;
+    componentInfoJson[CHANGE_TYPE_KEY] = 0;
+    std::string componentInfo = componentInfoJson.dump();
+    if (DistributedSchedService::GetInstance().componentChangeHandler_ == nullptr) {
+        auto runner = AppExecFwk::EventRunner::Create("DmsComponentChange");
+        DistributedSchedService::GetInstance().componentChangeHandler_ =
+            std::make_shared<AppExecFwk::EventHandler>(runner);
+    }
+
+    bool result = DistributedSchedService::GetInstance().HandleDistributedComponentChange(componentInfo);
+    EXPECT_EQ(true, result);
+
+    DTEST_LOG << "DistributedSchedServiceTest HandleDistributedComponentChange_002 end" << std::endl;
+}
+
+/**
+ * @tc.name: HandleDistributedComponentChange_003
+ * @tc.desc: HandleDistributedComponentChange when start by callee
+ * @tc.type: FUNC
+ * @tc.require: I5NOA1
+ */
+HWTEST_F(DistributedSchedServiceTest, HandleDistributedComponentChange_003, TestSize.Level3)
+{
+    DTEST_LOG << "DistributedSchedServiceTest HandleDistributedComponentChange_003 start" << std::endl;
+
+    nlohmann::json componentInfoJson;
+    componentInfoJson[PID_KEY] = 0;
+    componentInfoJson[UID_KEY] = 0;
+    componentInfoJson[BUNDLE_NAME_KEY] = std::string();
+    componentInfoJson[COMPONENT_TYPE_KEY] = 0;
+    componentInfoJson[DEVICE_TYPE_KEY] = 1;
+    componentInfoJson[CHANGE_TYPE_KEY] = 0;
+    std::string componentInfo = componentInfoJson.dump();
+    if (DistributedSchedService::GetInstance().componentChangeHandler_ == nullptr) {
+        auto runner = AppExecFwk::EventRunner::Create("DmsComponentChange");
+        DistributedSchedService::GetInstance().componentChangeHandler_ =
+            std::make_shared<AppExecFwk::EventHandler>(runner);
+    }
+
+    bool result = DistributedSchedService::GetInstance().HandleDistributedComponentChange(componentInfo);
+    EXPECT_EQ(true, result);
+
+    DTEST_LOG << "DistributedSchedServiceTest HandleDistributedComponentChange_003 end" << std::endl;
 }
 /**
  * @tc.name: StartRemoteShareForm_001
