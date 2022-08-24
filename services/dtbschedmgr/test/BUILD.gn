@@ -27,7 +27,6 @@ config("test_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "//foundation/ability/dmsfwk/utils/native/include",
-    "//foundation/ability/dmsfwk/services/base/include",
     "//foundation/ability/dmsfwk/services/dtbschedmgr/test/unittest",
   ]
 }
