@@ -26,7 +26,10 @@ dtbabilitymgr_configs = [
 
 config("test_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "//foundation/ability/dmsfwk/utils/native/include" ]
+  include_dirs = [
+    "//foundation/ability/dmsfwk/utils/native/include",
+    "//foundation/ability/dmsfwk/services/dtbabilitymgr/test/unittest",
+  ]
 }
 
 dtbabilitymgr_external_deps = [
@@ -79,7 +82,25 @@ ohos_unittest("continuationmanagertest") {
   part_name = "dmsfwk"
 }
 
+ohos_unittest("distributedabilitymanagerstubtest") {
+  module_out_path = module_output_path
+  sources = [ "unittest/distributed_ability_manager_service_test.cpp" ]
+  sources += dtbabilitymgr_sources
+  configs = [ ":test_config" ]
+  configs += dtbabilitymgr_configs
+  deps =
+      [ "${distributed_service}/dtbabilitymgr:distributed_ability_manager_svr" ]
+  if (is_standard_system) {
+    external_deps = dtbabilitymgr_external_deps
+    public_deps = dtbabilitymgr_public_deps
+  }
+  part_name = "dmsfwk"
+}
+
 group("unittest") {
   testonly = true
-  deps = [ ":continuationmanagertest" ]
+  deps = [
+    ":continuationmanagertest",
+    ":distributedabilitymanagerstubtest",
+  ]
 }
