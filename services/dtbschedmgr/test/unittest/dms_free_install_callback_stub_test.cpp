@@ -26,11 +26,11 @@ using namespace testing::ext;
 namespace OHOS {
 namespace DistributedSchedule {
 namespace {
-    DmsFreeInstallCallbackStub* dmsFreeInstallCallbackStub;
-    const std::u16string MOCK_INVALID_DESCRIPTOR = u"invalid descriptor";
-    int32_t code = -1;
-    MessageParcel reply;
-    MessageOption option;
+DmsFreeInstallCallbackStub* dmsFreeInstallCallbackStub;
+const std::u16string MOCK_INVALID_DESCRIPTOR = u"invalid descriptor";
+int32_t code = -1;
+MessageParcel reply;
+MessageOption option;
 }
 
 void DmsFreeInstallCallbackStubTest::SetUpTestCase()
@@ -58,7 +58,7 @@ void DmsFreeInstallCallbackStubTest::SetUp()
  * @tc.desc: constructor
  * @tc.type: FUNC
  */
-HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_001, TestSize.Level2)
+HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_001, TestSize.Level3)
 {
     DTEST_LOG << "DmsFreeInstallCallbackStubTest DmsFreeInstallCallbackStubTest_001 begin" << std::endl;
     int64_t taskId = 0;
@@ -73,7 +73,7 @@ HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_001, Tes
  * @tc.desc: invalid descriptor
  * @tc.type: FUNC
  */
-HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_002, TestSize.Level2)
+HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_002, TestSize.Level3)
 {
     DTEST_LOG << "DmsFreeInstallCallbackStubTest DmsFreeInstallCallbackStubTest_002 begin" << std::endl;
     MessageParcel data;
@@ -88,7 +88,7 @@ HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_002, Tes
  * @tc.desc: invalid code
  * @tc.type: FUNC
  */
-HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_003, TestSize.Level2)
+HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_003, TestSize.Level3)
 {
     DTEST_LOG << "DmsFreeInstallCallbackStubTest DmsFreeInstallCallbackStubTest_003 begin" << std::endl;
     MessageParcel data;
@@ -103,7 +103,7 @@ HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_003, Tes
  * @tc.desc: invalid param
  * @tc.type: FUNC
  */
-HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_004, TestSize.Level2)
+HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_004, TestSize.Level3)
 {
     DTEST_LOG << "DmsFreeInstallCallbackStubTest DmsFreeInstallCallbackStubTest_004 begin" << std::endl;
     MessageParcel data;
@@ -119,7 +119,7 @@ HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_004, Tes
  * @tc.desc: test finish install
  * @tc.type: FUNC
  */
-HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_005, TestSize.Level2)
+HWTEST_F(DmsFreeInstallCallbackStubTest, DmsFreeInstallCallbackStubTest_005, TestSize.Level3)
 {
     DTEST_LOG << "DmsFreeInstallCallbackStubTest DmsFreeInstallCallbackStubTest_005 begin" << std::endl;
     code = 0;

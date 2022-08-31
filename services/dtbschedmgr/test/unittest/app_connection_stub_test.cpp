@@ -14,6 +14,7 @@
  */
 
 #include "app_connection_stub_test.h"
+#include "mock_remote_stub.h"
 #include "test_log.h"
 
 #define private public
@@ -26,11 +27,11 @@ using namespace testing::ext;
 namespace OHOS {
 namespace DistributedSchedule {
 namespace {
-    AppConnectionStub* appConnectionStub;
-    const std::u16string MOCK_INVALID_DESCRIPTOR = u"invalid descriptor";
-    int32_t code = 0;
-    MessageParcel reply;
-    MessageOption option;
+AppConnectionStub* appConnectionStub;
+const std::u16string MOCK_INVALID_DESCRIPTOR = u"invalid descriptor";
+int32_t code = 0;
+MessageParcel reply;
+MessageOption option;
 }
 
 void AppConnectionStubTest::SetUpTestCase()
@@ -58,7 +59,7 @@ void AppConnectionStubTest::SetUp()
  * @tc.desc: constructor
  * @tc.type: FUNC
  */
-HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_001, TestSize.Level2)
+HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_001, TestSize.Level3)
 {
     DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_001 begin" << std::endl;
     const sptr<DmsNotifier> dmsNotifier;
@@ -74,7 +75,7 @@ HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_001, TestSize.Level2)
  * @tc.desc: invalid descriptor
  * @tc.type: FUNC
  */
-HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_002, TestSize.Level2)
+HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_002, TestSize.Level3)
 {
     DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_002 begin" << std::endl;
     MessageParcel data;
@@ -89,7 +90,7 @@ HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_002, TestSize.Level2)
  * @tc.desc: invalid element name
  * @tc.type: FUNC
  */
-HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_003, TestSize.Level2)
+HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_003, TestSize.Level3)
 {
     DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_003 begin" << std::endl;
     MessageParcel data;
@@ -104,7 +105,7 @@ HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_003, TestSize.Level2)
  * @tc.desc: test connect done
  * @tc.type: FUNC
  */
-HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_004, TestSize.Level2)
+HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_004, TestSize.Level3)
 {
     DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_004 begin" << std::endl;
     MessageParcel data;
@@ -122,7 +123,7 @@ HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_004, TestSize.Level2)
  * @tc.desc: test disconnect done
  * @tc.type: FUNC
  */
-HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_005, TestSize.Level2)
+HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_005, TestSize.Level3)
 {
     DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_005 begin" << std::endl;
     MessageParcel data;
@@ -140,7 +141,7 @@ HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_005, TestSize.Level2)
  * @tc.desc: invalid code
  * @tc.type: FUNC
  */
-HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_006, TestSize.Level2)
+HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_006, TestSize.Level3)
 {
     DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_006 begin" << std::endl;
     MessageParcel data;
@@ -151,6 +152,64 @@ HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_006, TestSize.Level2)
     int32_t result = appConnectionStub->OnRemoteRequest(code, data, reply, option);
     EXPECT_NE(result, ERR_NONE);
     DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_006 end" << std::endl;
+}
+
+/**
+ * @tc.name: AppConnectionStubTest_007
+ * @tc.desc: test connect done
+ * @tc.type: FUNC
+ */
+HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_007, TestSize.Level3)
+{
+    DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_007 begin" << std::endl;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppConnectionStub::GetDescriptor());
+    AppExecFwk::ElementName element;
+    data.WriteParcelable(&element);
+    data.WriteRemoteObject((new MockRemoteStub())->AsObject());
+    code = AppConnectionStub::ON_ABILITY_CONNECT_DONE;
+    int32_t result = appConnectionStub->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(result, ERR_NONE);
+    DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_007 end" << std::endl;
+}
+
+/**
+ * @tc.name: AppConnectionStubTest_008
+ * @tc.desc: nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_008, TestSize.Level3)
+{
+    DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_008 begin" << std::endl;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppConnectionStub::GetDescriptor());
+    AppExecFwk::ElementName element;
+    data.WriteParcelable(&element);
+    data.WriteRemoteObject((new MockRemoteStub())->AsObject());
+    code = AppConnectionStub::ON_ABILITY_CONNECT_DONE;
+    appConnectionStub->dmsNotifier_ = nullptr;
+    int32_t result = appConnectionStub->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(result, ERR_NONE);
+    DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_008 end" << std::endl;
+}
+
+/**
+ * @tc.name: AppConnectionStubTest_009
+ * @tc.desc: nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(AppConnectionStubTest, AppConnectionStubTest_009, TestSize.Level3)
+{
+    DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_009 begin" << std::endl;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppConnectionStub::GetDescriptor());
+    AppExecFwk::ElementName element;
+    data.WriteParcelable(&element);
+    code = AppConnectionStub::ON_ABILITY_DISCONNECT_DONE;
+    appConnectionStub->dmsNotifier_ = nullptr;
+    int32_t result = appConnectionStub->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(result, ERR_NONE);
+    DTEST_LOG << "AppConnectionStubTest AppConnectionStubTest_009 end" << std::endl;
 }
 }
 }
