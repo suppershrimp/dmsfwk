@@ -22,6 +22,7 @@
 #include <set>
 #include <string>
 
+#include "device_manager.h"
 #include "event_handler.h"
 #include "nocopyable.h"
 #include "softbus_bus_center.h"
@@ -40,9 +41,9 @@ public:
     DeviceListener() = default;
     virtual ~DeviceListener() = default;
 
-    virtual void OnDeviceOnline(const NodeBasicInfo* nodeBasicInfo) = 0;
-    virtual void OnDeviceOffline(const NodeBasicInfo* nodeBasicInfo) = 0;
-    virtual void OnDeviceInfoChanged(const std::string& networkId, DeviceInfoType type) = 0;
+    virtual void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
+    virtual void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
+    virtual void OnDeviceInfoChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
 };
 
 class DnetworkAdapter {
@@ -64,14 +65,24 @@ private:
     DISALLOW_COPY_AND_MOVE(DnetworkAdapter);
 
     std::string GetUuidOrUdidByNetworkId(const std::string& networkId, NodeDeviceInfoKey keyType);
-    static void OnNodeOnline(NodeBasicInfo* info);
-    static void OnNodeOffline(NodeBasicInfo* info);
-    static void OnNodeBasicInfoChanged(NodeBasicInfoType type, NodeBasicInfo* info);
 
-    INodeStateCb nodeStateCb_;
     static std::shared_ptr<AppExecFwk::EventHandler> dnetworkHandler_;
     static std::mutex listenerSetMutex_;
     static std::set<std::shared_ptr<DeviceListener>> listenerSet_;
+
+    std::shared_ptr<DistributedHardware::DeviceStateCallback> stateCallback_;
+    std::shared_ptr<DistributedHardware::DmInitCallback> initCallback_;
+
+class DeviceInitCallBack : public DistributedHardware::DmInitCallback {
+    void OnRemoteDied() override;
+};
+
+class DmsDeviceStateCallback : public DistributedHardware::DeviceStateCallback {
+    void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    void OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+};
 };
 } // namespace DistributedSchedule
 } // namespace OHOS

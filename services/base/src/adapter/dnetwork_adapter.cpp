@@ -50,27 +50,29 @@ std::shared_ptr<DnetworkAdapter> DnetworkAdapter::GetInstance()
 
 void DnetworkAdapter::Init()
 {
-    nodeStateCb_.events = EVENT_NODE_STATE_MASK;
-    nodeStateCb_.onNodeOnline = OnNodeOnline;
-    nodeStateCb_.onNodeOffline = OnNodeOffline;
-    nodeStateCb_.onNodeBasicInfoChanged = OnNodeBasicInfoChanged;
+    initCallback_ = std::make_shared<DeviceInitCallBack>();
+    if (ret != 0) {
+        HILOGE("init device manager failed, ret:%{public}d", ret);
+        return;
+    }
+    stateCallback_ = std::make_shared<DmsDeviceStateCallback>();
 
     auto runner = AppExecFwk::EventRunner::Create("dmsDnetwork");
     dnetworkHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
 }
 
-void DnetworkAdapter::OnNodeOnline(NodeBasicInfo* info)
+void DnetworkAdapter::DeviceInitCallBack::OnRemoteDied()
 {
-    if (info == nullptr) {
-        HILOGE("OnNodeOnline invalid parameter");
-        return;
-    }
+    HILOGD("DeviceInitCallBack OnRemoteDied");
+}
 
-    HILOGI("OnNodeOnline netwokId = %{public}s", AnonymizeDeviceId(info->networkId).c_str());
-    auto onlineNotifyTask = [info = *info]() {
+void DnetworkAdapter::DmsDeviceStateCallback::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+    HILOGI("OnNodeOnline netwokId = %{public}s", AnonymizeDeviceId(deviceInfo.deviceId).c_str());
+    auto onlineNotifyTask = [deviceInfo = deviceInfo]() {
         std::lock_guard<std::mutex> autoLock(listenerSetMutex_);
         for (auto& listener : listenerSet_) {
-            listener->OnDeviceOnline(&info);
+            listener->OnDeviceOnline(deviceInfo);
         }
     };
     if (!dnetworkHandler_->PostTask(onlineNotifyTask)) {
@@ -79,18 +81,13 @@ void DnetworkAdapter::OnNodeOnline(NodeBasicInfo* info)
     }
 }
 
-void DnetworkAdapter::OnNodeOffline(NodeBasicInfo* info)
+void DnetworkAdapter::DmsDeviceStateCallback::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    if (info == nullptr) {
-        HILOGE("OnNodeOffline invalid parameter");
-        return;
-    }
-
-    HILOGI("OnNodeOffline networkId = %{public}s", AnonymizeDeviceId(info->networkId).c_str());
-    auto offlineNotifyTask = [info = *info]() {
+    HILOGI("OnNodeOffline networkId = %{public}s", AnonymizeDeviceId(deviceInfo.deviceId).c_str());
+    auto offlineNotifyTask = [deviceInfo = deviceInfo]() {
         std::lock_guard<std::mutex> autoLock(listenerSetMutex_);
         for (auto& listener : listenerSet_) {
-            listener->OnDeviceOffline(&info);
+            listener->OnDeviceOffline(deviceInfo);
         }
     };
     if (!dnetworkHandler_->PostTask(offlineNotifyTask)) {
@@ -99,9 +96,14 @@ void DnetworkAdapter::OnNodeOffline(NodeBasicInfo* info)
     }
 }
 
-void DnetworkAdapter::OnNodeBasicInfoChanged(NodeBasicInfoType type, NodeBasicInfo* info)
+void DnetworkAdapter::DmsDeviceStateCallback::OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    HILOGD("OnNodeBasicInfoChanged called");
+    HILOGD("called");
+}
+
+void DnetworkAdapter::DmsDeviceStateCallback::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+    HILOGD("called");
 }
 
 bool DnetworkAdapter::AddDeviceChangeListener(const std::shared_ptr<DeviceListener>& listener)
@@ -127,13 +129,22 @@ bool DnetworkAdapter::AddDeviceChangeListener(const std::shared_ptr<DeviceListen
         int32_t retryTimes = 0;
         int32_t errCode = ERR_OK;
         while (retryTimes++ < RETRY_REGISTER_CALLBACK_TIMES) {
-            errCode = RegNodeDeviceStateCb(PKG_NAME.c_str(), &nodeStateCb_);
+            int32_t ret =
+                DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(PKG_NAME, initCallback_);
+            if (ret != ERR_OK) {
+                HILOGE("init device manager failed, ret:%{public}d", ret);
+                std::this_thread::sleep_for(1s);
+                continue;
+            }
+
+            errCode = DistributedHardware::DeviceManager::GetInstance().
+                RegisterDevStateCallback(PKG_NAME, "", stateCallback_);
             if (errCode == ERR_OK) {
                 break;
             }
 
             HILOGD("AddDeviceChangeListener Reg errCode = %{public}d, retrying...", errCode);
-            errCode = UnregNodeDeviceStateCb(&nodeStateCb_);
+            errCode = DistributedHardware::DeviceManager::GetInstance().UnRegisterDevStateCallback(PKG_NAME);
             HILOGD("AddDeviceChangeListener Unreg errCode = %{public}d", errCode);
             std::this_thread::sleep_for(1s);
         }
@@ -157,7 +168,7 @@ void DnetworkAdapter::RemoveDeviceChangeListener(const std::shared_ptr<DeviceLis
         }
     }
 
-    int32_t errCode = UnregNodeDeviceStateCb(&nodeStateCb_);
+    int32_t errCode = DistributedHardware::DeviceManager::GetInstance().UnRegisterDevStateCallback(PKG_NAME);
     if (errCode != ERR_OK) {
         HILOGE("RemoveDeviceChangeListener remove failed, errCode = %{public}d", errCode);
     }

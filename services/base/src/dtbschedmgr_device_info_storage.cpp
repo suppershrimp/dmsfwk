@@ -307,7 +307,7 @@ void DtbschedmgrDeviceInfoStorage::DeviceOfflineNotify(const std::string& device
     }
 }
 
-void DtbschedmgrDeviceInfoStorage::OnDeviceInfoChanged(const std::string& deviceId, DeviceInfoType type)
+void DtbschedmgrDeviceInfoStorage::OnDeviceInfoChanged(const std::string& deviceId)
 {
     HILOGI("OnDeviceInfoChanged called");
 }
