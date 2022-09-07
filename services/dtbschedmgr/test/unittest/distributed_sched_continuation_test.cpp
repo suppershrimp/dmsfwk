@@ -22,6 +22,7 @@ using namespace testing;
 using namespace testing::ext;
 using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::DistributedHardware;
 using string = std::string;
 
 namespace OHOS {
@@ -35,6 +36,9 @@ const string LOCAL_DEVICE_ID = "192.168.43.100";
 
 void DSchedContinuationTest::SetUpTestCase()
 {
+    const std::string pkgName = "DBinderBus_" + std::to_string(getpid());
+    std::shared_ptr<DmInitCallback> initCallback_ = std::make_shared<DeviceInitCallBack>();
+    DeviceManager::GetInstance().InitDeviceManager(pkgName, initCallback_);
 }
 
 void DSchedContinuationTest::TearDownTestCase()
@@ -50,6 +54,10 @@ void DSchedContinuationTest::SetUp()
 void DSchedContinuationTest::TearDown()
 {
     dschedContinuation_ = nullptr;
+}
+
+void DSchedContinuationTest::DeviceInitCallBack::OnRemoteDied()
+{
 }
 
 sptr<IRemoteObject> DSchedContinuationTest::GetDSchedService() const

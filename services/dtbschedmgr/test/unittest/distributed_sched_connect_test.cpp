@@ -17,6 +17,7 @@
 #define private public
 #define protected public
 #include "ability_connect_callback_stub.h"
+#include "device_manager.h"
 #include "distributed_sched_service.h"
 #include "distributed_sched_util.h"
 #include "dtbschedmgr_device_info_storage.h"
@@ -32,6 +33,7 @@ namespace OHOS {
 namespace DistributedSchedule {
 using namespace testing;
 using namespace testing::ext;
+using namespace OHOS::DistributedHardware;
 
 namespace {
 constexpr int32_t STDOUT_FD = 1;
@@ -79,6 +81,10 @@ public:
 
     void AddConnectCount(int32_t uid) const;
     void DecreaseConnectCount(int32_t uid) const;
+
+    class DeviceInitCallBack : public DmInitCallback {
+        void OnRemoteDied() override;
+    };
 };
 
 void AbilityConnectCallbackTest::OnAbilityConnectDone(const AppExecFwk::ElementName& element,
@@ -103,6 +109,9 @@ void AbilityConnectionWrapperStubTest::OnAbilityDisconnectDone(const AppExecFwk:
 
 void DistributedSchedConnectTest::SetUpTestCase()
 {
+    const std::string pkgName = "DBinderBus_" + std::to_string(getpid());
+    std::shared_ptr<DmInitCallback> initCallback_ = std::make_shared<DeviceInitCallBack>();
+    DeviceManager::GetInstance().InitDeviceManager(pkgName, initCallback_);
 }
 
 void DistributedSchedConnectTest::TearDownTestCase()
@@ -115,6 +124,10 @@ void DistributedSchedConnectTest::SetUp()
 }
 
 void DistributedSchedConnectTest::TearDown()
+{
+}
+
+void DistributedSchedConnectTest::DeviceInitCallBack::OnRemoteDied()
 {
 }
 
