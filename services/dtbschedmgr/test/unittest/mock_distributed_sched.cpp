@@ -29,7 +29,7 @@ int32_t MockDistributedSched::StartRemoteAbility(const OHOS::AAFwk::Want& want,
     return 0;
 }
 
-int32_t MockDistributedSched::StartAbilityFromRemote(const OHOS::AAFwk::Want& want,
+int32_t MockDistributedSched::StartAbilityFromRemote(OHOS::AAFwk::Want& want,
     const OHOS::AppExecFwk::AbilityInfo& abilityInfo, int32_t requestCode, const CallerInfo& callerInfo,
     const AccountInfo& accountInfo)
 {

@@ -32,7 +32,12 @@ namespace {
 const std::string TAG = "DistributedSchedPermission";
 const std::string FOUNDATION_PROCESS_NAME = "foundation";
 const std::string DMS_MISSION_ID = "dmsMissionId";
+const std::string EXTRO_INFO_JSON_KEY_API_VERSION = "apiVesion";
+const std::string EXTRO_INFO_JSON_KEY_IS_CALLER_BACKGROUND = "isCallerBackground";
+const std::string PERMISSION_START_ABILITIES_FROM_BACKGROUND = "ohos.permission.START_ABILITIES_FROM_BACKGROUND";
+const std::string PERMISSION_START_INVISIBLE_ABILITY = "ohos.permission.START_INVISIBLE_ABILITY";
 const int DEFAULT_DMS_MISSION_ID = -1;
+const int API8 = 8;
 }
 IMPLEMENT_SINGLE_INSTANCE(DistributedSchedPermission);
 void from_json(const nlohmann::json& jsonObject, GroupInfo& groupInfo)
@@ -275,15 +280,40 @@ bool DistributedSchedPermission::CheckAccountAccessPermission(const CallerInfo& 
 bool DistributedSchedPermission::CheckComponentAccessPermission(const AppExecFwk::AbilityInfo& targetAbility,
     const CallerInfo& callerInfo, const AccountInfo& accountInfo, const AAFwk::Want& want) const
 {
-    // reject directly when in no account networking environment and target ability is not visible,
-    if (!targetAbility.visible) {
-        HILOGE("target ability is not visible, permission denied!");
+    // // reject directly when in no account networking environment and target ability is not visible,
+    // if (!targetAbility.visible) {
+    //     HILOGE("target ability is not visible, permission denied!");
+    //     return false;
+    // }
+    // // when in the migration scenario, make sure the appId is the same.
+    // if ((want.GetFlags() & AAFwk::Want::FLAG_ABILITY_CONTINUATION) != 0
+    //     && !BundleManagerInternal::IsSameAppId(callerInfo.callerAppId, targetAbility.bundleName)) {
+    //     HILOGE("the appId is different in the migration scenario, permission denied!");
+    //     return false;
+    // }
+    if (BundleManagerInternal::IsSameAppId(callerInfo.callerAppId, targetAbility.bundleName)) {
+        HILOGD("the appId is the same, check component permission success!");
+        return true;
+    }
+    if ((want.GetFlags() & AAFwk::Want::FLAG_ABILITY_CONTINUATION) != 0) {
+        HILOGE("the appId is different in the migration scenario, permission denied!");
         return false;
     }
-    // when in the migration scenario, make sure the appId is the same.
-    if ((want.GetFlags() & AAFwk::Want::FLAG_ABILITY_CONTINUATION) != 0
-        && !BundleManagerInternal::IsSameAppId(callerInfo.callerAppId, targetAbility.bundleName)) {
-        HILOGE("the appId is different in the migration scenario, permission denied!");
+    if (callerInfo.extraInfoJson[EXTRO_INFO_JSON_KEY_IS_CALLER_BACKGROUND] && 
+        !(!targetAbility.isStageBasedModel && targetAbility.type == AppExecFwk::AbilityType::SERVICE &&
+        callerInfo.extraInfoJson[EXTRO_INFO_JSON_KEY_API_VERSION] <= API8) &&
+        CheckPermission(callerInfo.accessToken, PERMISSION_START_ABILITIES_FROM_BACKGROUND) != ERR_OK) {
+        HILOGE("Caller is background and has no PERMISSION_START_ABILITIES_FROM_BACKGROUND, permission denied!");
+        return false;
+    }
+    if (!targetAbility.visible && CheckPermission(callerInfo.accessToken,
+        PERMISSION_START_INVISIBLE_ABILITY) != ERR_OK) {
+        HILOGE("target ability is not visible and has no PERMISSION_START_INVISIBLE_ABILITY, permission denied!");
+        return false;
+    }
+    if (!targetAbility.isStageBasedModel && targetAbility.type == AppExecFwk::AbilityType::SERVICE &&
+        !targetAbility.applicationInfo.associatedWakeUp) {
+        HILOGE("target ability is service ability(FA) and associatedWakeUp is false, permission denied!");
         return false;
     }
     HILOGD("check component permission success");
