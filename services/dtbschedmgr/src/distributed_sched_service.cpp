@@ -232,7 +232,7 @@ int32_t DistributedSchedService::StartRemoteAbility(const OHOS::AAFwk::Want& wan
     return result;
 }
 
-int32_t DistributedSchedService::StartAbilityFromRemote(const OHOS::AAFwk::Want& want,
+int32_t DistributedSchedService::StartAbilityFromRemote(OHOS::AAFwk::Want& want,
     const OHOS::AppExecFwk::AbilityInfo& abilityInfo, int32_t requestCode,
     const CallerInfo& callerInfo, const AccountInfo& accountInfo)
 {
