@@ -76,7 +76,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_001, TestSize.Level0)
     accountInfo.accountType = IDistributedSched::DIFF_ACCOUNT_TYPE;
     std::string localDeviceId = DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId);
+        callerInfo, accountInfo);
     EXPECT_TRUE(ret != ERR_OK);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_001 end ret:" << ret << std::endl;
 }
@@ -96,7 +96,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_002, TestSize.Level0)
     bool needQueryExtension = true;
     std::string localDeviceId = DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId, needQueryExtension);
+        callerInfo, accountInfo, needQueryExtension);
     EXPECT_TRUE(ret != ERR_OK);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_002 end ret:" << ret << std::endl;
 }
@@ -115,7 +115,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_003, TestSize.Level0)
     accountInfo.accountType = IDistributedSched::DIFF_ACCOUNT_TYPE;
     std::string localDeviceId = INVALID_DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId);
+        callerInfo, accountInfo);
     EXPECT_TRUE(ret == INVALID_PARAMETERS_ERR);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_003 end ret:" << ret << std::endl;
 }
@@ -135,7 +135,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_004, TestSize.Level0)
     bool needQueryExtension = true;
     std::string localDeviceId = INVALID_DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId, needQueryExtension);
+        callerInfo, accountInfo, needQueryExtension);
     EXPECT_TRUE(ret == INVALID_PARAMETERS_ERR);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_004 end ret:" << ret << std::endl;
 }
@@ -154,7 +154,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_005, TestSize.Level0)
     IDistributedSched::AccountInfo accountInfo;
     std::string localDeviceId = DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId);
+        callerInfo, accountInfo);
     EXPECT_TRUE(ret != ERR_OK);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_005 end result:" << ret << std::endl;
 }
@@ -174,7 +174,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_006, TestSize.Level1)
     accountInfo.accountType = IDistributedSched::DIFF_ACCOUNT_TYPE;
     string localDeviceId = DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId);
+        callerInfo, accountInfo);
     EXPECT_TRUE(ret != ERR_OK);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_006 end result:" << ret << std::endl;
 }
@@ -193,7 +193,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_007, TestSize.Level1)
     IDistributedSched::AccountInfo accountInfo;
     string localDeviceId = DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId);
+        callerInfo, accountInfo);
     EXPECT_TRUE(ret != ERR_OK);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_007 end result:" << ret << std::endl;
 }
@@ -213,7 +213,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_008, TestSize.Level0)
     accountInfo.accountType = IDistributedSched::SAME_ACCOUNT_TYPE;
     string localDeviceId = DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId);
+        callerInfo, accountInfo);
     EXPECT_TRUE(ret != ERR_OK);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_008 end result:" << ret << std::endl;
 }
@@ -235,7 +235,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_009, TestSize.Level1)
     accountInfo.groupIdList.push_back(groupId);
     string localDeviceId = DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId);
+        callerInfo, accountInfo);
     EXPECT_TRUE(ret != ERR_OK);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_009 end result:" << ret << std::endl;
 }
@@ -259,7 +259,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckDPermission_010, TestSize.Level1)
     accountInfo.groupIdList.push_back(groupId);
     string localDeviceId = DEVICE_ID;
     int32_t ret = DistributedSchedPermission::GetInstance().CheckDPermission(want,
-        callerInfo, accountInfo, localDeviceId);
+        callerInfo, accountInfo);
     EXPECT_TRUE(ret != ERR_OK);
     DTEST_LOG << "DistributedSchedPermissionTest CheckDPermission_010 end result:" << ret << std::endl;
 }

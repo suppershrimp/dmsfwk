@@ -28,11 +28,18 @@
 namespace OHOS {
 namespace DistributedSchedule {
 using namespace OHOS::Security;
+using namespace AAFwk;
 namespace {
 const std::string TAG = "DistributedSchedPermission";
 const std::string FOUNDATION_PROCESS_NAME = "foundation";
+const std::string DMS_API_VERSION = "dmsApiVersion";
+const std::string DMS_IS_CALLER_BACKGROUND = "dmsIsCallerBackGround";
 const std::string DMS_MISSION_ID = "dmsMissionId";
+const std::string PERMISSION_START_ABILITIES_FROM_BACKGROUND = "ohos.permission.START_ABILITIES_FROM_BACKGROUND";
+const std::string PERMISSION_START_INVISIBLE_ABILITY = "ohos.permission.START_INVISIBLE_ABILITY";
+constexpr int32_t DEFAULT_DMS_API_VERSION = 9;
 const int DEFAULT_DMS_MISSION_ID = -1;
+const int FA_MODULE_ALLOW_MIN_API_VERSION = 8;
 }
 IMPLEMENT_SINGLE_INSTANCE(DistributedSchedPermission);
 void from_json(const nlohmann::json& jsonObject, GroupInfo& groupInfo)
@@ -55,13 +62,43 @@ void from_json(const nlohmann::json& jsonObject, GroupInfo& groupInfo)
 }
 
 int32_t DistributedSchedPermission::CheckDPermission(const AAFwk::Want& want, const CallerInfo& callerInfo,
-    const AccountInfo& accountInfo, const std::string& localDeviceId, bool needQueryExtension)
+    const AccountInfo& accountInfo, bool needQueryExtension)
 {
-    if (localDeviceId.empty()) {
-        return INVALID_PARAMETERS_ERR;
-    }
     AppExecFwk::AbilityInfo targetAbility;
-    bool result = GetTargetAbility(want, needQueryExtension, localDeviceId, targetAbility, callerInfo);
+    if (CheckCommonPermission(want, callerInfo, accountInfo, targetAbility, needQueryExtension) != ERR_OK) {
+        HILOGE("CheckCommonPermission denied or failed!");
+        return DMS_PERMISSION_DENIED;
+    }
+    // check component access permission, when the ability is not visible.
+    if (!CheckComponentAccessPermission(targetAbility, callerInfo, accountInfo, want)) {
+        HILOGE("CheckComponentAccessPermission denied or failed! the callee component do not have permission");
+        return DMS_COMPONENT_ACCESS_PERMISSION_DENIED;
+    }
+    HILOGI("CheckDPermission success!!");
+    return ERR_OK;
+}
+
+int32_t DistributedSchedPermission::CheckStartPermission(const AAFwk::Want& want, const CallerInfo& callerInfo,
+    const AccountInfo& accountInfo, bool needQueryExtension)
+{
+    AppExecFwk::AbilityInfo targetAbility;
+    if (CheckCommonPermission(want, callerInfo, accountInfo, targetAbility, needQueryExtension) != ERR_OK) {
+        HILOGE("CheckCommonPermission denied or failed!");
+        return DMS_PERMISSION_DENIED;
+    }
+    // check start control permissions.
+    if (!CheckStartControlPermission(targetAbility, callerInfo, want)) {
+        HILOGE("CheckStartControlPermission denied or failed! the callee component do not have permission");
+        return DMS_COMPONENT_ACCESS_PERMISSION_DENIED;
+    }
+    HILOGI("CheckStartPermission success!!");
+    return ERR_OK;
+}
+
+int32_t DistributedSchedPermission::CheckCommonPermission(const AAFwk::Want& want, const CallerInfo& callerInfo,
+    const AccountInfo& accountInfo, AppExecFwk::AbilityInfo& targetAbility, bool needQueryExtension)
+{
+    bool result = GetTargetAbility(want, needQueryExtension, targetAbility, callerInfo);
     if (!result) {
         HILOGE("CheckDPermission can not find the target ability");
         return INVALID_PARAMETERS_ERR;
@@ -76,17 +113,12 @@ int32_t DistributedSchedPermission::CheckDPermission(const AAFwk::Want& want, co
         HILOGE("CheckAccountAccessPermission denied or failed!");
         return DMS_ACCOUNT_ACCESS_PERMISSION_DENIED;
     }
-    // 2.check component access permission, when the ability is not visible.
-    if (!CheckComponentAccessPermission(targetAbility, callerInfo, accountInfo, want)) {
-        HILOGE("CheckComponentAccessPermission denied or failed! the callee component do not have permission");
-        return DMS_COMPONENT_ACCESS_PERMISSION_DENIED;
-    }
-    // 3.check application custom permissions
+    // 2.check application custom permissions
     if (!CheckCustomPermission(targetAbility, callerInfo)) {
         HILOGE("CheckCustomPermission denied or failed! the caller component do not have permission");
         return DMS_COMPONENT_ACCESS_PERMISSION_DENIED;
     }
-    HILOGI("CheckDPermission success!!");
+    HILOGI("CheckCommonPermission success!!");
     return ERR_OK;
 }
 
@@ -158,8 +190,7 @@ bool DistributedSchedPermission::ParseGroupInfos(const std::string& returnGroupS
 }
 
 bool DistributedSchedPermission::GetTargetAbility(const AAFwk::Want& want,
-    bool needQueryExtension, const std::string& localDeviceId,
-    AppExecFwk::AbilityInfo& targetAbility, const CallerInfo& callerInfo) const
+    bool needQueryExtension, AppExecFwk::AbilityInfo& targetAbility, const CallerInfo& callerInfo) const
 {
     if (BundleManagerInternal::QueryAbilityInfo(want, targetAbility)) {
         if (want.GetIntParam(DMS_MISSION_ID, DEFAULT_DMS_MISSION_ID) != DEFAULT_DMS_MISSION_ID &&
@@ -186,20 +217,24 @@ bool DistributedSchedPermission::GetTargetAbility(const AAFwk::Want& want,
 }
 
 int32_t DistributedSchedPermission::CheckGetCallerPermission(const AAFwk::Want& want, const CallerInfo& callerInfo,
-    const AccountInfo& accountInfo, const std::string& localDeviceId)
+    const AccountInfo& accountInfo)
 {
-    int32_t result = CheckDPermission(want, callerInfo, accountInfo, localDeviceId);
-    if (result != ERR_OK) {
-        HILOGE("CheckGetCallerPermission fail, error:%{public}d", result);
-        return result;
+    AppExecFwk::AbilityInfo targetAbility;
+    if (CheckCommonPermission(want, callerInfo, accountInfo, targetAbility) != ERR_OK) {
+        HILOGE("CheckCommonPermission denied or failed!");
+        return DMS_PERMISSION_DENIED;
     }
-    std::string appId;
-    if (!BundleManagerInternal::GetCallerAppIdFromBms(want.GetElement().GetBundleName(), appId)) {
-        HILOGE("CheckGetCallerPermission get appId fail");
+    if (!BundleManagerInternal::IsSameAppId(callerInfo.callerAppId, targetAbility.bundleName)) {
+        HILOGD("the appId is different, CheckGetCallerPermission denied!");
         return CALL_PERMISSION_DENIED;
     }
-    if (appId != callerInfo.callerAppId) {
-        HILOGE("CheckGetCallerPermission appId is different");
+    AAFwk::Want* remoteWant = const_cast<Want*>(&want);
+    bool isCallerBackGround = remoteWant->GetBoolParam(DMS_IS_CALLER_BACKGROUND, true);
+    remoteWant->RemoveParam(DMS_IS_CALLER_BACKGROUND);
+    remoteWant->RemoveParam(DMS_API_VERSION);
+    if (isCallerBackGround &&
+        CheckPermission(callerInfo.accessToken, PERMISSION_START_ABILITIES_FROM_BACKGROUND) != ERR_OK) {
+        HILOGE("Caller is background and has no PERMISSION_START_ABILITIES_FROM_BACKGROUND, permission denied!");
         return CALL_PERMISSION_DENIED;
     }
     return ERR_OK;
@@ -284,6 +319,46 @@ bool DistributedSchedPermission::CheckComponentAccessPermission(const AppExecFwk
     if ((want.GetFlags() & AAFwk::Want::FLAG_ABILITY_CONTINUATION) != 0
         && !BundleManagerInternal::IsSameAppId(callerInfo.callerAppId, targetAbility.bundleName)) {
         HILOGE("the appId is different in the migration scenario, permission denied!");
+        return false;
+    }
+    HILOGD("check component permission success");
+    return true;
+}
+
+bool DistributedSchedPermission::CheckStartControlPermission(const AppExecFwk::AbilityInfo& targetAbility,
+    const CallerInfo& callerInfo, const AAFwk::Want& want) const
+{
+    if ((want.GetFlags() & AAFwk::Want::FLAG_ABILITY_CONTINUATION) != 0) {
+        if (BundleManagerInternal::IsSameAppId(callerInfo.callerAppId, targetAbility.bundleName)) {
+            HILOGD("the appId is the same, check component permission success!");
+            return true;
+        }
+        HILOGE("the appId is different in the migration scenario, permission denied!");
+        return false;
+    }
+    AAFwk::Want* remoteWant = const_cast<Want*>(&want);
+    int apiVersion = remoteWant->GetIntParam(DMS_API_VERSION, DEFAULT_DMS_API_VERSION);
+    remoteWant->RemoveParam(DMS_API_VERSION);
+    bool isCallerBackGround = remoteWant->GetBoolParam(DMS_IS_CALLER_BACKGROUND, true);
+    remoteWant->RemoveParam(DMS_IS_CALLER_BACKGROUND);
+    if (isCallerBackGround && !(!targetAbility.isStageBasedModel &&
+        targetAbility.type == AppExecFwk::AbilityType::SERVICE && apiVersion <= FA_MODULE_ALLOW_MIN_API_VERSION) &&
+        CheckPermission(callerInfo.accessToken, PERMISSION_START_ABILITIES_FROM_BACKGROUND) != ERR_OK) {
+        HILOGE("Caller is background and has no PERMISSION_START_ABILITIES_FROM_BACKGROUND, permission denied!");
+        return false;
+    }
+    if (BundleManagerInternal::IsSameAppId(callerInfo.callerAppId, targetAbility.bundleName)) {
+        HILOGD("the appId is the same, check component permission success!");
+        return true;
+    }
+    if (!targetAbility.visible && CheckPermission(callerInfo.accessToken,
+        PERMISSION_START_INVISIBLE_ABILITY) != ERR_OK) {
+        HILOGE("target ability is not visible and has no PERMISSION_START_INVISIBLE_ABILITY, permission denied!");
+        return false;
+    }
+    if (!targetAbility.isStageBasedModel && targetAbility.type == AppExecFwk::AbilityType::SERVICE &&
+        !targetAbility.applicationInfo.associatedWakeUp) {
+        HILOGE("target ability is service ability(FA) and associatedWakeUp is false, permission denied!");
         return false;
     }
     HILOGD("check component permission success");

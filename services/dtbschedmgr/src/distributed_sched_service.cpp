@@ -244,9 +244,9 @@ int32_t DistributedSchedService::StartAbilityFromRemote(const OHOS::AAFwk::Want&
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
     DistributedSchedPermission& permissionInstance = DistributedSchedPermission::GetInstance();
-    ErrCode err = permissionInstance.CheckDPermission(want, callerInfo, accountInfo, deviceId);
+    ErrCode err = permissionInstance.CheckStartPermission(want, callerInfo, accountInfo);
     if (err != ERR_OK) {
-        HILOGE("CheckDPermission denied!!");
+        HILOGE("CheckStartPermission denied!!");
         return err;
     }
     return StartAbility(want, requestCode);
@@ -264,7 +264,7 @@ int32_t DistributedSchedService::SendResultFromRemote(OHOS::AAFwk::Want& want, i
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
     DistributedSchedPermission& permissionInstance = DistributedSchedPermission::GetInstance();
-    ErrCode err = permissionInstance.CheckDPermission(want, callerInfo, accountInfo, deviceId);
+    ErrCode err = permissionInstance.CheckDPermission(want, callerInfo, accountInfo);
     if (err != ERR_OK) {
         HILOGE("CheckDPermission denied!!");
         return err;
@@ -677,7 +677,8 @@ int32_t DistributedSchedService::ConnectRemoteAbility(const OHOS::AAFwk::Want& w
     }
 
     HILOGD("[PerformanceTest] ConnectRemoteAbility begin");
-    int32_t result = TryConnectRemoteAbility(want, connect, callerInfo);
+    AAFwk::Want* remoteWant = const_cast<Want*>(&want);
+    int32_t result = TryConnectRemoteAbility(*remoteWant, connect, callerInfo);
     if (result != ERR_OK) {
         HILOGE("ConnectRemoteAbility result is %{public}d", result);
     }
@@ -965,9 +966,9 @@ int32_t DistributedSchedService::StartAbilityByCallFromRemote(const OHOS::AAFwk:
     }
 
     DistributedSchedPermission& permissionInstance = DistributedSchedPermission::GetInstance();
-    int32_t result = permissionInstance.CheckGetCallerPermission(want, callerInfo, accountInfo, localDeviceId);
+    int32_t result = permissionInstance.CheckGetCallerPermission(want, callerInfo, accountInfo);
     if (result != ERR_OK) {
-        HILOGE("StartAbilityByCallFromRemote CheckDPermission denied!!");
+        HILOGE("StartAbilityByCallFromRemote CheckGetCallerPermission denied!!");
         return result;
     }
     sptr<IRemoteObject> callbackWrapper;
@@ -1298,10 +1299,9 @@ int32_t DistributedSchedService::ConnectAbilityFromRemote(const OHOS::AAFwk::Wan
     }
 
     DistributedSchedPermission& permissionInstance = DistributedSchedPermission::GetInstance();
-    int32_t result = permissionInstance.CheckDPermission(want, callerInfo, accountInfo,
-        localDeviceId, true);
+    int32_t result = permissionInstance.CheckStartPermission(want, callerInfo, accountInfo, true);
     if (result != ERR_OK) {
-        HILOGE("ConnectAbilityFromRemote CheckDPermission denied!!");
+        HILOGE("ConnectAbilityFromRemote CheckStartPermission denied!!");
         return result;
     }
 
@@ -1892,9 +1892,9 @@ int32_t DistributedSchedService::StartLocalAbility(const FreeInstallInfo& info, 
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
     DistributedSchedPermission &permissionInstance = DistributedSchedPermission::GetInstance();
-    ErrCode err = permissionInstance.CheckDPermission(info.want, info.callerInfo, info.accountInfo, localDeviceId);
+    ErrCode err = permissionInstance.CheckStartPermission(info.want, info.callerInfo, info.accountInfo);
     if (err != ERR_OK) {
-        HILOGE("CheckDPermission denied!!");
+        HILOGE("CheckStartPermission denied!!");
         return err;
     }
     AAFwk::Want* want = const_cast<Want*>(&info.want);
