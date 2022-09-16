@@ -43,10 +43,11 @@ public:
     using AccountInfo = IDistributedSched::AccountInfo;
 
     int32_t CheckDPermission(const AAFwk::Want& want, const CallerInfo& callerInfo,
-        const AccountInfo& accountInfo, const std::string& localDeviceId,
-        bool needQueryExtension = false);
+        const AccountInfo& accountInfo, bool needQueryExtension = false);
+    int32_t CheckStartPermission(const AAFwk::Want& want, const CallerInfo& callerInfo,
+        const AccountInfo& accountInfo, bool needQueryExtension = false);
     int32_t CheckGetCallerPermission(const AAFwk::Want& want, const CallerInfo& callerInfo,
-        const AccountInfo& accountInfo, const std::string& localDeviceId);
+        const AccountInfo& accountInfo);
     bool IsFoundationCall() const;
     int32_t CheckPermission(uint32_t accessToken, const std::string& permissionName) const;
     int32_t GetAccountInfo(const std::string& remoteNetworkId, const CallerInfo& callerInfo,
@@ -64,8 +65,12 @@ private:
         const CallerInfo& callerInfo, const AccountInfo& accountInfo, const AAFwk::Want& want) const;
     bool CheckCustomPermission(const AppExecFwk::AbilityInfo& targetAbility,
         const CallerInfo& callerInfo) const;
-    bool GetTargetAbility(const AAFwk::Want& want, bool needQueryExtension, const std::string& localDeviceId,
+    bool CheckStartControlPermission(const AppExecFwk::AbilityInfo& targetAbility,
+        const CallerInfo& callerInfo, const AAFwk::Want& want) const;
+    bool GetTargetAbility(const AAFwk::Want& want, bool needQueryExtension,
         AppExecFwk::AbilityInfo& targetAbility, const CallerInfo& callerInfo) const;
+    int32_t CheckCommonPermission(const AAFwk::Want& want, const CallerInfo& callerInfo,
+        const AccountInfo& accountInfo, AppExecFwk::AbilityInfo& targetAbility, bool needQueryExtension = false);
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
