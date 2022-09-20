@@ -62,6 +62,14 @@ struct ProcessDiedNotifyInfo {
     TargetComponent targetComponent;
 };
 
+struct HarmonyVersion {
+    std::string versionName;
+    uint32_t majorVersionNum;
+    uint32_t minorVersionNum;
+    uint32_t buildVersionNum;
+    uint32_t revisionVersionNum;
+};
+
 class DistributedSchedService : public DistributedSchedStub {
 
 DECLARE_SINGLE_INSTANCE_BASE(DistributedSchedService);
@@ -176,6 +184,12 @@ private:
     int32_t SetWantForContinuation(AAFwk::Want& newWant, int32_t missionId);
     int32_t ContinueLocalMission(const std::string& dstDeviceId, int32_t missionId,
         const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams);
+    int32_t ContinueAbilityWithTimeout(const std::string& dstDeviceId, int32_t missionId,
+        const sptr<IRemoteObject>& callback, uint32_t remoteBundleVersion = 0);
+    bool IsOldHarmonyVersion(const std::string& dstDeviceId);
+    bool CompareHarmonyVersionNum(const HarmonyVersion& harmonyVersion1,const HarmonyVersion& harmonyVersion2);
+    int32_t GetRemoteHarmonyVersion(const std::string& dstDeviceId, HarmonyVersion& remoteHarmonyVersion);
+    bool ParseHarmonyVersion(const std::string& harmonyVersionData, HarmonyVersion& harmonyVersion);
     int32_t ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId, int32_t missionId,
         const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams);
     int32_t TryStartRemoteAbilityByCall(const OHOS::AAFwk::Want& want, const sptr<IRemoteObject>& connect,

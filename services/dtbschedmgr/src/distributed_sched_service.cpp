@@ -26,6 +26,7 @@
 #include "bundle/bundle_manager_internal.h"
 #include "connect_death_recipient.h"
 #include "datetime_ex.h"
+#include "distributed_device_profile_client.h"
 #include "distributed_sched_adapter.h"
 #include "distributed_sched_dumper.h"
 #include "distributed_sched_permission.h"
@@ -39,6 +40,7 @@
 #ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
 #include "form_mgr_death_recipient.h"
 #endif
+#include "in_process_call.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #ifdef SUPPORT_DISTRIBUTEDCOMPONENT_TO_MEMMGR
@@ -81,6 +83,8 @@ const std::string DEVICE_TYPE_KEY = "deviceType";
 const std::string CHANGE_TYPE_KEY = "changeType";
 const std::string PANEL_NAME_KEY = "const.distributedsched.panelname";
 const std::string DEFAULT_PANEL_NAME_VALUE = "";
+const std::string SYSTEM_PROFILE_SERVICE_ID = "system";
+const std::string OPEN_HARMONY_VERSION_NAME = "OpenHarmony";
 constexpr int32_t MAX_SPLIT_VARS = 2;
 constexpr int32_t BIND_CONNECT_RETRY_TIMES = 3;
 constexpr int32_t BIND_CONNECT_TIMEOUT = 500; // 500ms
@@ -319,6 +323,10 @@ int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDevi
         HILOGE("ContinueLocalMission already in progress!");
         return INVALID_PARAMETERS_ERR;
     }
+    if (IsOldHarmonyVersion(dstDeviceId)) {
+        HILOGI("remote harmony version is old");
+        return ContinueAbilityWithTimeout(dstDeviceId, missionId, callback);
+    }
 
     MissionInfo missionInfo;
     int32_t result = AbilityManagerClient::GetInstance()->GetMissionInfo("", missionId, missionInfo);
@@ -333,12 +341,7 @@ int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDevi
     result = BundleManagerInternal::CheckRemoteBundleInfoForContinuation(dstDeviceId,
         bundleName, remoteBundleInfo);
     if (result == ERR_OK) {
-        dschedContinuation_->PushCallback(missionId, callback, dstDeviceId, false);
-        SetContinuationTimeout(missionId, CONTINUATION_TIMEOUT);
-        uint32_t remoteBundleVersion = remoteBundleInfo.versionCode;
-        result = AbilityManagerClient::GetInstance()->ContinueAbility(dstDeviceId, missionId, remoteBundleVersion);
-        HILOGI("result: %{public}d!", result);
-        return result;
+        return ContinueAbilityWithTimeout(dstDeviceId, missionId, callback, remoteBundleInfo.versionCode);
     }
     if (result == CONTINUE_REMOTE_UNINSTALLED_UNSUPPORT_FREEINSTALL) {
         HILOGE("remote not installed and app not support free install");
@@ -362,6 +365,107 @@ int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDevi
         return INVALID_PARAMETERS_ERR;
     }
     return ERR_OK;
+}
+
+int32_t DistributedSchedService::ContinueAbilityWithTimeout(const std::string& dstDeviceId, int32_t missionId,
+    const sptr<IRemoteObject>& callback, uint32_t remoteBundleVersion)
+{
+    dschedContinuation_->PushCallback(missionId, callback, dstDeviceId, false);
+    SetContinuationTimeout(missionId, CONTINUATION_TIMEOUT);
+    int32_t result = AbilityManagerClient::GetInstance()->ContinueAbility(dstDeviceId, missionId, remoteBundleVersion);
+    HILOGI("result: %{public}d!", result);
+    return result;
+}
+
+bool DistributedSchedService::IsOldHarmonyVersion(const std::string& dstDeviceId)
+{
+    HarmonyVersion remoteHarmonyVersion;
+    if (GetRemoteHarmonyVersion(dstDeviceId, remoteHarmonyVersion) != ERR_OK) {
+        return false;
+    }
+    HarmonyVersion thresholdHarmonyVersion = {OPEN_HARMONY_VERSION_NAME, 3, 2, 0 ,0};
+    if (remoteHarmonyVersion.versionName != thresholdHarmonyVersion.versionName) {
+        return false;
+    }
+    return CompareHarmonyVersionNum(remoteHarmonyVersion, thresholdHarmonyVersion);
+}
+
+bool DistributedSchedService::CompareHarmonyVersionNum(const HarmonyVersion& harmonyVersion1,
+    const HarmonyVersion& harmonyVersion2)
+{
+    if (harmonyVersion1.majorVersionNum < harmonyVersion2.majorVersionNum) {
+        return true;
+    }
+    if (harmonyVersion1.majorVersionNum == harmonyVersion2.majorVersionNum &&
+        harmonyVersion1.minorVersionNum < harmonyVersion2.minorVersionNum) {
+        return true;
+    }
+    if (harmonyVersion1.majorVersionNum == harmonyVersion2.majorVersionNum &&
+        harmonyVersion1.minorVersionNum == harmonyVersion2.minorVersionNum &&
+        harmonyVersion1.buildVersionNum < harmonyVersion2.buildVersionNum) {
+        return true;
+    }
+    if (harmonyVersion1.majorVersionNum == harmonyVersion2.majorVersionNum &&
+        harmonyVersion1.minorVersionNum == harmonyVersion2.minorVersionNum &&
+        harmonyVersion1.buildVersionNum == harmonyVersion2.buildVersionNum &&
+        harmonyVersion1.revisionVersionNum < harmonyVersion2.revisionVersionNum) {
+        return true;
+    }
+    return false;
+}
+
+int32_t DistributedSchedService::GetRemoteHarmonyVersion(const std::string& dstDeviceId,
+    HarmonyVersion& remoteHarmonyVersion)
+{
+    DeviceProfile::ServiceCharacteristicProfile profile;
+    int32_t result = IN_PROCESS_CALL(
+        DeviceProfile::DistributedDeviceProfileClient::GetInstance().GetDeviceProfile(dstDeviceId,
+            SYSTEM_PROFILE_SERVICE_ID, profile)
+    );
+    if (result != ERR_OK) {
+        HILOGE("get device profile failed");
+        return result;
+    }
+    std::string jsonData = profile.GetCharacteristicProfileJson();
+    if (jsonData.empty()) {
+        HILOGE("device system profile is null");
+        return INVALID_PARAMETERS_ERR;
+    }
+    nlohmann::json dpJson = nlohmann::json::parse(jsonData.c_str());
+    std::string harmonyVersionData;
+    if (dpJson.find("harmonyVersion") != dpJson.end()) {
+        dpJson.at("harmonyVersion").get_to(harmonyVersionData);
+    }
+    if (!ParseHarmonyVersion(harmonyVersionData, remoteHarmonyVersion)) {
+        HILOGE("parse harmony version failed");
+        return INVALID_PARAMETERS_ERR;
+    }
+    return ERR_OK;
+}
+
+bool DistributedSchedService::ParseHarmonyVersion(const std::string& harmonyVersionData,
+    HarmonyVersion& harmonyVersion)
+{
+    if (harmonyVersionData.empty()) {
+        return false;
+    }
+    std::vector<std::string> versionNameList;
+	SplitStr(harmonyVersionData, " ", versionNameList);
+    if (versionNameList.size() < 2) {
+        return false;
+    }
+    harmonyVersion.versionName = versionNameList[0];
+
+    std::vector<std::string> versionNumList;
+	SplitStr(versionNameList[1], ".", versionNumList);
+    if (versionNumList.size() < 4) {
+        return false;
+    }
+    harmonyVersion.majorVersionNum = atoi(versionNumList[0].c_str());
+    harmonyVersion.minorVersionNum = atoi(versionNumList[1].c_str());
+    harmonyVersion.buildVersionNum = atoi(versionNumList[2].c_str());
+    harmonyVersion.revisionVersionNum = atoi(versionNumList[3].c_str());
+    return true;
 }
 
 int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
