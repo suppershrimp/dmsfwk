@@ -26,18 +26,17 @@ namespace OHOS {
 namespace DistributedSchedule {
 using namespace OHOS::HiviewDFX;
 namespace {
-    const std::string TAG = "DmsHiSysEventReport";
-    constexpr const char*  DOMAIN_NAME = HiSysEvent::Domain::DISTRIBUTED_SCHEDULE;
+const std::string TAG = "DmsHiSysEventReport";
+constexpr const char*  DOMAIN_NAME = HiSysEvent::Domain::DISTRIBUTED_SCHEDULE;
 
-    constexpr const char*  KEY_CALLING_APP_UID = "CALLING_APP_UID";
-    constexpr const char*  KEY_CALLING_PID = "CALLING_PID";
-    constexpr const char*  KEY_CALLING_TYPE = "CALLING_TYPE";
-    constexpr const char*  KEY_CALLING_UID = "CALLING_UID";
-    constexpr const char*  KEY_ERROR_TYPE = "ERROR_TYPE";
-
-    constexpr const char*  KEY_RESULT = "RESULT";
-    constexpr const char*  KEY_TARGET_ABILITY = "TARGET_ABILITY";
-    constexpr const char*  KEY_TARGET_BUNDLE = "TARGET_BUNDLE";
+constexpr const char*  KEY_CALLING_APP_UID = "CALLING_APP_UID";
+constexpr const char*  KEY_CALLING_PID = "CALLING_PID";
+constexpr const char*  KEY_CALLING_TYPE = "CALLING_TYPE";
+constexpr const char*  KEY_CALLING_UID = "CALLING_UID";
+constexpr const char*  KEY_ERROR_TYPE = "ERROR_TYPE";
+constexpr const char*  KEY_RESULT = "RESULT";
+constexpr const char*  KEY_TARGET_ABILITY = "TARGET_ABILITY";
+constexpr const char*  KEY_TARGET_BUNDLE = "TARGET_BUNDLE";
 }
 
 int DmsHiSysEventReport::ReportBehaviorEvent(const BehaviorEventParam& param)
@@ -50,16 +49,27 @@ int DmsHiSysEventReport::ReportBehaviorEvent(const BehaviorEventParam& param)
         KEY_TARGET_BUNDLE, param.bundleName,
         KEY_TARGET_ABILITY, param.abilityName,
         KEY_RESULT, param.eventResult);
-    if (result != 0) {
-        HILOGE("hisysevent report failed! ret %{public}d.", result);
-    }
-    return result;
+    return PrintLogIfFail(result);
 }
 
 int DmsHiSysEventReport::ReportFaultEvent(const std::string& eventName, const std::string& errorType)
 {
     int result = HiSysEvent::Write(DOMAIN_NAME, eventName, HiSysEvent::EventType::FAULT,
         KEY_ERROR_TYPE, errorType);
+    return PrintLogIfFail(result);
+}
+
+int DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(const std::string& eventName, const std::string& callingType,
+    int32_t eventResult)
+{
+    int result = HiSysEvent::Write(DOMAIN_NAME, eventName, HiSysEvent::EventType::BEHAVIOR,
+        KEY_CALLING_TYPE, callingType,
+        KEY_RESULT, eventResult);
+    return PrintLogIfFail(result);
+}
+
+int DmsHiSysEventReport::PrintLogIfFail(int result)
+{
     if (result != 0) {
         HILOGE("hisysevent report failed! ret %{public}d.", result);
     }

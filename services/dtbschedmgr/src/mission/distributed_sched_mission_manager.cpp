@@ -21,6 +21,7 @@
 
 #include "datetime_ex.h"
 #include "distributed_sched_adapter.h"
+#include "dfx/dms_hisysevent_report.h"
 #include "dtbschedmgr_device_info_storage.h"
 #include "dtbschedmgr_log.h"
 #include "ipc_skeleton.h"
@@ -561,6 +562,8 @@ bool DistributedSchedMissionManager::HasSyncListener(const std::string& networkI
 
 void DistributedSchedMissionManager::NotifySnapshotChanged(const std::string& networkId, int32_t missionId)
 {
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::NOTIFY_SNAPSHOT_CHANGED,
+        EventCallingType::REMOTE);
     std::u16string u16DevId = Str8ToStr16(networkId);
     std::lock_guard<std::mutex> autoLock(listenDeviceLock_);
     auto iter = listenDeviceMap_.find(u16DevId);
@@ -847,6 +850,8 @@ void DistributedSchedMissionManager::NotifyMissionsChangedToRemoteInner(const st
     }
     int64_t begin = GetTickCount();
     int32_t result = remoteDms->NotifyMissionsChangedFromRemote(missionInfos, callerInfo);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::NOTIFY_MISSION_CHANGED,
+        EventCallingType::LOCAL, result);
     HILOGI("[PerformanceTest] NotifyMissionsChangedFromRemote ret:%{public}d, spend %{public}" PRId64 " ms",
         result, GetTickCount() - begin);
 }
@@ -1065,6 +1070,8 @@ int32_t DistributedSchedMissionManager::MissionSnapshotChanged(int32_t missionId
     size_t len = data.GetReadableBytes();
     const uint8_t* byteStream = data.ReadBuffer(len);
     errCode = StoreSnapshotInfo(networkId, missionId, byteStream, len);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::NOTIFY_SNAPSHOT_CHANGED,
+        EventCallingType::LOCAL, errCode);
     return errCode;
 }
 
