@@ -66,6 +66,30 @@ constexpr ErrCode DMS_SERVICE_ERR_OFFSET = ErrCodeOffset(SUBSYS_DISTRIBUTEDSCHED
 
 enum {
     /**
+     * Result(16300503) for failed to get the missioninfo of the specified missionId.
+     */
+    NO_MISSION_INFO_FOR_MISSION_ID = 16300503,
+    /**
+     * Result(16600001) for the system ability work abnormally.
+     */
+    SYSTEM_WORK_ABNORMALLY = 16600001,
+    /**
+     * Result(16600002) for invalid input parameter.
+     */
+    INVALID_INPUT_PARAMETER = 16600002,
+    /**
+     * Result(16600003) for token or callback not registered.
+     */
+    CALLBACK_TOKEN_UNREGISTERED = 16600003,
+    /**
+     * Result(16600004) for token register max times.
+     */
+    REGISTERED_MAX_TIMES = 16600004,
+    /**
+     * Result(16600005) for token has been registered.
+     */
+    NO_REPEATED_REGISTRATION = 16600005,
+    /**
      * Result(29360128) for invalid parameters.
      */
     INVALID_PARAMETERS_ERR = DMS_SERVICE_ERR_OFFSET,
