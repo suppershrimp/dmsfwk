@@ -58,10 +58,7 @@ bool DtbschedmgrDeviceInfoStorage::Init()
         }
         HILOGE("connect softbus 60times * 30s, error!!");
     };
-    if (!initHandler_->PostTask(func)) {
-        HILOGE("Init handler postTask failed");
-        return false;
-    }
+    initHandler_->PostTask(func);
     return true;
 }
 
@@ -275,9 +272,7 @@ void DtbschedmgrDeviceInfoStorage::DeviceOnlineNotify(const std::shared_ptr<DmsD
             listener_->DeviceOnlineNotify(deviceId);
         }
     };
-    if (!networkIdMgrHandler_->PostTask(nodeOnline)) {
-        HILOGE("DeviceOnlineNotify handler postTask failed");
-    }
+    networkIdMgrHandler_->PostTask(nodeOnline);
 }
 
 void DtbschedmgrDeviceInfoStorage::DeviceOfflineNotify(const std::string& deviceId)
@@ -303,9 +298,7 @@ void DtbschedmgrDeviceInfoStorage::DeviceOfflineNotify(const std::string& device
         lock_guard<mutex> autoLock(deviceLock_);
         remoteDevices_.erase(deviceId);
     };
-    if (!networkIdMgrHandler_->PostTask(nodeOffline)) {
-        HILOGE("DeviceOfflineNotify handler postTask failed");
-    }
+    networkIdMgrHandler_->PostTask(nodeOffline);
 }
 
 void DtbschedmgrDeviceInfoStorage::OnDeviceInfoChanged(const std::string& deviceId)
