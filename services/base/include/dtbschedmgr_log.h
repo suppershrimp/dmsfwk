@@ -405,6 +405,18 @@ enum {
      * Result(29360216) for invalid continuation mode.
      */
     INVALID_CONTINUATION_MODE = 29360216,
+    /**
+     * Result(29360217) for DistributedSched Service call device profile service error.
+     */
+    DEVICE_PROFILE_SERVICE_EXCEPTION = 29360217,
+    /**
+     * Result(29360218) for dms version is empty.
+     */
+    DMS_VERSION_EMPTY = 29360218,
+    /**
+     * Result(29360219) for DistributedSched Service parse dms version error.
+     */
+    DMS_VERSION_PARSE_EXCEPTION = 29360219,
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
