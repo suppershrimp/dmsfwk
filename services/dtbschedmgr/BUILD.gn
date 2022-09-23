@@ -22,7 +22,10 @@ group("unittest") {
 
 config("distributed_sched_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "//foundation/ability/dmsfwk/utils/native/include",
+  ]
   if (dmsfwk_mission_manager) {
     defines = [ "SUPPORT_DISTRIBUTED_MISSION_MANAGER" ]
   }
@@ -73,6 +76,7 @@ ohos_shared_library("distributedschedsvr") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_client",
     "device_manager:devicemanagersdk",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
