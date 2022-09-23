@@ -13,17 +13,26 @@
  * limitations under the License.
  */
 
-#include "native_engine/native_engine.h"
-#include "js_continuation_manager.h"
+#ifndef DMS_TOKEN_CB_TEST_H
+#define DMS_TOKEN_CB_TEST_H
 
-__attribute__((constructor)) static void NAPI_application_continuationmanager_AutoRegister()
-{
-    auto moduleManager = NativeModuleManager::GetInstance();
-    NativeModule newModuleInfo = {
-        .name = "continuation.continuationManager",
-        .fileName = "continuation/libcontinuationmanager_napi.so/continuationmanager.js",
-        .registerCallback = OHOS::DistributedSchedule::JsContinuationManagerInit,
-    };
+#include "gtest/gtest.h"
 
-    moduleManager->Register(&newModuleInfo);
-}
+#define private public
+#include "dms_token_callback.h"
+#undef private
+
+namespace OHOS {
+namespace DistributedSchedule {
+class DmsTokenCallbackTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+
+    sptr<DmsTokenCallback> dmsTokenCallback_;
+};
+} // namespace DistributedSchedule
+} // namespace OHOS
+#endif // DMS_TOKEN_CB_TEST_H

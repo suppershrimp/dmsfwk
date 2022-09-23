@@ -13,26 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_DISTRIBUTED_ABILITY_MANAGER_INTERFACES_INNERKITS_CONTINUATION_MODE_H
-#define OHOS_DISTRIBUTED_ABILITY_MANAGER_INTERFACES_INNERKITS_CONTINUATION_MODE_H
+#ifndef OHOS_DISTRIBUTED_ABILITY_MANAGER_DUMPER_TEST_H
+#define OHOS_DISTRIBUTED_ABILITY_MANAGER_DUMPER_TEST_H
+
+#include "gtest/gtest.h"
+
+#define private public
+#include "distributed_ability_manager_service.h"
+#undef private
 
 namespace OHOS {
 namespace DistributedSchedule {
-/**
- * @enum ContinuationMode
- * ContinuationMode defines the description of additional parameters for continuation.
- */
-enum class ContinuationMode {
-    /**
-     * Collaboration with a single device.
-     */
-    COLLABORATION_SINGLE = 0,
+class DistributedAbilityManagerDumperTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp() override;
+    void TearDown() override;
 
-    /**
-     * Collaboration with a mutiple device.
-     */
-    COLLABORATION_MUTIPLE = 1,
+    sptr<DistributedAbilityManagerService> dtbabilitymgrService_;
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
-#endif // OHOS_DISTRIBUTED_ABILITY_MANAGER_INTERFACES_INNERKITS_CONTINUATION_MODE_H
+#endif // OHOS_DISTRIBUTED_ABILITY_MANAGER_DUMPER_TEST_H

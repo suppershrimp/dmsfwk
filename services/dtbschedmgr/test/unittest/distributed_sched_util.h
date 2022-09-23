@@ -16,11 +16,16 @@
 #ifndef DISTRIBUTED_SCHED_UTIL_H
 #define DISTRIBUTED_SCHED_UTIL_H
 
+#include <stdint.h>
+
 namespace OHOS {
 namespace DistributedSchedule {
 class DistributedSchedUtil {
 public:
     static void MockPermission();
+    static void MockProcess(const char* processName);
+    static void MockProcessAndPermission(const char* processName,
+        const char *perms[] = nullptr, int32_t permsNum = 0);
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
