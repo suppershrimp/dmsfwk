@@ -47,7 +47,7 @@ int32_t DmsBundleManagerCallbackStub::OnQueryInstallationFinishedInner(MessagePa
 int32_t DmsBundleManagerCallbackStub::OnQueryInstallationFinished(int32_t resultCode,
     int32_t missionId, int versionCode)
 {
-    HILOGI("bms callback received, missionId: %{public}d", missionId);
+    HILOGI("[PerformanceTest] bms callback received, missionId: %{public}d", missionId);
     int32_t result = 0;
     if (resultCode != ERR_OK) {
         HILOGE("remote not installed and cannot install on remote device, resultCode = %{public}d", resultCode);
@@ -60,7 +60,9 @@ int32_t DmsBundleManagerCallbackStub::OnQueryInstallationFinished(int32_t result
     HILOGI("able to install on target device, start continue ability with freeInstall");
     std::string deviceId = DistributedSchedService::GetInstance().GetContinuaitonDevice(missionId);
     DistributedSchedService::GetInstance().SetContinuationTimeout(missionId, CONTINUATION_FREE_INSTALL_TIMEOUT);
+    HILOGD("[PerformanceTest] ContinueAbility begin");
     result = AAFwk::AbilityManagerClient::GetInstance()->ContinueAbility(deviceId, missionId, versionCode);
+    HILOGD("[PerformanceTest] ContinueAbility end");
     return result;
 }
 

@@ -194,6 +194,7 @@ bool DistributedSchedService::Init()
 int32_t DistributedSchedService::StartRemoteAbility(const OHOS::AAFwk::Want& want,
     int32_t callerUid, int32_t requestCode, uint32_t accessToken)
 {
+    HILOGD("[PerformanceTest] StartRemoteAbility begin");
     std::string localDeviceId;
     std::string deviceId = want.GetElement().GetDeviceID();
     if (!GetLocalDeviceId(localDeviceId) || !CheckDeviceId(localDeviceId, deviceId)) {
@@ -226,9 +227,10 @@ int32_t DistributedSchedService::StartRemoteAbility(const OHOS::AAFwk::Want& wan
     }
     AAFwk::Want* newWant = const_cast<Want*>(&want);
     newWant->SetParam(DMS_SRC_NETWORK_ID, localDeviceId);
-    HILOGI("[PerformanceTest] StartRemoteAbility transact begin");
+    int64_t begin = GetTickCount();
     int32_t result = remoteDms->StartAbilityFromRemote(*newWant, abilityInfo, requestCode, callerInfo, accountInfo);
-    HILOGI("[PerformanceTest] StartRemoteAbility transact end");
+    HILOGD("[PerformanceTest] StartAbilityFromRemote transact spend %{public}" PRId64 " ms", GetTickCount() - begin);
+    HILOGD("[PerformanceTest] StartRemoteAbility end");
     return result;
 }
 
@@ -236,6 +238,7 @@ int32_t DistributedSchedService::StartAbilityFromRemote(const OHOS::AAFwk::Want&
     const OHOS::AppExecFwk::AbilityInfo& abilityInfo, int32_t requestCode,
     const CallerInfo& callerInfo, const AccountInfo& accountInfo)
 {
+    HILOGD("[PerformanceTest] StartAbilityFromRemote begin");
     std::string localDeviceId;
     std::string deviceId = want.GetElement().GetDeviceID();
     if (!GetLocalDeviceId(localDeviceId) ||
@@ -249,7 +252,8 @@ int32_t DistributedSchedService::StartAbilityFromRemote(const OHOS::AAFwk::Want&
         HILOGE("CheckDPermission denied!!");
         return err;
     }
-    return StartAbility(want, requestCode);
+    int32_t errCode = StartAbility(want, requestCode);
+    return errCode;
 }
 
 int32_t DistributedSchedService::SendResultFromRemote(OHOS::AAFwk::Want& want, int32_t requestCode,
@@ -336,6 +340,7 @@ int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDevi
         dschedContinuation_->PushCallback(missionId, callback, dstDeviceId, false);
         SetContinuationTimeout(missionId, CONTINUATION_TIMEOUT);
         uint32_t remoteBundleVersion = remoteBundleInfo.versionCode;
+        HILOGD("[PerformanceTest] ContinueAbility begin");
         result = AbilityManagerClient::GetInstance()->ContinueAbility(dstDeviceId, missionId, remoteBundleVersion);
         HILOGI("result: %{public}d!", result);
         return result;
@@ -355,7 +360,8 @@ int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDevi
     SetContinuationTimeout(missionId, CHECK_REMOTE_INSTALL_ABILITY);
 
     missionInfo.want.SetDeviceId(dstDeviceId);
-    if (!BundleManagerInternal::CheckIfRemoteCanInstall(missionInfo.want, missionId)) {
+    bool ret = BundleManagerInternal::CheckIfRemoteCanInstall(missionInfo.want, missionId);
+    if (!ret) {
         HILOGE("call CheckIfRemoteCanInstall failed");
         RemoveContinuationTimeout(missionId);
         dschedContinuation_->PopCallback(missionId);
@@ -372,7 +378,9 @@ int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDev
         HILOGE("get remote dms null!");
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
+    int64_t begin = GetTickCount();
     int32_t result = remoteDms->ContinueMission(srcDeviceId, dstDeviceId, missionId, callback, wantParams);
+    HILOGD("[PerformanceTest] ContinueMission to remote spend %{public}" PRId64 " ms", GetTickCount() - begin);
     HILOGI("ContinueRemoteMission result: %{public}d!", result);
     return result;
 }
@@ -411,7 +419,8 @@ int32_t DistributedSchedService::SetWantForContinuation(AAFwk::Want& newWant, in
     newWant.SetParam("sessionId", missionId);
     newWant.SetParam("deviceId", devId);
     BundleInfo localBundleInfo;
-    if (BundleManagerInternal::GetLocalBundleInfo(newWant.GetBundle(), localBundleInfo) != ERR_OK) {
+    int32_t errCode = BundleManagerInternal::GetLocalBundleInfo(newWant.GetBundle(), localBundleInfo);
+    if (errCode != ERR_OK) {
         HILOGE("get local bundle info failed");
         return INVALID_PARAMETERS_ERR;
     }
@@ -487,7 +496,9 @@ void DistributedSchedService::NotifyCompleteContinuation(const std::u16string& d
         HILOGE("NotifyCompleteContinuation get remote dms null!");
         return;
     }
+    HILOGD("[PerformanceTest] NotifyContinuationResult to remote begin");
     remoteDms->NotifyContinuationResultFromRemote(sessionId, isSuccess);
+    HILOGD("[PerformanceTest] NotifyContinuationResult to remote end");
 }
 
 int32_t DistributedSchedService::NotifyContinuationResultFromRemote(int32_t sessionId, bool isSuccess)
@@ -566,10 +577,14 @@ void DistributedSchedService::NotifyContinuationCallbackResult(int32_t missionId
     int32_t result = 0;
     if (dschedContinuation_->IsInContinuationProgress(missionId)) {
         if (!isSuccess) {
+            HILOGD("[PerformanceTest] CleanMission begin");
             result = AbilityManagerClient::GetInstance()->CleanMission(missionId);
+            HILOGD("[PerformanceTest] CleanMission end");
             HILOGD("clean mission result:%{public}d", result);
         }
+        HILOGD("[PerformanceTest] NotifyMissionCenterResult begin");
         result = dschedContinuation_->NotifyMissionCenterResult(missionId, isSuccess);
+        HILOGD("[PerformanceTest] NotifyMissionCenterResult end");
     } else {
         result = AbilityManagerClient::GetInstance()->NotifyContinuationResult(missionId, isSuccess);
         dschedContinuation_->RemoveTimeOut(missionId);
@@ -677,11 +692,12 @@ int32_t DistributedSchedService::ConnectRemoteAbility(const OHOS::AAFwk::Want& w
     }
 
     HILOGD("[PerformanceTest] ConnectRemoteAbility begin");
+    int64_t start = GetTickCount();
     int32_t result = TryConnectRemoteAbility(want, connect, callerInfo);
     if (result != ERR_OK) {
         HILOGE("ConnectRemoteAbility result is %{public}d", result);
     }
-    HILOGD("[PerformanceTest] ConnectRemoteAbility end");
+    HILOGD("[PerformanceTest] ConnectRemoteAbility end, spend %{public}" PRId64 " ms", GetTickCount() - start);
     return result;
 }
 
@@ -707,7 +723,7 @@ int32_t DistributedSchedService::TryConnectRemoteAbility(const OHOS::AAFwk::Want
         int64_t start = GetTickCount();
         HILOGD("[PerformanceTest] ConnectRemoteAbility begin");
         result = remoteDms->ConnectAbilityFromRemote(want, abilityInfo, connect, callerInfo, accountInfo);
-        HILOGD("[PerformanceTest] ConnectRemoteAbility end");
+        HILOGD("[PerformanceTest] ConnectRemoteAbility end, spend %{public}" PRId64 " ms", GetTickCount() - start);
         if (result == ERR_OK) {
             std::lock_guard<std::mutex> autoLock(distributedLock_);
             RemoteConnectAbilityMappingLocked(connect, callerInfo.sourceDeviceId, remoteDeviceId,
@@ -801,15 +817,17 @@ int32_t DistributedSchedService::TryStartRemoteAbilityByCall(const OHOS::AAFwk::
             DnetworkAdapter::AnonymizeDeviceId(remoteDeviceId).c_str());
         return INVALID_PARAMETERS_ERR;
     }
-    HILOGD("[PerformanceTest] TryStartRemoteAbilityByCall RPC begin");
     AccountInfo accountInfo;
     int32_t ret = DistributedSchedPermission::GetInstance().GetAccountInfo(remoteDeviceId, callerInfo, accountInfo);
     if (ret != ERR_OK) {
         HILOGE("GetAccountInfo failed");
         return ret;
     }
+    int64_t begin = GetTickCount();
+    HILOGD("[PerformanceTest] TryStartRemoteAbilityByCall RPC begin");
     int32_t result = remoteDms->StartAbilityByCallFromRemote(want, connect, callerInfo, accountInfo);
-    HILOGD("[PerformanceTest] TryStartRemoteAbilityByCall RPC end");
+    HILOGD("[PerformanceTest] TryStartRemoteAbilityByCall RPC end, spend %{public}" PRId64 " ms",
+        GetTickCount() - begin);
     if (result == ERR_OK) {
         SaveCallerComponent(want, connect, callerInfo);
     } else {
@@ -889,6 +907,7 @@ void DistributedSchedService::ProcessCalleeOffline(const std::string& deviceId)
 int32_t DistributedSchedService::StartRemoteAbilityByCall(const OHOS::AAFwk::Want& want,
     const sptr<IRemoteObject>& connect, int32_t callerUid, int32_t callerPid, uint32_t accessToken)
 {
+    HILOGD("[PerformanceTest] StartRemoteAbilityByCall begin");
     if (connect == nullptr) {
         HILOGE("StartRemoteAbilityByCall connect is null");
         return INVALID_PARAMETERS_ERR;
@@ -1230,9 +1249,9 @@ sptr<IDistributedSched> DistributedSchedService::GetRemoteDms(const std::string&
         HILOGE("GetRemoteDms failed to connect to systemAbilityMgr!");
         return nullptr;
     }
-    HILOGD("[PerformanceTest] GetRemoteDms begin");
+    int64_t begin = GetTickCount();
     auto object = samgr->CheckSystemAbility(DISTRIBUTED_SCHED_SA_ID, remoteDeviceId);
-    HILOGD("[PerformanceTest] GetRemoteDms end");
+    HILOGD("[PerformanceTest] GetRemoteDms spend %{public}" PRId64 " ms", GetTickCount() - begin);
     if (object == nullptr) {
         HILOGE("GetRemoteDms failed to get remote DistributedSched %{private}s", remoteDeviceId.c_str());
         return nullptr;
@@ -1242,7 +1261,10 @@ sptr<IDistributedSched> DistributedSchedService::GetRemoteDms(const std::string&
 
 bool DistributedSchedService::GetLocalDeviceId(std::string& localDeviceId)
 {
-    if (!DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(localDeviceId)) {
+    int64_t begin = GetTickCount();
+    bool ret = DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(localDeviceId);
+    HILOGD("[PerformanceTest] GetLocalDeviceId spend %{public}" PRId64 " ms", GetTickCount() - begin);
+    if (!ret) {
         HILOGE("GetLocalDeviceId failed");
         return false;
     }
@@ -1286,7 +1308,8 @@ int32_t DistributedSchedService::ConnectAbilityFromRemote(const OHOS::AAFwk::Wan
     const AppExecFwk::AbilityInfo& abilityInfo, const sptr<IRemoteObject>& connect,
     const CallerInfo& callerInfo, const AccountInfo& accountInfo)
 {
-    HILOGD("[PerformanceTest] DistributedSchedService ConnectAbilityFromRemote begin");
+    HILOGD("[PerformanceTest] ConnectAbilityFromRemote begin");
+    int64_t begin = GetTickCount();
     if (connect == nullptr) {
         HILOGE("ConnectAbilityFromRemote connect is null");
         return INVALID_REMOTE_PARAMETERS_ERR;
@@ -1322,7 +1345,7 @@ int32_t DistributedSchedService::ConnectAbilityFromRemote(const OHOS::AAFwk::Wan
         }
     }
     int32_t errCode = DistributedSchedAdapter::GetInstance().ConnectAbility(want, callbackWrapper, this);
-    HILOGD("[PerformanceTest] ConnectAbilityFromRemote end");
+    HILOGD("[PerformanceTest] ConnectAbilityFromRemote end, spend %{public}" PRId64 " ms", GetTickCount() - begin);
     if (errCode == ERR_OK) {
         std::lock_guard<std::mutex> autoLock(connectLock_);
         if (itConnect == connectAbilityMap_.end()) {
@@ -1908,22 +1931,27 @@ int32_t DistributedSchedService::StartLocalAbility(const FreeInstallInfo& info, 
 
 int32_t DistributedSchedService::StartAbility(const OHOS::AAFwk::Want& want, int32_t requestCode)
 {
+    int64_t begin = GetTickCount();
     ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->Connect();
     if (err != ERR_OK) {
         HILOGE("connect ability server failed %{public}d", err);
         return err;
     }
+    HILOGD("[PerformanceTest] AbilityManager connect spend %{public}" PRId64 " ms", GetTickCount() - begin);
     std::vector<int> ids;
+    begin = GetTickCount();
     ErrCode ret = OsAccountManager::QueryActiveOsAccountIds(ids);
+    HILOGD("[PerformanceTest] QueryActiveOsAccountIds spend %{public}" PRId64 " ms", GetTickCount() - begin);
     if (ret != ERR_OK || ids.empty()) {
         return INVALID_PARAMETERS_ERR;
     }
+    begin = GetTickCount();
     if (want.GetBoolParam(Want::PARAM_RESV_FOR_RESULT, false)) {
-        HILOGI("StartAbilityForResult start");
+        HILOGI("[PerformanceTest]StartAbilityForResult start");
         sptr<IRemoteObject> dmsTokenCallback = new DmsTokenCallback();
         err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, dmsTokenCallback, requestCode, ids[0]);
     } else {
-        HILOGI("StartAbility start");
+        HILOGI("[PerformanceTest]StartAbility start");
         err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, requestCode, ids[0]);
     }
     if (err != ERR_OK) {
