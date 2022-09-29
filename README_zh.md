@@ -35,4 +35,4 @@
 
 ability\_dmsfwk
 
-ability\_dmsfwk\_lite
+[ability\_dmsfwk\_lite](https://gitee.com/openharmony/ability_dmsfwk_lite)
