@@ -79,6 +79,7 @@ void DistributedSchedPermissionTest::SetUp()
  * @tc.name: CheckSendResultPermission_001
  * @tc.desc: input invalid params
  * @tc.type: FUNC
+ * @tc.require: issueI5T6GJ
  */
 HWTEST_F(DistributedSchedPermissionTest, CheckSendResultPermission_001, TestSize.Level3)
 {
@@ -99,6 +100,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckSendResultPermission_001, TestSize
  * @tc.name: CheckSendResultPermission_002
  * @tc.desc: input invalid params
  * @tc.type: FUNC
+ * @tc.require: issueI5T6GJ
  */
 HWTEST_F(DistributedSchedPermissionTest, CheckSendResultPermission_002, TestSize.Level3)
 {
@@ -119,6 +121,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckSendResultPermission_002, TestSize
  * @tc.name: CheckSendResultPermission_003
  * @tc.desc: input invalid params
  * @tc.type: FUNC
+ * @tc.require: issueI5T6GJ
  */
 HWTEST_F(DistributedSchedPermissionTest, CheckSendResultPermission_003, TestSize.Level3)
 {
