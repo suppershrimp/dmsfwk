@@ -537,6 +537,8 @@ int32_t DistributedSchedStub::GetMissionInfosInner(MessageParcel& data, MessageP
 
     std::vector<MissionInfo> missionInfos;
     int32_t result = GetMissionInfos(Str16ToStr8(deviceId), numMissions, missionInfos);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::GET_REMOTE_MISSION_INFOS,
+        EventCallingType::LOCAL, result);
     HILOGI("result = %{public}d", result);
     if (result == ERR_NONE) {
         result = MissionInfoConverter::WriteMissionInfosToParcel(reply, missionInfos) ? ERR_NONE : ERR_FLATTEN_OBJECT;
@@ -563,6 +565,8 @@ int32_t DistributedSchedStub::GetRemoteMissionSnapshotInfoInner(MessageParcel& d
     }
     std::unique_ptr<MissionSnapshot> missionSnapshotPtr = std::make_unique<MissionSnapshot>();
     int32_t errCode = GetRemoteMissionSnapshotInfo(networkId, missionId, missionSnapshotPtr);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::GET_REMOTE_MISSION_SNAPSHOT,
+        EventCallingType::LOCAL, errCode);
     if (errCode != ERR_NONE) {
         HILOGE("get mission snapshot failed!");
         return ERR_NULL_OBJECT;
@@ -597,6 +601,8 @@ int32_t DistributedSchedStub::RegisterMissionListenerInner(MessageParcel& data, 
         return ERR_FLATTEN_OBJECT;
     }
     int32_t result = RegisterMissionListener(devId, missionChangedListener);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::REGISTER_MISSION_LISTENER,
+        EventCallingType::LOCAL, result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
@@ -617,6 +623,8 @@ int32_t DistributedSchedStub::UnRegisterMissionListenerInner(MessageParcel& data
         return ERR_FLATTEN_OBJECT;
     }
     int32_t result = UnRegisterMissionListener(devId, missionChangedListener);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::UNREGISTER_MISSION_LISTENER,
+        EventCallingType::LOCAL, result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
@@ -632,7 +640,10 @@ int32_t DistributedSchedStub::StartSyncMissionsFromRemoteInner(MessageParcel& da
         return ERR_FLATTEN_OBJECT;
     }
     std::vector<DstbMissionInfo> missionInfos;
-    if (StartSyncMissionsFromRemote(callerInfo, missionInfos) != ERR_NONE) {
+    int32_t result = StartSyncMissionsFromRemote(callerInfo, missionInfos);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::START_SYNC_REMOTE_MISSIONS,
+        EventCallingType::REMOTE, result);
+    if (result != ERR_NONE) {
         return ERR_FLATTEN_OBJECT;
     }
     if (!reply.WriteInt32(VERSION)) {
@@ -657,6 +668,8 @@ int32_t DistributedSchedStub::StopSyncRemoteMissionsInner(MessageParcel& data, M
         return ERR_FLATTEN_OBJECT;
     }
     int32_t result = StopSyncRemoteMissions(Str16ToStr8(devId));
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::STOP_SYNC_REMOTE_MISSIONS,
+        EventCallingType::LOCAL, result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
@@ -672,6 +685,8 @@ int32_t DistributedSchedStub::StopSyncMissionsFromRemoteInner(MessageParcel& dat
         return ERR_FLATTEN_OBJECT;
     }
     int32_t result = StopSyncMissionsFromRemote(callerInfo);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::STOP_SYNC_REMOTE_MISSIONS,
+        EventCallingType::REMOTE, result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
@@ -693,6 +708,8 @@ int32_t DistributedSchedStub::NotifyMissionsChangedFromRemoteInner(MessageParcel
     callerInfo.pid = data.ReadInt32();
     callerInfo.dmsVersion = data.ReadInt32();
     int32_t result = NotifyMissionsChangedFromRemote(missionInfos, callerInfo);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::NOTIFY_MISSION_CHANGED,
+        EventCallingType::REMOTE, result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
@@ -711,6 +728,8 @@ int32_t DistributedSchedStub::StartSyncRemoteMissionsInner(MessageParcel& data, 
     bool fixConflict = data.ReadBool();
     int64_t tag = data.ReadInt64();
     int32_t result = StartSyncRemoteMissions(deviceId, fixConflict, tag);
+    DmsHiSysEventReport::ReportMissionMgrBehaviorEvent(BehaviorEvent::START_SYNC_REMOTE_MISSIONS,
+        EventCallingType::LOCAL, result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 #endif

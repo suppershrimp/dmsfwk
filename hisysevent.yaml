@@ -13,6 +13,7 @@
 
 domain: DISTSCHEDULE
 
+# distributed schedule manager behavior event
 START_REMOTE_ABILITY:
   __BASE: {type: BEHAVIOR, level: MINOR, tag: start, desc: start remote ability}
   CALLING_TYPE: {type: STRING, desc: calling type}
@@ -73,7 +74,48 @@ START_CONTINUATION:
   CALLING_APP_UID: {type: INT32, desc: calling app uid}
   RESULT: {type: INT32, desc: result}
 
+# distributed mission manager behavior event
+GET_REMOTE_MISSION_INFOS:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: mission, desc: get mission}
+  CALLING_TYPE: {type: STRING, desc: calling type}
+  RESULT: {type: INT32, desc: result}
 
+GET_REMOTE_MISSION_SNAPSHOT:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: mission, desc: get snapshot}
+  CALLING_TYPE: {type: STRING, desc: calling type}
+  RESULT: {type: INT32, desc: result}
+  
+START_SYNC_REMOTE_MISSIONS:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: mission, desc: start sync mission}
+  CALLING_TYPE: {type: STRING, desc: calling type}
+  RESULT: {type: INT32, desc: result}
+
+STOP_SYNC_REMOTE_MISSIONS:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: mission, desc: stop sync mission}
+  CALLING_TYPE: {type: STRING, desc: calling type}
+  RESULT: {type: INT32, desc: result}
+
+REGISTER_MISSION_LISTENER:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: mission, desc: register listener}
+  CALLING_TYPE: {type: STRING, desc: calling type}
+  RESULT: {type: INT32, desc: result}
+
+UNREGISTER_MISSION_LISTENER:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: mission, desc: unregister listener}
+  CALLING_TYPE: {type: STRING, desc: calling type}
+  RESULT: {type: INT32, desc: result}
+
+NOTIFY_MISSION_CHANGED:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: mission, desc: notify mission changed}
+  CALLING_TYPE: {type: STRING, desc: calling type}
+  RESULT: {type: INT32, desc: result}
+
+NOTIFY_SNAPSHOT_CHANGED:
+  __BASE: {type: BEHAVIOR, level: MINOR, tag: mission, desc: notify snapshot changed}
+  CALLING_TYPE: {type: STRING, desc: calling type}
+  RESULT: {type: INT32, desc: result}
+
+# distributed schedule manager fault event
 START_ABILITY_FAILED:
   __BASE: {type: FAULT, level: CRITICAL, tag: start, desc: start remote ability}
   ERROR_TYPE: {type: STRING, desc: error type}
