@@ -51,7 +51,6 @@ Uri::Uri(const string& uriString)
     port_ = NOT_CALCULATED;
 
     if (uriString.empty()) {
-        HiLog::Error(LABEL, "Input empty!");
         return;
     }
 
@@ -67,7 +66,6 @@ Uri::Uri(const string& uriString)
 
     if (!CheckScheme()) {
         uriString_ = EMPTY;
-        HiLog::Error(LABEL, "Scheme wrong!");
     }
 }
 
