@@ -66,7 +66,6 @@ Uri::Uri(const string& uriString)
 
     if (!CheckScheme()) {
         uriString_ = EMPTY;
-        HiLog::Error(LABEL, "Scheme wrong!");
     }
 }
 
