@@ -113,11 +113,11 @@ DistributedSchedStub::~DistributedSchedStub()
 int32_t DistributedSchedStub::OnRemoteRequest(uint32_t code,
     MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
-    bool IsLocalCalling = IPCSkeleton::IsLocalCalling();
-    HILOGI("OnRemoteRequest, code = %{public}d, flags = %{public}d, IsLocalCalling = %{public}d.",
-        code, option.GetFlags(), IsLocalCalling);
+    bool isLocalCalling = IPCSkeleton::IsLocalCalling();
+    HILOGI("OnRemoteRequest, code = %{public}d, flags = %{public}d, isLocalCalling = %{public}d.",
+        code, option.GetFlags(), isLocalCalling);
 
-    const auto& funcsMap = IsLocalCalling ? localFuncsMap_ : remoteFuncsMap_;
+    const auto& funcsMap = isLocalCalling ? localFuncsMap_ : remoteFuncsMap_;
     auto iter = funcsMap.find(code);
     if (iter != funcsMap.end()) {
         auto func = iter->second;

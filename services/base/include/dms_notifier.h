@@ -26,7 +26,7 @@ namespace DistributedSchedule {
 class DmsNotifier : public virtual RefBase {
 public:
     DmsNotifier() = default;
-    virtual ~DmsNotifier() = default;
+    ~DmsNotifier() override = default;
 
     virtual void DeviceOnlineNotify(const std::string& deviceId) = 0;
     virtual void DeviceOfflineNotify(const std::string& deviceId) = 0;

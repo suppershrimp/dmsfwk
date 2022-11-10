@@ -25,10 +25,10 @@ namespace DistributedSchedule {
 class ContinuationResult : public Parcelable {
 public:
     ContinuationResult() = default;
-    ~ContinuationResult() = default;
+    ~ContinuationResult() override = default;
 
     bool ReadFromParcel(Parcel &parcel);
-    virtual bool Marshalling(Parcel &parcel) const override;
+    bool Marshalling(Parcel &parcel) const override;
     static ContinuationResult *Unmarshalling(Parcel &parcel);
 
     void SetDeviceId(std::string deviceId);

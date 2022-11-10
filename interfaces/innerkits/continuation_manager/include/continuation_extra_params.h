@@ -28,10 +28,10 @@ namespace DistributedSchedule {
 class ContinuationExtraParams : public Parcelable {
 public:
     ContinuationExtraParams() = default;
-    ~ContinuationExtraParams() = default;
+    ~ContinuationExtraParams() override = default;
 
     bool ReadFromParcel(Parcel &parcel);
-    virtual bool Marshalling(Parcel &parcel) const override;
+    bool Marshalling(Parcel &parcel) const override;
     static ContinuationExtraParams *Unmarshalling(Parcel &parcel);
 
     void SetDeviceType(std::vector<std::string> deviceTypeVec);

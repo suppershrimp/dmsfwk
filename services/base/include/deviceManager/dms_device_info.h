@@ -38,7 +38,7 @@ public:
     DmsDeviceInfo(const std::string& deviceName, int32_t deviceType, const std::string& deviceId,
         int32_t deviceState = ONLINE)
         : deviceName_(deviceName), deviceType_(deviceType), deviceId_(deviceId), deviceState_(deviceState) {}
-    ~DmsDeviceInfo() = default;
+    ~DmsDeviceInfo() override = default;
 
     const std::string& GetDeviceName() const;
     const std::string& GetDeviceId() const;

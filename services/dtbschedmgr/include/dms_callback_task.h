@@ -64,7 +64,7 @@ private:
             : AppExecFwk::EventHandler(runner), callbackTask_(callbackTask), callback_(callback)
         {
         }
-        ~DmsCallbackHandler() = default;
+        ~DmsCallbackHandler() override = default;
 
         void ProcessEvent(const OHOS::AppExecFwk::InnerEvent::Pointer& event) override;
     private:

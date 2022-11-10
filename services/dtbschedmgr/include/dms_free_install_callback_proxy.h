@@ -40,7 +40,7 @@ public:
      * @param requestCode the resultCode of the ability to start.
      * @param resultCode, ERR_OK on success, others on failure.
      */
-    virtual void OnInstallFinished(const OHOS::AAFwk::Want& want, int32_t requestCode, int32_t resultCode) override;
+    void OnInstallFinished(const OHOS::AAFwk::Want& want, int32_t requestCode, int32_t resultCode) override;
 
 private:
     void SendRequestCommon(int32_t errcode, IDmsFreeInstallCallback::IDmsFreeInstallCallbackCmd cmd);

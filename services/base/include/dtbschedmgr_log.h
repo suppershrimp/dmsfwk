@@ -16,10 +16,10 @@
 #ifndef SERVICES_DTBSCHEDMGR_INCLUDE_DTBSCHEDMGR_LOG_H_
 #define SERVICES_DTBSCHEDMGR_INCLUDE_DTBSCHEDMGR_LOG_H_
 
+#include "cinttypes"
 #include "errors.h"
 #include "hilog/log_c.h"
 #include "hilog/log_cpp.h"
-#include "inttypes.h"
 
 namespace OHOS {
 namespace DistributedSchedule {

@@ -27,7 +27,7 @@ namespace DistributedSchedule {
 class JsDeviceSelectionListener : public DeviceSelectionNotifierStub {
 public:
     explicit JsDeviceSelectionListener(NativeEngine* engine) : engine_(engine) {}
-    virtual ~JsDeviceSelectionListener() = default;
+    ~JsDeviceSelectionListener() override = default;
 
     void OnDeviceConnect(const std::vector<ContinuationResult>& continuationResults) override;
     void OnDeviceDisconnect(const std::vector<ContinuationResult>& continuationResults) override;

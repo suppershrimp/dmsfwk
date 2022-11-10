@@ -24,7 +24,7 @@ namespace DistributedSchedule {
 class DistributedMissionChangeListener : public AAFwk::MissionListenerStub {
 public:
     DistributedMissionChangeListener() = default;
-    virtual ~DistributedMissionChangeListener() = default;
+    ~DistributedMissionChangeListener() override = default;
 
     /**
      * @brief When a mission is created, AbilityMs notifies the listener of the mission id
@@ -69,14 +69,14 @@ public:
      *
      * @param missionId, mission Id.
      */
-    virtual void OnMissionClosed(int32_t missionId) override;
+    void OnMissionClosed(int32_t missionId) override;
 
     /**
      * @brief When a mission's label changed, AbilityMs notifies the listener of the mission id
      *
      * @param missionId, mission Id.
      */
-    virtual void OnMissionLabelUpdated(int32_t missionId) override;
+    void OnMissionLabelUpdated(int32_t missionId) override;
 };
 } // namespace DistributedSchedule
 } // namespace OHOS

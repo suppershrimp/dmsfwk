@@ -34,7 +34,7 @@ namespace DistributedSchedule {
 class DmsFreeInstallCallback : public DmsFreeInstallCallbackStub {
 public:
     DmsFreeInstallCallback(int64_t taskId, const IDistributedSched::FreeInstallInfo& info);
-    virtual ~DmsFreeInstallCallback() = default;
+    ~DmsFreeInstallCallback() override = default;
 
     /**
      * OnInstallFinished, FreeInstall is complete.
@@ -43,7 +43,7 @@ public:
      * @param requestCode the resultCode of the ability to start.
      * @param resultCode, ERR_OK on success, others on failure.
      */
-    virtual void OnInstallFinished(const OHOS::AAFwk::Want& want, int32_t requestCode, int32_t resultCode) override;
+    void OnInstallFinished(const OHOS::AAFwk::Want& want, int32_t requestCode, int32_t resultCode) override;
 
 private:
     int64_t taskId_ = 0;
