@@ -165,6 +165,43 @@ public:
     {
         return ERR_OK;
     };
+    int32_t GetFormsInfoHost(const FormInfoFilter &filter, std::vector<FormInfo> &formInfos) override
+    {
+        return ERR_OK;
+    };
+    int32_t GetFormPreviewImage(const Want &want, sptr<Ashmem> &previewImage) override
+    {
+        return ERR_OK;
+    };
+    int32_t AddFormByRemote(const int64_t formId, const AAFwk::Want &want,
+        const sptr<IRemoteObject> &dfmsHost, const FormCallerInfo &caller, FormJsInfo &formJsInfo) override
+    {
+        return ERR_OK;
+    };
+    int32_t RequestFormByRemote(const int64_t formId,
+        const sptr<IRemoteObject> &dfmsHost, const Want &want, const FormCallerInfo &caller) override
+    {
+        return ERR_OK;
+    };
+    int32_t DeleteFormByRemote(
+        const int64_t formId, const sptr<IRemoteObject> &dfmsHost, const FormCallerInfo &caller) override
+    {
+        return ERR_OK;
+    };
+    int32_t ReleaseFormByRemote(const int64_t formId,
+        const sptr<IRemoteObject> &dfmsHost, const FormCallerInfo &caller, bool delCache) override
+    {
+        return ERR_OK;
+    };
+    int32_t MessageEventByRemote(const int64_t formId,
+        const Want &want, const sptr<IRemoteObject> &dfmsHost, const FormCallerInfo &caller) override
+    {
+        return ERR_OK;
+    };
+    int32_t RouterEventByRemote(const int64_t formId, Want &want, const FormCallerInfo &caller) override
+    {
+        return ERR_OK;
+    };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
