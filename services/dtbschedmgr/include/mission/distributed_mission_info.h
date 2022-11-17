@@ -53,7 +53,7 @@ struct DstbMissionInfo : public Parcelable {
     int32_t windowTypeMode = 0;
 
     bool ReadFromParcel(Parcel& parcel);
-    virtual bool Marshalling(Parcel& parcel) const override;
+    bool Marshalling(Parcel& parcel) const override;
     static DstbMissionInfo* Unmarshalling(Parcel& parcel);
     std::string ToString() const;
 

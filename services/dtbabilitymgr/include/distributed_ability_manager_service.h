@@ -32,7 +32,7 @@ class DistributedAbilityManagerService : public SystemAbility, public Distribute
 
 public:
     DistributedAbilityManagerService(int32_t systemAbilityId, bool runOnCreate);
-    ~DistributedAbilityManagerService() = default;
+    ~DistributedAbilityManagerService() override = default;
     void OnStart() override;
     void OnStop() override;
     int32_t SendRequestToImpl(uint32_t code, MessageParcel& data, MessageParcel& reply,

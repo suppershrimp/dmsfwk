@@ -24,7 +24,7 @@ namespace OHOS {
 namespace DistributedSchedule {
 #define PARCEL_WRITE_HELPER(parcel, type, value) \
     do { \
-        bool ret = parcel.Write##type((value)); \
+        bool ret = (parcel).Write##type((value)); \
         if (!ret) { \
             HILOGE("%{public}s write value failed!", __func__); \
             return ERR_FLATTEN_OBJECT; \
@@ -33,7 +33,7 @@ namespace DistributedSchedule {
 
 #define PARCEL_WRITE_HELPER_NORET(parcel, type, value) \
     do { \
-        bool ret = parcel.Write##type((value)); \
+        bool ret = (parcel).Write##type((value)); \
         if (!ret) { \
             HILOGE("%{public}s write value failed!", __func__); \
             return; \
@@ -42,7 +42,7 @@ namespace DistributedSchedule {
 
 #define PARCEL_WRITE_HELPER_RET(parcel, type, value, failRet) \
     do { \
-        bool ret = parcel.Write##type((value)); \
+        bool ret = (parcel).Write##type((value)); \
         if (!ret) { \
             HILOGE("%{public}s write value failed!", __func__); \
             return failRet; \
@@ -51,7 +51,7 @@ namespace DistributedSchedule {
 
 #define PARCEL_READ_HELPER(parcel, type, out) \
     do { \
-        bool ret = parcel.Read##type((out)); \
+        bool ret = (parcel).Read##type((out)); \
         if (!ret) { \
             HILOGE("%{public}s read value failed!", __func__); \
             return ERR_FLATTEN_OBJECT; \
@@ -60,7 +60,7 @@ namespace DistributedSchedule {
 
 #define PARCEL_READ_HELPER_RET(parcel, type, out, failRet) \
     do { \
-        bool ret = parcel.Read##type((out)); \
+        bool ret = (parcel).Read##type((out)); \
         if (!ret) { \
             HILOGE("%{public}s read value failed!", __func__); \
             return failRet; \
@@ -69,7 +69,7 @@ namespace DistributedSchedule {
 
 #define PARCEL_READ_HELPER_NORET(parcel, type, out) \
     do { \
-        bool ret = parcel.Read##type((out)); \
+        bool ret = (parcel).Read##type((out)); \
         if (!ret) { \
             HILOGW("%{public}s read value failed!", __func__); \
         } \
@@ -78,12 +78,12 @@ namespace DistributedSchedule {
 #define PARCEL_TRANSACT_SYNC_RET_INT(remote, code, data, reply) \
     do { \
         MessageOption option; \
-        int32_t error = remote->SendRequest(code, data, reply, option); \
+        int32_t error = (remote)->SendRequest(code, data, reply, option); \
         if (error != ERR_NONE) { \
             HILOGE("%{public}s transact failed, error: %{public}d", __func__, error); \
             return error; \
         } \
-        int32_t result = reply.ReadInt32(); \
+        int32_t result = (reply).ReadInt32(); \
         HILOGD("%{public}s get result from server data = %{public}d", __func__, result); \
         return result; \
     } while (0)
@@ -91,7 +91,7 @@ namespace DistributedSchedule {
 #define PARCEL_TRANSACT_SYNC_NORET(remote, code, data, reply) \
     do { \
         MessageOption option; \
-        int32_t error = remote->SendRequest(code, data, reply, option); \
+        int32_t error = (remote)->SendRequest(code, data, reply, option); \
         if (error != ERR_NONE) { \
             HILOGE("%{public}s transact failed, error: %{public}d", __func__, error); \
             return; \
@@ -101,7 +101,7 @@ namespace DistributedSchedule {
 
 #define PARCEL_WRITE_REPLY_NOERROR(reply, type, result) \
     do { \
-        bool ret = reply.Write##type(result); \
+        bool ret = (reply).Write##type(result); \
         if (!ret) { \
             HILOGW("%{public}s write reply failed.", __func__); \
         } \

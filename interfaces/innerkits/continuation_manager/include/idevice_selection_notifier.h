@@ -33,7 +33,7 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedSchedule.IDeviceSelectionNotifier");
 
     IDeviceSelectionNotifier() = default;
-    virtual ~IDeviceSelectionNotifier() = default;
+    ~IDeviceSelectionNotifier() override = default;
 
     virtual void OnDeviceConnect(const std::vector<ContinuationResult>& continuationResults) = 0;
     virtual void OnDeviceDisconnect(const std::vector<ContinuationResult>& continuationResults) = 0;

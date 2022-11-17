@@ -91,11 +91,11 @@ struct Rect : public Parcelable {
 
     static Rect* Unmarshalling(Parcel &parcel)
     {
-        int32_t left = parcel.ReadInt32();
-        int32_t top = parcel.ReadInt32();
-        int32_t right = parcel.ReadInt32();
-        int32_t bottom = parcel.ReadInt32();
-        auto rectPtr = new Rect(left, top, right, bottom);
+        int32_t rectLeft = parcel.ReadInt32();
+        int32_t rectTop = parcel.ReadInt32();
+        int32_t rectRight = parcel.ReadInt32();
+        int32_t rectBottom = parcel.ReadInt32();
+        auto rectPtr = new Rect(rectLeft, rectTop, rectRight, rectBottom);
         return rectPtr;
     }
 

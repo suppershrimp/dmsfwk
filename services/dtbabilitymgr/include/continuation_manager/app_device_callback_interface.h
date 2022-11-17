@@ -28,7 +28,7 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedSchedule.IAppDeviceCallback");
 
     AppDeviceCallbackInterface() = default;
-    virtual ~AppDeviceCallbackInterface() = default;
+    ~AppDeviceCallbackInterface() override = default;
 
     virtual int32_t OnDeviceConnect(int32_t token, const std::vector<ContinuationResult>& continuationResults) = 0;
     virtual int32_t OnDeviceDisconnect(int32_t token, const std::vector<ContinuationResult>& continuationResults) = 0;

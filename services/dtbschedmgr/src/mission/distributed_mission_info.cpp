@@ -110,13 +110,13 @@ bool DstbMissionInfo::ReadDstbMissionInfosFromParcel(Parcel& parcel,
         if (len < 0) {
             return false;
         }
-        size_t size = static_cast<size_t>(len);
-        if ((size > parcel.GetReadableBytes()) || (missionInfos.max_size() < size)) {
-            HILOGE("Failed to read DstbMissionInfo vector, size = %{public}zu", size);
+        size_t missionInfosSize = static_cast<size_t>(len);
+        if ((missionInfosSize > parcel.GetReadableBytes()) || (missionInfos.max_size() < missionInfosSize)) {
+            HILOGE("Failed to read DstbMissionInfo vector, size = %{public}zu", missionInfosSize);
             return false;
         }
         missionInfos.clear();
-        for (size_t i = 0; i < size; i++) {
+        for (size_t i = 0; i < missionInfosSize; i++) {
             DstbMissionInfo *ptr = parcel.ReadParcelable<DstbMissionInfo>();
             if (ptr == nullptr) {
                 return false;
@@ -134,14 +134,14 @@ bool DstbMissionInfo::ReadDstbMissionInfosFromParcel(Parcel& parcel,
 bool DstbMissionInfo::WriteDstbMissionInfosToParcel(Parcel& parcel,
     const std::vector<DstbMissionInfo>& missionInfos)
 {
-    size_t size = missionInfos.size();
-    if (size == 0) {
+    size_t missionInfosSize = missionInfos.size();
+    if (missionInfosSize == 0) {
         PARCEL_WRITE_HELPER_RET(parcel, Int32, VALUE_NULL, false);
         return true;
     }
 
     PARCEL_WRITE_HELPER_RET(parcel, Int32, VALUE_OBJECT, false);
-    PARCEL_WRITE_HELPER_RET(parcel, Int32, size, false);
+    PARCEL_WRITE_HELPER_RET(parcel, Int32, missionInfosSize, false);
     for (auto& info : missionInfos) {
         PARCEL_WRITE_HELPER_RET(parcel, Parcelable, &info, false);
     }

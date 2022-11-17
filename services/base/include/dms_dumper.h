@@ -25,7 +25,7 @@ namespace DistributedSchedule {
 class DmsDumper : public virtual RefBase {
 public:
     DmsDumper() = default;
-    virtual ~DmsDumper() = default;
+    ~DmsDumper() override = default;
     virtual bool ProcessDistributedSchedDump(const std::vector<std::string>& args, std::string& result) = 0;
 };
 } // namespace DistributedSchedule

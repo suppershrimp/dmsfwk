@@ -51,7 +51,7 @@ private:
             const std::shared_ptr<DSchedContinuation>& continuationObj,
             const FuncContinuationCallback& contCallback)
             : AppExecFwk::EventHandler(runner), continuationObj_(continuationObj), contCallback_(contCallback) {}
-        ~ContinuationHandler() = default;
+        ~ContinuationHandler() override = default;
 
         void ProcessEvent(const OHOS::AppExecFwk::InnerEvent::Pointer& event) override;
     private:

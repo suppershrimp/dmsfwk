@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SERVICES_DTBSCHEDMGR_NAPI_ERROR_CODE_H_
-#define SERVICES_DTBSCHEDMGR_NAPI_ERROR_CODE_H_
+#ifndef SERVICES_DTBSCHEDMGR_NAPI_ERROR_CODE_H
+#define SERVICES_DTBSCHEDMGR_NAPI_ERROR_CODE_H
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -46,4 +46,4 @@ enum {
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
-#endif // SERVICES_DTBSCHEDMGR_NAPI_ERROR_CODE_H_
+#endif // SERVICES_DTBSCHEDMGR_NAPI_ERROR_CODE_H

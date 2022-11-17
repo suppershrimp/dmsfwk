@@ -25,7 +25,7 @@ namespace DistributedSchedule {
 class DistributedDeviceNodeListener : public DeviceListener {
 public:
     DistributedDeviceNodeListener() = default;
-    ~DistributedDeviceNodeListener() = default;
+    ~DistributedDeviceNodeListener() override = default;
 
     void OnDeviceOnline(const DistributedHardware::DmDeviceInfo& deviceInfo) override;
     void OnDeviceOffline(const DistributedHardware::DmDeviceInfo& deviceInfo) override;
