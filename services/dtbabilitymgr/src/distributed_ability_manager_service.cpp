@@ -570,10 +570,10 @@ void DistributedAbilityManagerService::ScheduleStartDeviceManager(const sptr<IRe
     const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams)
 {
     std::lock_guard<std::mutex> appProxyLock(appProxyMutex_);
-    appProxy_ = appProxy;
-    if (appProxy_ == nullptr) {
+    if (appProxy == nullptr) {
         return;
     }
+    appProxy_ = appProxy;
     HandleStartDeviceManager(token, continuationExtraParams);
     return;
 }
