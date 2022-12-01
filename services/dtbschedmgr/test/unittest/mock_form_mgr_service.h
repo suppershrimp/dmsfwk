@@ -169,7 +169,7 @@ public:
     {
         return ERR_OK;
     };
-    int32_t GetFormPreviewImage(const Want &want, sptr<Ashmem> &previewImage) override
+    int32_t GetFormPreviewImage(const Want &want, sptr<FormAshmem> &previewImage) override
     {
         return ERR_OK;
     };
