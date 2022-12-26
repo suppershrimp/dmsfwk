@@ -165,6 +165,11 @@ public:
     {
         return ERR_OK;
     };
+    int NotifyFormSizeChanged(const int64_t formId, const int32_t dimensionNum,
+        const sptr<IRemoteObject> &callerToken) override
+    {
+        return ERR_OK;
+    }
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
