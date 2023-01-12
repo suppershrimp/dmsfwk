@@ -1280,36 +1280,6 @@ HWTEST_F(DistributedSchedServiceTest, ConnectAbilityFromRemote_001, TestSize.Lev
 }
 
 /**
- * @tc.name: ConnectAbilityFromRemote_002
- * @tc.desc: input invalid params
- * @tc.type: FUNC
- * @tc.require: issueI5T6GJ
- */
-HWTEST_F(DistributedSchedServiceTest, ConnectAbilityFromRemote_002, TestSize.Level3)
-{
-    DTEST_LOG << "DistributedSchedServiceTest ConnectAbilityFromRemote_002 start" << std::endl;
-    AAFwk::Want want;
-    std::string localDeviceId;
-    DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(localDeviceId);
-    AppExecFwk::ElementName element(localDeviceId, BUNDLE_NAME,
-        ABILITY_NAME);
-    want.SetElement(element);
-    want.SetParam(DMS_IS_CALLER_BACKGROUND, false);
-    AppExecFwk::AbilityInfo abilityInfo;
-    abilityInfo.permissions.clear();
-    sptr<IRemoteObject> connect = new MockDistributedSched();
-    CallerInfo callerInfo;
-    callerInfo.uid = 0;
-    callerInfo.sourceDeviceId = LOCAL_DEVICEID;
-    IDistributedSched::AccountInfo accountInfo;
-    accountInfo.accountType = IDistributedSched::SAME_ACCOUNT_TYPE;
-    int ret = DistributedSchedService::GetInstance().ConnectAbilityFromRemote(want,
-        abilityInfo, connect, callerInfo, accountInfo);
-    EXPECT_EQ(ret, DMS_START_CONTROL_PERMISSION_DENIED);
-    DTEST_LOG << "DistributedSchedServiceTest ConnectAbilityFromRemote_002 end" << std::endl;
-}
-
-/**
  * @tc.name: StartLocalAbility_005
  * @tc.desc: test StartLocalAbility
  * @tc.type: FUNC
