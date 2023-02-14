@@ -22,6 +22,7 @@
 #include "continuation_manager/app_device_callback_stub.h"
 #include "continuation_manager/device_selection_notifier_proxy.h"
 #include "continuation_manager/notifier_death_recipient.h"
+#include "datetime_ex.h"
 #include "dlfcn.h"
 #include "distributed_ability_manager_dumper.h"
 #include "dtbschedmgr_device_info_storage.h"
@@ -55,6 +56,7 @@ DistributedAbilityManagerService::DistributedAbilityManagerService(
 
 void DistributedAbilityManagerService::OnStart()
 {
+    int64_t begin = GetTickCount();
     HILOGI("begin");
     DnetworkAdapter::GetInstance()->Init();
     if (!DtbschedmgrDeviceInfoStorage::GetInstance().Init(this)) {
@@ -72,7 +74,11 @@ void DistributedAbilityManagerService::OnStart()
         auto runner = AppExecFwk::EventRunner::Create("continuation_manager");
         continuationHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
     }
+    if (!InitDmsImplFunc()) {
+        HILOGE("load libdistributedschedsvr.z.so failed.");
+    }
     Publish(this);
+    HILOGI("[PerformanceTest] OnStart spend %{public}" PRId64 " ms", GetTickCount() - begin);
 }
 
 void DistributedAbilityManagerService::OnStop()
