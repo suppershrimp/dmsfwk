@@ -52,6 +52,7 @@ const std::string PERMISSION_DISTRIBUTED_DATASYNC = "ohos.permission.DISTRIBUTED
 const std::string PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
 const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
 const std::string CMPT_PARAM_FREEINSTALL_BUNDLENAMES = "ohos.extra.param.key.allowedBundles";
+const std::string DMS_VERSION_ID = "dmsVersion";
 const int DEFAULT_REQUEST_CODE = -1;
 }
 
@@ -172,7 +173,6 @@ int32_t DistributedSchedStub::StartAbilityFromRemoteInner(MessageParcel& data, M
         HILOGW("request DENIED!");
         return DMS_PERMISSION_DENIED;
     }
-
     shared_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
     if (want == nullptr) {
         HILOGW("want readParcelable failed!");
@@ -208,6 +208,7 @@ int32_t DistributedSchedStub::StartAbilityFromRemoteInner(MessageParcel& data, M
         callerInfo.accessToken = accessToken;
         HILOGD("parse extra info, accessTokenID = %u", accessToken);
     }
+    callerInfo.extraInfoJson[DMS_VERSION_ID] = data.ReadString();
     int32_t result = StartAbilityFromRemote(*want, abilityInfo, requestCode, callerInfo, accountInfo);
     BehaviorEventParam eventParam = { EventCallingType::REMOTE, BehaviorEvent::START_REMOTE_ABILITY, result,
         want->GetElement().GetBundleName(), want->GetElement().GetAbilityName(), callerInfo.uid };
@@ -453,6 +454,7 @@ int32_t DistributedSchedStub::ConnectAbilityFromRemoteInner(MessageParcel& data,
         callerInfo.accessToken = accessToken;
         HILOGD("parse extra info, accessTokenID = %u", accessToken);
     }
+    callerInfo.extraInfoJson[DMS_VERSION_ID] = data.ReadString();
     std::string package = abilityInfo.bundleName;
     std::string deviceId = abilityInfo.deviceId;
     int64_t begin = GetTickCount();
@@ -828,6 +830,7 @@ int32_t DistributedSchedStub::StartAbilityByCallFromRemoteInner(MessageParcel& d
         HILOGW("want readParcelable failed!");
         return ERR_NULL_OBJECT;
     }
+    callerInfo.extraInfoJson[DMS_VERSION_ID] = data.ReadString();
     int32_t result = StartAbilityByCallFromRemote(*want, connect, callerInfo, accountInfo);
     BehaviorEventParam eventParam = { EventCallingType::REMOTE, BehaviorEvent::START_REMOTE_ABILITY_BYCALL, result,
         want->GetElement().GetBundleName(), want->GetElement().GetAbilityName(), callerInfo.uid };
