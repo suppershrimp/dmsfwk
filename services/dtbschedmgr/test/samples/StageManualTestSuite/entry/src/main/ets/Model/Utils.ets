@@ -17,6 +17,7 @@ export default class Utils {
   static sleep(time) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
+        // @ts-ignore
         resolve()
       }, time)
     }).then(() => {

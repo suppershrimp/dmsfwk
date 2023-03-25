@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// @ts-nocheck
 
+// @ts-ignore
 import ServiceExtensionAbility from '@ohos.app.ability.ServiceExtensionAbility';
 import wantConstant from '@ohos.ability.wantConstant'
 
@@ -40,6 +40,7 @@ export default class ServiceAbility extends ServiceExtensionAbility {
         }
         console.info('ServiceAbility onRequest START, options is : ' + JSON.stringify(options));
 
+        // @ts-ignore
         this.context.startAbility(str, options).then((data) => {
             console.log("ServiceAbility onRequest data: " + JSON.stringify(data))
         }).catch((error) => {

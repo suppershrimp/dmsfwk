@@ -31,6 +31,7 @@ export default class RemoteDeviceModel {
         if (typeof (this.MyDeviceManager) === 'undefined') {
             console.log('[ServiceExtensionDemo] deviceManager.createDeviceManager begin');
             let self = this;
+            // @ts-ignore
             deviceManager.createDeviceManager('com.example.serviceextensiondemo', (error, value) => {
                 if (error) {
                     console.error('createDeviceManager failed.');

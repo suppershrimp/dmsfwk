@@ -72,9 +72,9 @@ struct Index {
                     globalThis.selectDevice = item
                     AppStorage.Set<string>('receiveMessage', AppStorage.Get<string>("receiveMessage") + "select device:" + item + '\n')
                   })
-              }.editable(this.editFlag)
+              }.editable(false)
             }, (item : string) => item.toString())
-          }.height('75%').width('100%').borderWidth(1).align(ItemAlign.Start)
+          }.height('75%').width('100%').borderWidth(1).align(Alignment.Start)
         }.width('30%').height('100%').padding(5)
 
         Column() {
@@ -93,7 +93,7 @@ struct Index {
               .textAlign(TextAlign.Start)
           }.scrollBar(BarState.Auto)
           .height('55%')
-          .align(ItemAlign.Start)
+          .align(Alignment.Start)
           .borderWidth(1)
 
           Text("待发送数据：")
@@ -111,7 +111,7 @@ struct Index {
             .borderWidth(1)
             .textAlign(TextAlign.Start)
 
-          TextInput("输入消息")
+          TextInput({text: "输入消息"})
             .width('100%')
             .height('10%')
             .borderStyle(BorderStyle.Solid)
