@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,6 +85,8 @@ public:
     int32_t StartShareFormFromRemote(
         const std::string& remoteDeviceId, const AppExecFwk::FormShareInfo& formShareInfo) override;
 #endif
+    int32_t NotifyStateChangedFromRemote(int32_t abilityState, int32_t missionId,
+        const AppExecFwk::ElementName& element) override;
     int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) override;
 private:
     bool CallerInfoMarshalling(const CallerInfo& callerInfo, MessageParcel& data);

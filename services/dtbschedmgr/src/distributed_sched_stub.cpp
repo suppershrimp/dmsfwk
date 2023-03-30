@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -100,9 +100,11 @@ DistributedSchedStub::DistributedSchedStub()
 #endif
     localFuncsMap_[GET_DISTRIBUTED_COMPONENT_LIST] = &DistributedSchedStub::GetDistributedComponentListInner;
     localFuncsMap_[START_REMOTE_FREE_INSTALL] = &DistributedSchedStub::StartRemoteFreeInstallInner;
-    remoteFuncsMap_[START_FREE_INSTALL_FROM_REMOTE] = &DistributedSchedStub::StartFreeInstallFromRemoteInner;
     remoteFuncsMap_[NOTIFY_COMPLETE_FREE_INSTALL_FROM_REMOTE] =
         &DistributedSchedStub::NotifyCompleteFreeInstallFromRemoteInner;
+    remoteFuncsMap_[NOTIFY_STATE_CHANGED_FROM_REMOTE] =
+        &DistributedSchedStub::NotifyStateChangedFromRemoteInner;
+    remoteFuncsMap_[START_FREE_INSTALL_FROM_REMOTE] = &DistributedSchedStub::StartFreeInstallFromRemoteInner;
 }
 
 DistributedSchedStub::~DistributedSchedStub()
@@ -930,6 +932,26 @@ int32_t DistributedSchedStub::GetDistributedComponentListInner(MessageParcel& da
     PARCEL_WRITE_HELPER(reply, Int32, result);
     PARCEL_WRITE_HELPER(reply, StringVector, distributedComponents);
     return ERR_NONE;
+}
+
+int32_t DistributedSchedStub::NotifyStateChangedFromRemoteInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!CheckCallingUid()) {
+        HILOGW("request DENIED!");
+        return DMS_PERMISSION_DENIED;
+    }
+    int32_t abilityState = 0;
+    int32_t missionId = 0;
+    PARCEL_READ_HELPER(data, Int32, abilityState);
+    PARCEL_READ_HELPER(data, Int32, missionId);
+    shared_ptr<AppExecFwk::ElementName> element(data.ReadParcelable<AppExecFwk::ElementName>());
+    if (element == nullptr) {
+        HILOGE("NotifyStateChangedFromRemoteInner receive element is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    int32_t result = NotifyStateChangedFromRemote(abilityState, missionId, *element);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
 int32_t DistributedSchedStub::StartRemoteFreeInstallInner(MessageParcel& data, MessageParcel& reply)

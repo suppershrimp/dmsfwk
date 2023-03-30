@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -124,6 +124,8 @@ public:
     virtual int32_t StartShareFormFromRemote(
         const std::string& remoteDeviceId, const OHOS::AppExecFwk::FormShareInfo& formShareInfo) = 0;
 #endif
+    virtual int32_t NotifyStateChangedFromRemote(int32_t abilityState, int32_t missionId,
+        const AppExecFwk::ElementName& element) = 0;
     virtual int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) = 0;
     enum {
         START_REMOTE_ABILITY = 1,
@@ -173,6 +175,7 @@ public:
         RELEASE_REMOTE_ABILITY = 151,
         START_ABILITY_BY_CALL_FROM_REMOTE = 152,
         RELEASE_ABILITY_FROM_REMOTE = 153,
+        NOTIFY_STATE_CHANGED_FROM_REMOTE = 154,
 
         START_REMOTE_FREE_INSTALL = 200,
         // request code for upload distributed component info
