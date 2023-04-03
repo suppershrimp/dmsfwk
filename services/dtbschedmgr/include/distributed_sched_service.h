@@ -21,6 +21,8 @@
 #include <set>
 #include <unordered_map>
 
+#include "app_mgr_interface.h"
+#include "app_state_observer.h"
 #include "distributed_sched_stub.h"
 #include "distributed_sched_continuation.h"
 #include "dms_callback_task.h"
@@ -59,6 +61,11 @@ struct ProcessDiedNotifyInfo {
     std::string remoteDeviceId;
     CallerInfo callerInfo;
     TargetComponent targetComponent;
+};
+
+struct CallInfo {
+    sptr<IRemoteObject> connect;
+    std::string remoteDeviceId;
 };
 
 class DistributedSchedService : public SystemAbility, public DistributedSchedStub {
@@ -140,6 +147,10 @@ public:
     int32_t NotifyCompleteFreeInstallFromRemote(int64_t taskId, int32_t resultCode) override;
     int32_t NotifyCompleteFreeInstall(const FreeInstallInfo& info, int64_t taskId, int32_t resultCode);
     int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) override;
+    int32_t NotifyStateChangedFromRemote(int32_t abilityState, int32_t missionId,
+        const AppExecFwk::ElementName& element) override;
+    int32_t NotifyStateChanged(int32_t abilityState, AppExecFwk::ElementName& element);
+    void UnregisterAppStateObserver();
     void SetContinuationTimeout(int32_t missionId, int32_t timeout);
     void RemoveContinuationTimeout(int32_t missionId);
     std::string GetContinuaitonDevice(int32_t missionId);
@@ -199,6 +210,8 @@ private:
     void GetConnectComponentList(std::vector<std::string>& distributedComponents);
     void GetCallComponentList(std::vector<std::string>& distributedComponents);
     void ProcessFreeInstallOffline(const std::string& deviceId);
+    bool RegisterAppStateObserver(const OHOS::AAFwk::Want& want, const CallerInfo& callerInfo);
+    sptr<AppExecFwk::IAppMgr> GetAppManager();
     int32_t CheckTargetPermission(const OHOS::AAFwk::Want& want, const CallerInfo& callerInfo,
         const AccountInfo& accountInfo, int32_t flag, bool needQueryExtension);
 
@@ -222,6 +235,11 @@ private:
     std::mutex callerLock_;
     std::map<sptr<IRemoteObject>, std::list<ConnectAbilitySession>> callerMap_;
     sptr<IRemoteObject::DeathRecipient> callerDeathRecipientForLocalDevice_;
+    std::mutex observerLock_;
+    std::map<sptr<AppStateObserver>, std::string> observerMap_;
+    std::mutex callLock_;
+    std::map<int32_t, CallInfo> callMap_;
+    sptr<AppStateObserver> appStateObserver_;
 };
 
 class ConnectAbilitySession {
