@@ -88,6 +88,10 @@ public:
     int32_t NotifyStateChangedFromRemote(int32_t abilityState, int32_t missionId,
         const AppExecFwk::ElementName& element) override;
     int32_t GetDistributedComponentList(std::vector<std::string>& distributedComponents) override;
+    virtual int32_t StopRemoteExtensionAbility(
+        const OHOS::AAFwk::Want& want, int32_t callerUid, uint32_t accessToken, int32_t extensionType) override;
+    virtual int32_t StopExtensionAbilityFromRemote(const OHOS::AAFwk::Want& want,
+        const CallerInfo& callerInfo, const AccountInfo& accountInfo, int32_t extensionType) override;
 private:
     bool CallerInfoMarshalling(const CallerInfo& callerInfo, MessageParcel& data);
     static inline BrokerDelegator<DistributedSchedProxy> delegator_;

@@ -73,6 +73,11 @@ private:
     bool EnforceInterfaceToken(MessageParcel& data);
     bool CallerInfoUnmarshalling(CallerInfo& callerInfo, MessageParcel& data);
     void SaveExtraInfo(const nlohmann::json& extraInfoJson, CallerInfo& callerInfo);
+    void InitLocalFuncsInner();
+    void InitRemoteFuncsInner();
+
+    int32_t StopRemoteExtensionAbilityInner(MessageParcel& data, MessageParcel& reply);
+    int32_t StopExtensionAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply);
 
     using DistributedSchedFunc = int32_t(DistributedSchedStub::*)(MessageParcel& data, MessageParcel& reply);
     std::map<uint32_t, DistributedSchedFunc> remoteFuncsMap_;
