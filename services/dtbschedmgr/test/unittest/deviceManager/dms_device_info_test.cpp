@@ -51,7 +51,7 @@ void DmsDeviceInfoTest::TearDown()
 HWTEST_F(DmsDeviceInfoTest, testGet_001, TestSize.Level1)
 {
     DTEST_LOG << "DmsDeviceInfoTest testGet_001 begin" << std::endl;
-    DmsDeviceInfo dmsDeviceInfo("invalid deviceName", 1, "invalid deivceId");
+    DmsDeviceInfo dmsDeviceInfo("invalid deviceName", 1, "invalid deivceId", "invalid networkId");
     /**
      * @tc.steps: step1. test GetDeviceName;
      */
@@ -60,6 +60,10 @@ HWTEST_F(DmsDeviceInfoTest, testGet_001, TestSize.Level1)
      * @tc.steps: step2. test GetDeviceId;
      */
     EXPECT_EQ("invalid deivceId", dmsDeviceInfo.GetDeviceId());
+    /**
+     * @tc.steps: step2. test GetNetworkId;
+     */
+    EXPECT_EQ("invalid networkId", dmsDeviceInfo.GetNetworkId());
     /**
      * @tc.steps: step3. test GetDeviceType;
      */
