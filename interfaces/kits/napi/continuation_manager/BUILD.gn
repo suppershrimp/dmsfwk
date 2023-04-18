@@ -45,6 +45,7 @@ ohos_shared_library("continuationmanager_napi") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:runtime",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "dmsfwk:common_sdk",
     "dmsfwk:continuation_manager",
     "hiviewdfx_hilog_native:libhilog",
