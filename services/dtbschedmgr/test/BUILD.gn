@@ -29,9 +29,8 @@ config("test_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "//foundation/ability/dmsfwk/utils/native/include",
-    "//foundation/ability/dmsfwk/services/dtbschedmgr/test/unittest",
     "//foundation/ability/ability_base/interfaces/kits/native/want/include",
-    "//foundation/ability/dmsfwk/services/dtbschedmgr/include/distributedWant",
+    "//foundation/ability/dmsfwk/services/dtbschedmgr/include",
   ]
 }
 
@@ -62,6 +61,7 @@ dsched_external_deps = [
   "os_account:os_account_innerkits",
   "safwk:system_ability_fwk",
   "samgr:samgr_proxy",
+  "test:unittest",
 ]
 
 if (dmsfwk_report_memmgr) {

@@ -25,8 +25,8 @@
 
 #define private public
 #define protected public
-#include "distributed_operation.h"
-#include "distributed_want.h"
+#include "distributedWant/distributed_operation.h"
+#include "distributedWant/distributed_want.h"
 #include "want.h"
 #undef private
 #undef protected
