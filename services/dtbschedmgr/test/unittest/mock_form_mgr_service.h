@@ -208,6 +208,17 @@ public:
     {
         return 0;
     }
+    ErrCode RegisterFormAddObserverByBundle(const std::string &bundleName,
+        const sptr<IRemoteObject> &callerToken))
+    {
+        return ERR_OK;
+    }
+
+    ErrCode RegisterFormRemoveObserverByBundle(const std::string &bundleName,
+        const sptr<IRemoteObject> &callerToken))
+    {
+        return ERR_OK;
+    }
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
