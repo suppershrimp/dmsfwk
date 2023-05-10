@@ -407,9 +407,9 @@ void DistributedWantParams::Remove(const std::string& key)
 }
 
 /**
- * @description: Checks whether the Intent contains the given key.
+ * @description: Checks whether the contains the given key.
  * @param key Indicates the key to check.
- * @return Returns true if the Intent contains the key; returns false otherwise.
+ * @return Returns true if the contains the key; returns false otherwise.
  */
 bool DistributedWantParams::HasParam(const std::string& key) const
 {

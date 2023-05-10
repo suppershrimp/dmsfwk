@@ -139,9 +139,11 @@ DistributedWant::DistributedWant(const Want&want)
 }
 
 void DistributedWant::SetParameters(std::shared_ptr<Want>& want, DistributedWantParams& params) {
+    ABILITYBASE_LOGI("SetParameters called.");
     std::map<std::string, sptr<IInterface>> data = params.GetParams();
     for (auto it = data.begin(); it != data.end(); it++) {
         auto tp = DistributedWantParams::GetDataType(it->second);
+        ABILITYBASE_LOGI("SetParameters data type: %{public}d", tp);
         if (tp == DistributedWantParams::VALUE_TYPE_BOOLEAN) {
             want->SetParam(it->first, GetBoolParam(it->first, false));
         } else if (tp == DistributedWantParams::VALUE_TYPE_BYTE) {
@@ -193,6 +195,7 @@ void DistributedWant::SetParameters(std::shared_ptr<Want>& want, DistributedWant
                 Array::ForEach(ao, func);
             }
         } else if (tp == DistributedWantParams::VALUE_TYPE_WANTPARAMS) {
+            ABILITYBASE_LOGI("SetParameters VALUE_TYPE_WANTPARAMS data type: %{public}d", tp);
             auto param = DistributedWantParamWrapper::Unbox(IDistributedWantParams::Query(it->second));
             SetParameters(want, param);
         }
