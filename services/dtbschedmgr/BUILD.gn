@@ -15,6 +15,8 @@ import("//build/ohos.gni")
 import("//build/ohos_var.gni")
 import("//foundation/ability/dmsfwk/dmsfwk.gni")
 
+ability_base = "//foundation/ability/ability_base"
+
 group("unittest") {
   testonly = true
   deps = [ "test:unittest" ]
@@ -25,8 +27,8 @@ config("distributed_sched_config") {
   visibility += [ "./test/*" ]
   include_dirs = [
     "include",
-    "//foundation/ability/ability_base/interfaces/kits/native/uri/include",
-    "//foundation/ability/ability_base/interfaces/kits/native/want/include",
+    "${ability_base}/interfaces/kits/native/uri/include",
+    "${ability_base}/interfaces/kits/native/want/include",
     "//third_party/json/include",
   ]
   defines = []
