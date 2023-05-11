@@ -1359,5 +1359,17 @@ void DistributedWantParams::DumpInfo(int level) const
     }
     ABILITYBASE_LOGI("=======DistributedWantParams::DumpInfo level: %{public}d end=============", level);
 }
+
+WantParams DistributedWantParams::ToWantParams() {
+    ABILITYBASE_LOGI("ToWantParams called.");
+    WantParams wantParams;
+    std::map<std::string, sptr<IInterface>> data = GetParams();
+    for (auto it = data.begin(); it != data.end(); it++) {
+        wantParams.SetParam(it->first, it->second);
+    }
+    ABILITYBASE_LOGI("ToWantParams new wantParams size: %{public}zu", params_.size());
+    return wantParams;
+}
+
 }  // namespace AAFwk
 }  // namespace OHOS
