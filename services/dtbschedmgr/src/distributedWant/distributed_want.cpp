@@ -120,8 +120,10 @@ DistributedWant::DistributedWant(const Want&want)
     std::shared_ptr<DistributedOperation> op = builder.build();
     operation_ = *op;
     std::map<std::string, sptr<IInterface>> data = want.GetParams().GetParams();
+    ABILITYBASE_LOGI("FromWant called.");
     for (auto it = data.begin(); it != data.end(); it++) {
         auto tp = WantParams::GetDataType(it->second);
+        ABILITYBASE_LOGI("FromWant data type: %{public}d", tp);
         if ((tp == DistributedWantParams::VALUE_TYPE_BOOLEAN) ||
             (tp == DistributedWantParams::VALUE_TYPE_BYTE) ||
             (tp == DistributedWantParams::VALUE_TYPE_CHAR) ||
@@ -133,6 +135,7 @@ DistributedWant::DistributedWant(const Want&want)
             (tp == DistributedWantParams::VALUE_TYPE_STRING) ||
             (tp == DistributedWantParams::VALUE_TYPE_ARRAY) ||
             (tp == DistributedWantParams::VALUE_TYPE_WANTPARAMS)) {
+            ABILITYBASE_LOGI("FromWant SetParam: %{public}d", tp);
             parameters_.SetParam(it->first, it->second);
         }
     }
