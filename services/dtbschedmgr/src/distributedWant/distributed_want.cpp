@@ -107,7 +107,7 @@ DistributedWant&DistributedWant::operator=(const DistributedWant& other)
     return *this;
 }
 
-DistributedWant::DistributedWant(const Want&want) 
+DistributedWant::DistributedWant(const Want& want) 
 {
     DistributedOperationBuilder builder;
     builder.WithAbilityName(want.GetElement().GetAbilityName());
@@ -191,6 +191,7 @@ void DistributedWant::SetParameters(std::shared_ptr<Want>& want, DistributedWant
                         auto* value = IDistributedWantParams::Query(object);
                         if (value != nullptr) {
                             auto param = DistributedWantParamWrapper::Unbox(value);
+                            ABILITYBASE_LOGI("SetParameters VALUE_TYPE_WANTPARAMSARRAY data type: %{public}d", tp);
                             SetParameters(want, param);
                         }
                     }
