@@ -65,7 +65,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetAbilityNam
     GTEST_LOG_(INFO) << "DmsFwk_DistributedOperation_GetAbilityName_0100 start";
 
     operationbuilder_->WithAbilityName(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_STREQ(value.c_str(), operation->GetAbilityName().c_str());
 
     GTEST_LOG_(INFO) << "DmsFwk_DistributedOperation_GetAbilityName_0100 end";
@@ -80,7 +80,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetAbilityNam
 {
     std::string value = "";
     operationbuilder_->WithAbilityName(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
 
     EXPECT_STREQ(value.c_str(), operation->GetAbilityName().c_str());
 }
@@ -94,7 +94,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetBundleName
 {
     std::string value = "value";
     operationbuilder_->WithBundleName(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_STREQ(value.c_str(), operation->GetBundleName().c_str());
 }
 
@@ -107,7 +107,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetBundleName
 {
     std::string value = "";
     operationbuilder_->WithBundleName(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_STREQ(value.c_str(), operation->GetBundleName().c_str());
 }
 
@@ -120,7 +120,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetDeviceId_0
 {
     std::string value = "value";
     operationbuilder_->WithDeviceId(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_STREQ(value.c_str(), operation->GetDeviceId().c_str());
 }
 
@@ -133,7 +133,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetDeviceId_0
 {
     std::string value = "";
     operationbuilder_->WithDeviceId(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_STREQ(value.c_str(), operation->GetDeviceId().c_str());
 }
 
@@ -146,7 +146,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetAction_010
 {
     std::string value = "value";
     operationbuilder_->WithAction(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_STREQ(value.c_str(), operation->GetAction().c_str());
 }
 
@@ -159,7 +159,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetAction_020
 {
     std::string value = "";
     operationbuilder_->WithAction(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_STREQ(value.c_str(), operation->GetAction().c_str());
 }
 
@@ -173,7 +173,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetEntities_0
     std::vector<std::string> value;
     value.push_back("string1");
     operationbuilder_->WithEntities(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
 
     std::vector<std::string> revValue = operation->GetEntities();
 
@@ -193,7 +193,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetEntities_0
 {
     std::vector<std::string> value;
     operationbuilder_->WithEntities(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_EQ(true, operation->GetEntities().size() == 0);
 }
 
@@ -206,7 +206,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetFlags_0100
 {
     unsigned int value = 1;
     operationbuilder_->WithFlags(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_EQ(value, operation->GetFlags());
 }
 
@@ -219,7 +219,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetFlags_0200
 {
     unsigned int value = 0;
     operationbuilder_->WithFlags(value);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_EQ(value, operation->GetFlags());
 }
 
@@ -233,7 +233,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetUri_0100, 
     std::string value = "scheme://authority/path1/path2/path3?id = 1&name = mingming&old#fragment";
     OHOS::Uri uri(value);
     operationbuilder_->WithUri(uri);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
 
     EXPECT_EQ(uri, operation->GetUri());
 }
@@ -248,7 +248,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_GetUri_0200, 
     std::string value = "";
     OHOS::Uri uri(value);
     operationbuilder_->WithUri(uri);
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     EXPECT_EQ(uri, operation->GetUri());
 }
 
@@ -270,7 +270,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_build_0100, F
     operationbuilder_->WithBundleName(value);
     operationbuilder_->WithAbilityName(value);
 
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
 
     EXPECT_EQ(uri, operation->GetUri());
     EXPECT_STREQ(value.c_str(), operation->GetAction().c_str());
@@ -305,11 +305,11 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_Marshalling_0
     operationbuilder_->WithBundleName(value);
     operationbuilder_->WithAbilityName(value);
 
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     Parcel in;
     operation->Marshalling(in);
 
-    Operation *pOperation = operation->Unmarshalling(in);
+    DistributedOperation* pOperation = operation->Unmarshalling(in);
     if (pOperation != nullptr) {
         EXPECT_EQ(true, *pOperation == *(operation.get()));
     } else {
@@ -324,7 +324,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_Marshalling_0
  */
 HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_Operator_0100, Function | MediumTest | Level1)
 {
-    Operation operation_;
+    DistributedOperation operation_;
     std::string value = "value";
     OHOS::Uri uri(value);
     std::vector<std::string> columns;
@@ -336,7 +336,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_Operator_0100
     operationbuilder_->WithBundleName(value);
     operationbuilder_->WithAbilityName(value);
 
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     operation_ = *(operation.get());
 
     EXPECT_EQ(true, operation_ == *(operation.get()));
@@ -350,7 +350,7 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_Operator_0100
 HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_DumpInfo_0100, Function | MediumTest | Level1)
 {
     GTEST_LOG_(INFO) << "DmsFwk_DistributedOperation_DumpInfo_0100 start";
-    std::shared_ptr<Operation> operation = operationbuilder_->build();
+    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
     int level = 10;
     operation->entities_.push_back("a");
     operation->entities_.push_back("b");
