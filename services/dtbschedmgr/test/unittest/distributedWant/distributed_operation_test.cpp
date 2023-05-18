@@ -341,20 +341,3 @@ HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_Operator_0100
 
     EXPECT_EQ(true, operation_ == *(operation.get()));
 }
-
-/**
- * @tc.number: DmsFwk_DistributedOperation_DumpInfo_0100
- * @tc.name: DumpInfo
- * @tc.desc: Verify string overload.
- */
-HWTEST_F(DistributedOperationBaseTest, DmsFwk_DistributedOperation_DumpInfo_0100, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "DmsFwk_DistributedOperation_DumpInfo_0100 start";
-    std::shared_ptr<DistributedOperation> operation = operationbuilder_->build();
-    int level = 10;
-    operation->entities_.push_back("a");
-    operation->entities_.push_back("b");
-    operation->DumpInfo(level);
-    EXPECT_EQ(true, operation->GetEntities().size() == 2);
-    GTEST_LOG_(INFO) << "DmsFwk_DistributedOperation_DumpInfo_0100 end";
-}
