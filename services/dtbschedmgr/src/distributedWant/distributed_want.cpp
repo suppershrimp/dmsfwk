@@ -85,14 +85,14 @@ DistributedWant::DistributedWant(const DistributedWant& other)
     parameters_ = other.parameters_;
 }
 
-DistributedWant&DistributedWant::operator=(const DistributedWant& other)
+DistributedWant& DistributedWant::operator=(const DistributedWant& other)
 {
     operation_ = other.operation_;
     parameters_ = other.parameters_;
     return *this;
 }
 
-DistributedWant::DistributedWant(const AAFwk::Want& want) 
+DistributedWant::DistributedWant(const AAFwk::Want& want)
 {
     DistributedOperationBuilder builder;
     builder.WithAbilityName(want.GetElement().GetAbilityName());
@@ -173,7 +173,7 @@ DistributedWant& DistributedWant::SetElementName(const std::string& bundleName, 
     return *this;
 }
 
-DistributedWant& DistributedWant::SetElementName(const std::string& deviceId, const std::string& bundleName, 
+DistributedWant& DistributedWant::SetElementName(const std::string& deviceId, const std::string& bundleName,
                                                  const std::string& abilityName)
 {
     operation_.SetDeviceId(deviceId);
@@ -1151,7 +1151,6 @@ DistributedWant* DistributedWant::Unmarshalling(Parcel& parcel)
 bool DistributedWant::ReadFromParcel(Parcel& parcel)
 {
     int empty;
-    std::string value;
     std::vector<std::string> entities;
     // read action
     operation_.SetAction(Str16ToStr8(parcel.ReadString16()));
@@ -1260,10 +1259,9 @@ bool DistributedWant::ParseUriInternal(const std::string& content, ElementName& 
 
 bool DistributedWant::ParseContent(const std::string& content, std::string& prop, std::string& value)
 {
-    std::string subString;
     std::size_t pos = content.find("=");
     if (pos != std::string::npos) {
-        subString = content.substr(0, pos);
+        std::string subString = content.substr(0, pos);
         prop = Decode(subString);
         subString = content.substr(pos + 1, content.length() - pos - 1);
         value = Decode(subString);
@@ -1345,7 +1343,7 @@ std::string DistributedWant::Encode(const std::string& str)
     return encode;
 }
 
-bool DistributedWant::CheckAndSetParameters(DistributedWant& want, const std::string& key, 
+bool DistributedWant::CheckAndSetParameters(DistributedWant& want, const std::string& key,
                                             std::string& prop, const std::string& value)
 {
     if (prop[0] == AAFwk::String::SIGNATURE && prop[1] == '.') {

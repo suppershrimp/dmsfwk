@@ -34,7 +34,7 @@ ErrCode DistributedWantParamWrapper::GetValue(DistributedWantParams& value)
 
 bool DistributedWantParamWrapper::Equals(IObject& other)
 {
-    DistributedWantParamWrapper* otherObj = 
+    DistributedWantParamWrapper* otherObj =
         static_cast<DistributedWantParamWrapper*>(IDistributedWantParams::Query(&other));
     return otherObj != nullptr && otherObj->wantParams_ == wantParams_;
 }
@@ -48,7 +48,7 @@ std::string DistributedWantParamWrapper::ToString()
             int typeId = DistributedWantParams::GetDataType(it.second);
             result = result + "\"" + it.first + "\":{\"" + std::to_string(typeId) + "\":";
             if (IDistributedWantParams::Query(it.second) != nullptr) {
-                result = result + 
+                result = result +
                     static_cast<DistributedWantParamWrapper*>(IDistributedWantParams::Query(it.second))->ToString();
             } else {
                 result = result + "\"" + DistributedWantParams::GetStringByType(it.second, typeId) + "\"";
@@ -115,9 +115,9 @@ bool DistributedWantParamWrapper::ValidateStr(const std::string& str)
 sptr<IDistributedWantParams> DistributedWantParamWrapper::Parse(const std::string& str)
 {
     DistributedWantParams wantPaqrams;
-    std::string key = "";
-    int typeId = 0;
     if (ValidateStr(str)) {
+        std::string key = "";
+        int typeId = 0;
         for (size_t strnum = 0; strnum < str.size(); strnum++) {
             if (str[strnum] == '{' && key != "" && typeId == DistributedWantParams::VALUE_TYPE_WANTPARAMS) {
                 size_t num;
@@ -151,7 +151,7 @@ sptr<IDistributedWantParams> DistributedWantParamWrapper::Parse(const std::strin
                 } else {
                     strnum++;
                     wantPaqrams.SetParam(key,
-                        DistributedWantParams::GetInterfaceByType(typeId, 
+                        DistributedWantParams::GetInterfaceByType(typeId,
                             str.substr(strnum, str.find('"', strnum) - strnum)));
                     strnum = str.find('"', strnum);
                     typeId = 0;
@@ -205,7 +205,7 @@ DistributedWantParams DistributedWantParamWrapper::ParseWantParams(const std::st
             } else {
                 strnum++;
                 wantPaqrams.SetParam(key,
-                    DistributedWantParams::GetInterfaceByType(typeId, 
+                    DistributedWantParams::GetInterfaceByType(typeId,
                         str.substr(strnum, str.find('"', strnum) - strnum)));
                 strnum = str.find('"', strnum);
                 typeId = 0;
