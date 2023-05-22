@@ -1,0 +1,195 @@
+diff --git a/services/dtbschedmgr/include/distributed_sched_interface.h b/services/dtbschedmgr/include/distributed_sched_interface.h
+index 64cbc7c..7fe464e 100644
+--- a/services/dtbschedmgr/include/distributed_sched_interface.h
++++ b/services/dtbschedmgr/include/distributed_sched_interface.h
+@@ -89,6 +89,8 @@ public:
+     virtual int32_t StopSyncRemoteMissions(const std::string& devId) = 0;
+     virtual int32_t StopSyncMissionsFromRemote(const CallerInfo& callerInfo) = 0;
+     virtual int32_t RegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) = 0;
++    virtual int32_t RegisterOnListener(const std::string& type, const sptr<IRemoteObject>& obj) = 0;
++    virtual int32_t RegisterOffListener(const std::string& type, const sptr<IRemoteObject>& obj) = 0;
+     virtual int32_t UnRegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) = 0;
+     virtual int32_t GetMissionInfos(const std::string& deviceId, int32_t numMissions,
+         std::vector<AAFwk::MissionInfo>& missionInfos) = 0;
+@@ -174,6 +176,8 @@ public:
+         ALL_CONNECT_TO_DMS = 97,
+         STOP_SYNC_MISSIONS = 98,
+         GET_REMOTE_MISSION_SNAPSHOT_INFO = 99,
++        REGISTER_ON_LISTENER = 100,
++        REGISTER_OFF_LISTENER = 101,
+ 
+         // request code for call ability
+         START_REMOTE_ABILITY_BY_CALL = 150,
+diff --git a/services/dtbschedmgr/include/distributed_sched_proxy.h b/services/dtbschedmgr/include/distributed_sched_proxy.h
+index 0fd7424..f51f517 100644
+--- a/services/dtbschedmgr/include/distributed_sched_proxy.h
++++ b/services/dtbschedmgr/include/distributed_sched_proxy.h
+@@ -56,6 +56,8 @@ public:
+     int32_t StartSyncRemoteMissions(const std::string& devId, bool fixConflict, int64_t tag) override;
+     int32_t StopSyncRemoteMissions(const std::string& devId) override;
+     int32_t RegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) override;
++    int32_t RegisterOnListener(const std::string& type, const sptr<IRemoteObject>& obj) override;
++    int32_t RegisterOffListener(const std::string& type, const sptr<IRemoteObject>& obj) override;
+     int32_t UnRegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) override;
+     int32_t GetMissionInfos(const std::string& deviceId, int32_t numMissions,
+         std::vector<AAFwk::MissionInfo>& missionInfos) override;
+diff --git a/services/dtbschedmgr/include/distributed_sched_service.h b/services/dtbschedmgr/include/distributed_sched_service.h
+index dbe53f5..5029bf6 100644
+--- a/services/dtbschedmgr/include/distributed_sched_service.h
++++ b/services/dtbschedmgr/include/distributed_sched_service.h
+@@ -127,6 +127,8 @@ public:
+     int32_t StopSyncRemoteMissions(const std::string& devId) override;
+     int32_t StopSyncMissionsFromRemote(const CallerInfo& callerInfo) override;
+     int32_t RegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) override;
++    int32_t RegisterOnListener(const std::string& type, const sptr<IRemoteObject>& obj) override;
++    int32_t RegisterOffListener(const std::string& type, const sptr<IRemoteObject>& obj) override;
+     int32_t UnRegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) override;
+ #endif
+     void ProcessConnectDied(const sptr<IRemoteObject>& connect);
+diff --git a/services/dtbschedmgr/include/distributed_sched_stub.h b/services/dtbschedmgr/include/distributed_sched_stub.h
+index 0eddf8d..c74e864 100644
+--- a/services/dtbschedmgr/include/distributed_sched_stub.h
++++ b/services/dtbschedmgr/include/distributed_sched_stub.h
+@@ -48,6 +48,8 @@ private:
+     int32_t GetMissionInfosInner(MessageParcel& data, MessageParcel& reply);
+     int32_t GetRemoteMissionSnapshotInfoInner(MessageParcel& data, MessageParcel& reply);
+     int32_t RegisterMissionListenerInner(MessageParcel& data, MessageParcel& reply);
++    int32_t RegisterOnListenerInner(MessageParcel& data, MessageParcel& reply);
++    int32_t RegisterOffListenerInner(MessageParcel& data, MessageParcel& reply);
+     int32_t UnRegisterMissionListenerInner(MessageParcel& data, MessageParcel& reply);
+     int32_t StartSyncRemoteMissionsInner(MessageParcel& data, MessageParcel& reply);
+     int32_t StartSyncMissionsFromRemoteInner(MessageParcel& data, MessageParcel& reply);
+diff --git a/services/dtbschedmgr/src/distributed_sched_proxy.cpp b/services/dtbschedmgr/src/distributed_sched_proxy.cpp
+index 49afc09..d9e798c 100644
+--- a/services/dtbschedmgr/src/distributed_sched_proxy.cpp
++++ b/services/dtbschedmgr/src/distributed_sched_proxy.cpp
+@@ -451,6 +451,44 @@ int32_t DistributedSchedProxy::RegisterMissionListener(const std::u16string& dev
+     PARCEL_TRANSACT_SYNC_RET_INT(remote, REGISTER_MISSION_LISTENER, data, reply);
+ }
+ 
++int32_t DistributedSchedProxy::RegisterOnListener(const std::string& type,
++    const sptr<IRemoteObject>& obj)
++{
++    HILOGI("RegisterOnListener called");
++    sptr<IRemoteObject> remote = Remote();
++    if (remote == nullptr) {
++        HILOGE("remote system ability is null");
++        return ERR_NULL_OBJECT;
++    }
++    MessageParcel data;
++    MessageParcel reply;
++    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
++        return ERR_FLATTEN_OBJECT;
++    }
++    PARCEL_WRITE_HELPER(data, String, type);
++    PARCEL_WRITE_HELPER(data, RemoteObject, obj);
++    PARCEL_TRANSACT_SYNC_RET_INT(remote, REGISTER_ON_LISTENER, data, reply);
++}
++
++int32_t DistributedSchedProxy::RegisterOffListener(const std::string& type,
++    const sptr<IRemoteObject>& obj)
++{
++    HILOGI("RegisterOffListener called");
++    sptr<IRemoteObject> remote = Remote();
++    if (remote == nullptr) {
++        HILOGE("remote system ability is null");
++        return ERR_NULL_OBJECT;
++    }
++    MessageParcel data;
++    MessageParcel reply;
++    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
++        return ERR_FLATTEN_OBJECT;
++    }
++    PARCEL_WRITE_HELPER(data, String, type);
++    PARCEL_WRITE_HELPER(data, RemoteObject, obj);
++    PARCEL_TRANSACT_SYNC_RET_INT(remote, REGISTER_OFF_LISTENER, data, reply);
++}
++
+ int32_t DistributedSchedProxy::UnRegisterMissionListener(const std::u16string& devId,
+     const sptr<IRemoteObject>& obj)
+ {
+diff --git a/services/dtbschedmgr/src/distributed_sched_service.cpp b/services/dtbschedmgr/src/distributed_sched_service.cpp
+index f145971..6edc451 100644
+--- a/services/dtbschedmgr/src/distributed_sched_service.cpp
++++ b/services/dtbschedmgr/src/distributed_sched_service.cpp
+@@ -1874,6 +1874,20 @@ int32_t DistributedSchedService::RegisterMissionListener(const std::u16string& d
+     return DistributedSchedMissionManager::GetInstance().RegisterMissionListener(devId, obj);
+ }
+ 
++int32_t DistributedSchedService::RegisterOnListener(const std::string& type,
++    const sptr<IRemoteObject>& obj)
++{
++    //return DistributedSchedContinueManager::GetInstance().RegisterOnListener(type, obj);
++    return 0;
++}
++
++int32_t DistributedSchedService::RegisterOffListener(const std::string& type,
++    const sptr<IRemoteObject>& obj)
++{
++    //return DistributedSchedContinueManager::GetInstance().RegisterOffListener(type, obj);
++    return 0;
++}
++
+ int32_t DistributedSchedService::UnRegisterMissionListener(const std::u16string& devId,
+     const sptr<IRemoteObject>& obj)
+ {
+diff --git a/services/dtbschedmgr/src/distributed_sched_stub.cpp b/services/dtbschedmgr/src/distributed_sched_stub.cpp
+index 29d4cd1..86dd987 100644
+--- a/services/dtbschedmgr/src/distributed_sched_stub.cpp
++++ b/services/dtbschedmgr/src/distributed_sched_stub.cpp
+@@ -81,6 +81,8 @@ void DistributedSchedStub::InitLocalFuncsInner()
+ #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
+     localFuncsMap_[GET_REMOTE_MISSION_SNAPSHOT_INFO] = &DistributedSchedStub::GetRemoteMissionSnapshotInfoInner;
+     localFuncsMap_[REGISTER_MISSION_LISTENER] = &DistributedSchedStub::RegisterMissionListenerInner;
++    localFuncsMap_[REGISTER_ON_LISTENER] = &DistributedSchedStub::RegisterOnListenerInner;
++    localFuncsMap_[REGISTER_OFF_LISTENER] = &DistributedSchedStub::RegisterOffListenerInner;
+     localFuncsMap_[UNREGISTER_MISSION_LISTENER] = &DistributedSchedStub::UnRegisterMissionListenerInner;
+     localFuncsMap_[GET_MISSION_INFOS] = &DistributedSchedStub::GetMissionInfosInner;
+     localFuncsMap_[START_SYNC_MISSIONS] = &DistributedSchedStub::StartSyncRemoteMissionsInner;
+@@ -663,6 +665,46 @@ int32_t DistributedSchedStub::RegisterMissionListenerInner(MessageParcel& data,
+     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+ }
+ 
++int32_t DistributedSchedStub::RegisterOnListenerInner(MessageParcel& data, MessageParcel& reply)
++{
++    if (!DistributedSchedPermission::GetInstance().IsFoundationCall()) {
++        return DMS_PERMISSION_DENIED;
++    }
++    HILOGI("[PerformanceTest] called, IPC end = %{public}" PRId64, GetTickCount());
++    string type = data.ReadString();
++    if (type.empty()) {
++        HILOGW("read type failed!");
++        return ERR_FLATTEN_OBJECT;
++    }
++    sptr<IRemoteObject> onListener = data.ReadRemoteObject();
++    if (onListener == nullptr) {
++        HILOGW("read IRemoteObject failed!");
++        return ERR_FLATTEN_OBJECT;
++    }
++    int32_t result = RegisterOnListener(type, onListener);
++    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
++}
++
++int32_t DistributedSchedStub::RegisterOffListenerInner(MessageParcel& data, MessageParcel& reply)
++{
++    if (!DistributedSchedPermission::GetInstance().IsFoundationCall()) {
++        return DMS_PERMISSION_DENIED;
++    }
++    HILOGI("[PerformanceTest] called, IPC end = %{public}" PRId64, GetTickCount());
++    string type = data.ReadString();
++    if (type.empty()) {
++        HILOGW("read type failed!");
++        return ERR_FLATTEN_OBJECT;
++    }
++    sptr<IRemoteObject> onListener = data.ReadRemoteObject();
++    if (onListener == nullptr) {
++        HILOGW("read IRemoteObject failed!");
++        return ERR_FLATTEN_OBJECT;
++    }
++    int32_t result = RegisterOffListener(type, onListener);
++    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
++}
++
+ int32_t DistributedSchedStub::UnRegisterMissionListenerInner(MessageParcel& data, MessageParcel& reply)
+ {
+     if (!DistributedSchedPermission::GetInstance().IsFoundationCall()) {

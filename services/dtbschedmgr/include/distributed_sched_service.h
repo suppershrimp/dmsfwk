@@ -127,6 +127,8 @@ public:
     int32_t StopSyncRemoteMissions(const std::string& devId) override;
     int32_t StopSyncMissionsFromRemote(const CallerInfo& callerInfo) override;
     int32_t RegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) override;
+    int32_t RegisterOnListener(const std::string& type, const sptr<IRemoteObject>& obj) override;
+    int32_t RegisterOffListener(const std::string& type, const sptr<IRemoteObject>& obj) override;
     int32_t UnRegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) override;
 #endif
     void ProcessConnectDied(const sptr<IRemoteObject>& connect);

@@ -81,6 +81,8 @@ void DistributedSchedStub::InitLocalFuncsInner()
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
     localFuncsMap_[GET_REMOTE_MISSION_SNAPSHOT_INFO] = &DistributedSchedStub::GetRemoteMissionSnapshotInfoInner;
     localFuncsMap_[REGISTER_MISSION_LISTENER] = &DistributedSchedStub::RegisterMissionListenerInner;
+    localFuncsMap_[REGISTER_ON_LISTENER] = &DistributedSchedStub::RegisterOnListenerInner;
+    localFuncsMap_[REGISTER_OFF_LISTENER] = &DistributedSchedStub::RegisterOffListenerInner;
     localFuncsMap_[UNREGISTER_MISSION_LISTENER] = &DistributedSchedStub::UnRegisterMissionListenerInner;
     localFuncsMap_[GET_MISSION_INFOS] = &DistributedSchedStub::GetMissionInfosInner;
     localFuncsMap_[START_SYNC_MISSIONS] = &DistributedSchedStub::StartSyncRemoteMissionsInner;
@@ -660,6 +662,46 @@ int32_t DistributedSchedStub::RegisterMissionListenerInner(MessageParcel& data, 
         return ERR_FLATTEN_OBJECT;
     }
     int32_t result = RegisterMissionListener(devId, missionChangedListener);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+int32_t DistributedSchedStub::RegisterOnListenerInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!DistributedSchedPermission::GetInstance().IsFoundationCall()) {
+        return DMS_PERMISSION_DENIED;
+    }
+    HILOGI("[PerformanceTest] called, IPC end = %{public}" PRId64, GetTickCount());
+    string type = data.ReadString();
+    if (type.empty()) {
+        HILOGW("read type failed!");
+        return ERR_FLATTEN_OBJECT;
+    }
+    sptr<IRemoteObject> onListener = data.ReadRemoteObject();
+    if (onListener == nullptr) {
+        HILOGW("read IRemoteObject failed!");
+        return ERR_FLATTEN_OBJECT;
+    }
+    int32_t result = RegisterOnListener(type, onListener);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+int32_t DistributedSchedStub::RegisterOffListenerInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!DistributedSchedPermission::GetInstance().IsFoundationCall()) {
+        return DMS_PERMISSION_DENIED;
+    }
+    HILOGI("[PerformanceTest] called, IPC end = %{public}" PRId64, GetTickCount());
+    string type = data.ReadString();
+    if (type.empty()) {
+        HILOGW("read type failed!");
+        return ERR_FLATTEN_OBJECT;
+    }
+    sptr<IRemoteObject> onListener = data.ReadRemoteObject();
+    if (onListener == nullptr) {
+        HILOGW("read IRemoteObject failed!");
+        return ERR_FLATTEN_OBJECT;
+    }
+    int32_t result = RegisterOffListener(type, onListener);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 

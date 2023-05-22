@@ -48,6 +48,8 @@ private:
     int32_t GetMissionInfosInner(MessageParcel& data, MessageParcel& reply);
     int32_t GetRemoteMissionSnapshotInfoInner(MessageParcel& data, MessageParcel& reply);
     int32_t RegisterMissionListenerInner(MessageParcel& data, MessageParcel& reply);
+    int32_t RegisterOnListenerInner(MessageParcel& data, MessageParcel& reply);
+    int32_t RegisterOffListenerInner(MessageParcel& data, MessageParcel& reply);
     int32_t UnRegisterMissionListenerInner(MessageParcel& data, MessageParcel& reply);
     int32_t StartSyncRemoteMissionsInner(MessageParcel& data, MessageParcel& reply);
     int32_t StartSyncMissionsFromRemoteInner(MessageParcel& data, MessageParcel& reply);
