@@ -73,6 +73,7 @@ void DistributedSchedStub::InitLocalFuncsInner()
 {
     localFuncsMap_[START_REMOTE_ABILITY] = &DistributedSchedStub::StartRemoteAbilityInner;
     localFuncsMap_[CONTINUE_MISSION] = &DistributedSchedStub::ContinueMissionInner;
+    localFuncsMap_[CONTINUE_MISSION_OF_BUNDLENAME] = &DistributedSchedStub::ContinueMissionOfBundleNameInner;
     localFuncsMap_[START_CONTINUATION] = &DistributedSchedStub::StartContinuationInner;
     localFuncsMap_[NOTIFY_COMPLETE_CONTINUATION] = &DistributedSchedStub::NotifyCompleteContinuationInner;
     localFuncsMap_[CONNECT_REMOTE_ABILITY] = &DistributedSchedStub::ConnectRemoteAbilityInner;
@@ -347,6 +348,36 @@ int32_t DistributedSchedStub::ContinueMissionInner(MessageParcel& data, MessageP
         return ERR_NULL_OBJECT;
     }
     int32_t result = ContinueMission(srcDevId, dstDevId, missionId, callback, *wantParams);
+    HILOGI("result = %{public}d", result);
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+int32_t DistributedSchedStub::ContinueMissionOfBundleNameInner(MessageParcel& data, MessageParcel& reply)
+{
+    bool isLocalCalling = IPCSkeleton::IsLocalCalling();
+    if ((isLocalCalling && !DistributedSchedPermission::GetInstance().IsFoundationCall()) ||
+        (!isLocalCalling && !CheckCallingUid())) {
+        HILOGE("check permission failed!");
+        return DMS_PERMISSION_DENIED;
+    }
+
+    std::string srcDevId;
+    std::string dstDevId;
+    std::string bundleName;
+    PARCEL_READ_HELPER(data, String, srcDevId);
+    PARCEL_READ_HELPER(data, String, dstDevId);
+    PARCEL_READ_HELPER(data, String, bundleName);
+    sptr<IRemoteObject> callback = data.ReadRemoteObject();
+    if (callback == nullptr) {
+        HILOGW("read callback failed!");
+        return ERR_NULL_OBJECT;
+    }
+    shared_ptr<AAFwk::WantParams> wantParams(data.ReadParcelable<AAFwk::WantParams>());
+    if (wantParams == nullptr) {
+        HILOGW("wantParams readParcelable failed!");
+        return ERR_NULL_OBJECT;
+    }
+    int32_t result = ContinueMission(srcDevId, dstDevId, bundleName, callback, *wantParams);
     HILOGI("result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }

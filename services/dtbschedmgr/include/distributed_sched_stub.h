@@ -36,6 +36,7 @@ private:
     int32_t StartAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t SendResultFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t ContinueMissionInner(MessageParcel& data, MessageParcel& reply);
+    int32_t ContinueMissionOfBundleNameInner(MessageParcel& data, MessageParcel& reply);
     int32_t StartContinuationInner(MessageParcel& data, MessageParcel& reply);
     int32_t NotifyCompleteContinuationInner(MessageParcel& data, MessageParcel& reply);
     int32_t NotifyContinuationResultFromRemoteInner(MessageParcel& data, MessageParcel& reply);

@@ -99,6 +99,8 @@ public:
         const CallerInfo& callerInfo, const AccountInfo& accountInfo, int32_t resultCode) override;
     int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
         int32_t missionId, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) override;
+    int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
+        const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) override;
     int32_t StartContinuation(const OHOS::AAFwk::Want& want, int32_t missionId, int32_t callerUid,
         int32_t status, uint32_t accessToken) override;
     void NotifyCompleteContinuation(const std::u16string& devId, int32_t sessionId, bool isSuccess) override;
@@ -204,6 +206,8 @@ private:
         const sptr<IRemoteObject>& callback, uint32_t remoteBundleVersion = 0);
     int32_t ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId, int32_t missionId,
         const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams);
+    int32_t ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
+        const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams);
     int32_t TryStartRemoteAbilityByCall(const OHOS::AAFwk::Want& want, const sptr<IRemoteObject>& connect,
         const CallerInfo& callerInfo);
     int32_t StartLocalAbility(const FreeInstallInfo& info, int64_t taskId, int32_t resultCode);

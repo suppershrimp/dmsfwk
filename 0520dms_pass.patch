@@ -1,0 +1,209 @@
+diff --git a/services/dtbschedmgr/include/distributed_sched_interface.h b/services/dtbschedmgr/include/distributed_sched_interface.h
+index 64cbc7c..16616c4 100644
+--- a/services/dtbschedmgr/include/distributed_sched_interface.h
++++ b/services/dtbschedmgr/include/distributed_sched_interface.h
+@@ -69,6 +69,8 @@ public:
+         const CallerInfo& callerInfo, const AccountInfo& accountInfo, int32_t resultCode) = 0;
+     virtual int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
+         int32_t missionId, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) = 0;
++    virtual int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
++        const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) = 0;
+     virtual int32_t StartContinuation(const OHOS::AAFwk::Want& want, int32_t missionId, int32_t callerUid,
+         int32_t status, uint32_t accessToken) = 0;
+     virtual void NotifyCompleteContinuation(const std::u16string& devId, int32_t sessionId, bool isSuccess) = 0;
+@@ -151,6 +153,7 @@ public:
+         SEND_RESULT_FROM_REMOTE = 20,
+         GET_REMOTE_APPTHREAD = 35,
+         CONTINUE_MISSION = 36,
++        CONTINUE_MISSION_OF_BUNDLENAME = 37,
+ 
+         // requeset code for free install
+         START_FREE_INSTALL_FROM_REMOTE = 51,
+diff --git a/services/dtbschedmgr/include/distributed_sched_proxy.h b/services/dtbschedmgr/include/distributed_sched_proxy.h
+index 0fd7424..44c2fb1 100644
+--- a/services/dtbschedmgr/include/distributed_sched_proxy.h
++++ b/services/dtbschedmgr/include/distributed_sched_proxy.h
+@@ -39,6 +39,8 @@ public:
+         const CallerInfo& callerInfo, const AccountInfo& accountInfo, int32_t resultCode) override;
+     int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
+         int32_t missionId, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) override;
++    int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
++        const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) override;
+     int32_t StartContinuation(const OHOS::AAFwk::Want& want, int32_t missionId, int32_t callerUid,
+         int32_t status, uint32_t accessToken) override;
+     void NotifyCompleteContinuation(const std::u16string& devId, int32_t sessionId, bool isSuccess) override;
+diff --git a/services/dtbschedmgr/include/distributed_sched_service.h b/services/dtbschedmgr/include/distributed_sched_service.h
+index dbe53f5..8499ffa 100644
+--- a/services/dtbschedmgr/include/distributed_sched_service.h
++++ b/services/dtbschedmgr/include/distributed_sched_service.h
+@@ -99,6 +99,8 @@ public:
+         const CallerInfo& callerInfo, const AccountInfo& accountInfo, int32_t resultCode) override;
+     int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
+         int32_t missionId, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) override;
++    int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
++        const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) override;
+     int32_t StartContinuation(const OHOS::AAFwk::Want& want, int32_t missionId, int32_t callerUid,
+         int32_t status, uint32_t accessToken) override;
+     void NotifyCompleteContinuation(const std::u16string& devId, int32_t sessionId, bool isSuccess) override;
+@@ -204,6 +206,8 @@ private:
+         const sptr<IRemoteObject>& callback, uint32_t remoteBundleVersion = 0);
+     int32_t ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId, int32_t missionId,
+         const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams);
++    int32_t ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
++        const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams);
+     int32_t TryStartRemoteAbilityByCall(const OHOS::AAFwk::Want& want, const sptr<IRemoteObject>& connect,
+         const CallerInfo& callerInfo);
+     int32_t StartLocalAbility(const FreeInstallInfo& info, int64_t taskId, int32_t resultCode);
+diff --git a/services/dtbschedmgr/include/distributed_sched_stub.h b/services/dtbschedmgr/include/distributed_sched_stub.h
+index 0eddf8d..da9f3f9 100644
+--- a/services/dtbschedmgr/include/distributed_sched_stub.h
++++ b/services/dtbschedmgr/include/distributed_sched_stub.h
+@@ -36,6 +36,7 @@ private:
+     int32_t StartAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply);
+     int32_t SendResultFromRemoteInner(MessageParcel& data, MessageParcel& reply);
+     int32_t ContinueMissionInner(MessageParcel& data, MessageParcel& reply);
++    int32_t ContinueMissionOfBundleNameInner(MessageParcel& data, MessageParcel& reply);
+     int32_t StartContinuationInner(MessageParcel& data, MessageParcel& reply);
+     int32_t NotifyCompleteContinuationInner(MessageParcel& data, MessageParcel& reply);
+     int32_t NotifyContinuationResultFromRemoteInner(MessageParcel& data, MessageParcel& reply);
+diff --git a/services/dtbschedmgr/src/distributed_sched_proxy.cpp b/services/dtbschedmgr/src/distributed_sched_proxy.cpp
+index 49afc09..1a5e6c6 100644
+--- a/services/dtbschedmgr/src/distributed_sched_proxy.cpp
++++ b/services/dtbschedmgr/src/distributed_sched_proxy.cpp
+@@ -149,6 +149,31 @@ int32_t DistributedSchedProxy::ContinueMission(const std::string& srcDeviceId, c
+     PARCEL_TRANSACT_SYNC_RET_INT(remote, CONTINUE_MISSION, data, reply);
+ }
+ 
++int32_t DistributedSchedProxy::ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
++    const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
++{
++    if (callback == nullptr) {
++        HILOGE("ContinueMission callback null");
++        return ERR_NULL_OBJECT;
++    }
++    sptr<IRemoteObject> remote = Remote();
++    if (remote == nullptr) {
++        HILOGE("ContinueMission remote service null");
++        return ERR_NULL_OBJECT;
++    }
++    MessageParcel data;
++    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
++        return ERR_FLATTEN_OBJECT;
++    }
++    PARCEL_WRITE_HELPER(data, String, srcDeviceId);
++    PARCEL_WRITE_HELPER(data, String, dstDeviceId);
++    PARCEL_WRITE_HELPER(data, String, bundleName);
++    PARCEL_WRITE_HELPER(data, RemoteObject, callback);
++    PARCEL_WRITE_HELPER(data, Parcelable, &wantParams);
++    MessageParcel reply;
++    PARCEL_TRANSACT_SYNC_RET_INT(remote, CONTINUE_MISSION_OF_BUNDLENAME, data, reply);
++}
++
+ int32_t DistributedSchedProxy::StartContinuation(const OHOS::AAFwk::Want& want, int32_t missionId, int32_t callerUid,
+     int32_t status, uint32_t accessToken)
+ {
+diff --git a/services/dtbschedmgr/src/distributed_sched_service.cpp b/services/dtbschedmgr/src/distributed_sched_service.cpp
+index f145971..c9db9a5 100644
+--- a/services/dtbschedmgr/src/distributed_sched_service.cpp
++++ b/services/dtbschedmgr/src/distributed_sched_service.cpp
+@@ -411,6 +411,20 @@ int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDev
+     return result;
+ }
+ 
++int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
++    const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
++{
++    sptr<IDistributedSched> remoteDms = GetRemoteDms(srcDeviceId);
++    if (remoteDms == nullptr) {
++        HILOGE("get remote dms null!");
++        return INVALID_REMOTE_PARAMETERS_ERR;
++    }
++    int32_t missionId = 1; // 需由bundleName获得；
++    int32_t result = remoteDms->ContinueMission(srcDeviceId, dstDeviceId, missionId, callback, wantParams);
++    HILOGI("ContinueRemoteMission result: %{public}d!", result);
++    return result;
++}
++
+ int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
+     int32_t missionId, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
+ {
+@@ -434,6 +448,30 @@ int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId,
+     }
+ }
+ 
++int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
++    const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
++{
++    if (srcDeviceId.empty() || dstDeviceId.empty() || callback == nullptr) {
++        HILOGE("srcDeviceId or dstDeviceId or callback is null!");
++        return INVALID_PARAMETERS_ERR;
++    }
++    std::string localDevId;
++    if (!GetLocalDeviceId(localDevId)) {
++        HILOGE("get local deviceId failed!");
++        return INVALID_PARAMETERS_ERR;
++    }
++
++    if (srcDeviceId == localDevId) {
++        int32_t missionId = 1;
++        return ContinueLocalMission(dstDeviceId, missionId, callback, wantParams);
++    } else if (dstDeviceId == localDevId) {
++        return ContinueRemoteMission(srcDeviceId, dstDeviceId, bundleName, callback, wantParams);
++    } else {
++        HILOGE("source or target device must be local!");
++        return OPERATION_DEVICE_NOT_INITIATOR_OR_TARGET;
++    }
++}
++
+ int32_t DistributedSchedService::SetWantForContinuation(AAFwk::Want& newWant, int32_t missionId)
+ {
+     std::string devId;
+diff --git a/services/dtbschedmgr/src/distributed_sched_stub.cpp b/services/dtbschedmgr/src/distributed_sched_stub.cpp
+index 29d4cd1..fb88ffc 100644
+--- a/services/dtbschedmgr/src/distributed_sched_stub.cpp
++++ b/services/dtbschedmgr/src/distributed_sched_stub.cpp
+@@ -73,6 +73,7 @@ void DistributedSchedStub::InitLocalFuncsInner()
+ {
+     localFuncsMap_[START_REMOTE_ABILITY] = &DistributedSchedStub::StartRemoteAbilityInner;
+     localFuncsMap_[CONTINUE_MISSION] = &DistributedSchedStub::ContinueMissionInner;
++    localFuncsMap_[CONTINUE_MISSION_OF_BUNDLENAME] = &DistributedSchedStub::ContinueMissionOfBundleNameInner;
+     localFuncsMap_[START_CONTINUATION] = &DistributedSchedStub::StartContinuationInner;
+     localFuncsMap_[NOTIFY_COMPLETE_CONTINUATION] = &DistributedSchedStub::NotifyCompleteContinuationInner;
+     localFuncsMap_[CONNECT_REMOTE_ABILITY] = &DistributedSchedStub::ConnectRemoteAbilityInner;
+@@ -351,6 +352,36 @@ int32_t DistributedSchedStub::ContinueMissionInner(MessageParcel& data, MessageP
+     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+ }
+ 
++int32_t DistributedSchedStub::ContinueMissionOfBundleNameInner(MessageParcel& data, MessageParcel& reply)
++{
++    bool isLocalCalling = IPCSkeleton::IsLocalCalling();
++    if ((isLocalCalling && !DistributedSchedPermission::GetInstance().IsFoundationCall()) ||
++        (!isLocalCalling && !CheckCallingUid())) {
++        HILOGE("check permission failed!");
++        return DMS_PERMISSION_DENIED;
++    }
++
++    std::string srcDevId;
++    std::string dstDevId;
++    std::string bundleName;
++    PARCEL_READ_HELPER(data, String, srcDevId);
++    PARCEL_READ_HELPER(data, String, dstDevId);
++    PARCEL_READ_HELPER(data, String, bundleName);
++    sptr<IRemoteObject> callback = data.ReadRemoteObject();
++    if (callback == nullptr) {
++        HILOGW("read callback failed!");
++        return ERR_NULL_OBJECT;
++    }
++    shared_ptr<AAFwk::WantParams> wantParams(data.ReadParcelable<AAFwk::WantParams>());
++    if (wantParams == nullptr) {
++        HILOGW("wantParams readParcelable failed!");
++        return ERR_NULL_OBJECT;
++    }
++    int32_t result = ContinueMission(srcDevId, dstDevId, bundleName, callback, *wantParams);
++    HILOGI("result = %{public}d", result);
++    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
++}
++
+ int32_t DistributedSchedStub::StartContinuationInner(MessageParcel& data, MessageParcel& reply)
+ {
+     if (!DistributedSchedPermission::GetInstance().IsFoundationCall()) {
