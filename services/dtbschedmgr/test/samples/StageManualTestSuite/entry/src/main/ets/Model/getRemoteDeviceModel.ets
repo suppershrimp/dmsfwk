@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+// @ts-ignore
 import deviceManager from '@ohos.distributedHardware.deviceManager';
 
 var SUBSCRIBE_ID = 100;
@@ -28,6 +29,7 @@ export default class RemoteDeviceModel {
     if (typeof (this.deviceManager) === 'undefined') {
       console.log('[dmsDemo] deviceManager.createDeviceManager begin');
       let self = this;
+      // @ts-ignore
       deviceManager.createDeviceManager('com.ohos.distributedmusicplayer', (error, value) => {
         if (error) {
           console.error('createDeviceManager failed.');

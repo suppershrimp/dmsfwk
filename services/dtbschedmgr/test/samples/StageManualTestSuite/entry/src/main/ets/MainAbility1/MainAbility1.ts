@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+// @ts-ignore
 import Ability from '@ohos.app.ability.UIAbility'
 
 export default class MainAbility1 extends Ability {
