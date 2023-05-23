@@ -411,6 +411,20 @@ int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDev
     return result;
 }
 
+int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
+    const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
+{
+    sptr<IDistributedSched> remoteDms = GetRemoteDms(srcDeviceId);
+    if (remoteDms == nullptr) {
+        HILOGE("get remote dms null!");
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+    int32_t missionId = 1; // 需由bundleName获得；
+    int32_t result = remoteDms->ContinueMission(srcDeviceId, dstDeviceId, missionId, callback, wantParams);
+    HILOGI("ContinueRemoteMission result: %{public}d!", result);
+    return result;
+}
+
 int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
     int32_t missionId, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
 {
@@ -428,6 +442,30 @@ int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId,
         return ContinueLocalMission(dstDeviceId, missionId, callback, wantParams);
     } else if (dstDeviceId == localDevId) {
         return ContinueRemoteMission(srcDeviceId, dstDeviceId, missionId, callback, wantParams);
+    } else {
+        HILOGE("source or target device must be local!");
+        return OPERATION_DEVICE_NOT_INITIATOR_OR_TARGET;
+    }
+}
+
+int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
+    const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
+{
+    if (srcDeviceId.empty() || dstDeviceId.empty() || callback == nullptr) {
+        HILOGE("srcDeviceId or dstDeviceId or callback is null!");
+        return INVALID_PARAMETERS_ERR;
+    }
+    std::string localDevId;
+    if (!GetLocalDeviceId(localDevId)) {
+        HILOGE("get local deviceId failed!");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    if (srcDeviceId == localDevId) {
+        int32_t missionId = 1;
+        return ContinueLocalMission(dstDeviceId, missionId, callback, wantParams);
+    } else if (dstDeviceId == localDevId) {
+        return ContinueRemoteMission(srcDeviceId, dstDeviceId, bundleName, callback, wantParams);
     } else {
         HILOGE("source or target device must be local!");
         return OPERATION_DEVICE_NOT_INITIATOR_OR_TARGET;

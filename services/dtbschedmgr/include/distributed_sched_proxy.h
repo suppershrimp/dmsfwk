@@ -39,6 +39,8 @@ public:
         const CallerInfo& callerInfo, const AccountInfo& accountInfo, int32_t resultCode) override;
     int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
         int32_t missionId, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) override;
+    int32_t ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
+        const std::string& bundleName, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams) override;
     int32_t StartContinuation(const OHOS::AAFwk::Want& want, int32_t missionId, int32_t callerUid,
         int32_t status, uint32_t accessToken) override;
     void NotifyCompleteContinuation(const std::u16string& devId, int32_t sessionId, bool isSuccess) override;
