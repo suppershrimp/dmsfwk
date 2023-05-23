@@ -89,6 +89,8 @@ public:
     virtual int32_t StopSyncRemoteMissions(const std::string& devId) = 0;
     virtual int32_t StopSyncMissionsFromRemote(const CallerInfo& callerInfo) = 0;
     virtual int32_t RegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) = 0;
+    virtual int32_t RegisterOnListener(const std::string& type, const sptr<IRemoteObject>& obj) = 0;
+    virtual int32_t RegisterOffListener(const std::string& type, const sptr<IRemoteObject>& obj) = 0;
     virtual int32_t UnRegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) = 0;
     virtual int32_t GetMissionInfos(const std::string& deviceId, int32_t numMissions,
         std::vector<AAFwk::MissionInfo>& missionInfos) = 0;
@@ -174,6 +176,8 @@ public:
         ALL_CONNECT_TO_DMS = 97,
         STOP_SYNC_MISSIONS = 98,
         GET_REMOTE_MISSION_SNAPSHOT_INFO = 99,
+        REGISTER_ON_LISTENER = 100,
+        REGISTER_OFF_LISTENER = 101,
 
         // request code for call ability
         START_REMOTE_ABILITY_BY_CALL = 150,

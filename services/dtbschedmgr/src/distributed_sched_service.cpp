@@ -1874,6 +1874,20 @@ int32_t DistributedSchedService::RegisterMissionListener(const std::u16string& d
     return DistributedSchedMissionManager::GetInstance().RegisterMissionListener(devId, obj);
 }
 
+int32_t DistributedSchedService::RegisterOnListener(const std::string& type,
+    const sptr<IRemoteObject>& obj)
+{
+    //return DistributedSchedContinueManager::GetInstance().RegisterOnListener(type, obj);
+    return 0;
+}
+
+int32_t DistributedSchedService::RegisterOffListener(const std::string& type,
+    const sptr<IRemoteObject>& obj)
+{
+    //return DistributedSchedContinueManager::GetInstance().RegisterOffListener(type, obj);
+    return 0;
+}
+
 int32_t DistributedSchedService::UnRegisterMissionListener(const std::u16string& devId,
     const sptr<IRemoteObject>& obj)
 {

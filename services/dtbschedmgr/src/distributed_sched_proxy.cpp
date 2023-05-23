@@ -451,6 +451,44 @@ int32_t DistributedSchedProxy::RegisterMissionListener(const std::u16string& dev
     PARCEL_TRANSACT_SYNC_RET_INT(remote, REGISTER_MISSION_LISTENER, data, reply);
 }
 
+int32_t DistributedSchedProxy::RegisterOnListener(const std::string& type,
+    const sptr<IRemoteObject>& obj)
+{
+    HILOGI("RegisterOnListener called");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote system ability is null");
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, String, type);
+    PARCEL_WRITE_HELPER(data, RemoteObject, obj);
+    PARCEL_TRANSACT_SYNC_RET_INT(remote, REGISTER_ON_LISTENER, data, reply);
+}
+
+int32_t DistributedSchedProxy::RegisterOffListener(const std::string& type,
+    const sptr<IRemoteObject>& obj)
+{
+    HILOGI("RegisterOffListener called");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        HILOGE("remote system ability is null");
+        return ERR_NULL_OBJECT;
+    }
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
+        return ERR_FLATTEN_OBJECT;
+    }
+    PARCEL_WRITE_HELPER(data, String, type);
+    PARCEL_WRITE_HELPER(data, RemoteObject, obj);
+    PARCEL_TRANSACT_SYNC_RET_INT(remote, REGISTER_OFF_LISTENER, data, reply);
+}
+
 int32_t DistributedSchedProxy::UnRegisterMissionListener(const std::u16string& devId,
     const sptr<IRemoteObject>& obj)
 {
