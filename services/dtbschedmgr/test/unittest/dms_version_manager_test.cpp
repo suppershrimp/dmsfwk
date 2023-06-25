@@ -452,7 +452,7 @@ HWTEST_F(DmsVersionManagerTest, GetAppInfoFromDP_002, TestSize.Level3)
     EXPECT_NE(result, ERR_OK);
     DTEST_LOG << "DmsVersionManagerTest GetAppInfoFromDP_002 end ret:" << result << std::endl;
 }
-
++++
 /**
  * @tc.name: GetAppInfoFromDP_003
  * @tc.desc: test call GetAppInfoFromDP with local device id
