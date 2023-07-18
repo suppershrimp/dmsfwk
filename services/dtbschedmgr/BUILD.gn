@@ -97,6 +97,7 @@ ohos_shared_library("distributedschedsvr") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
+    "ability_runtime:connection_callback",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",

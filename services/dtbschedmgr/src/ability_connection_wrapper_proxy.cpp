@@ -16,6 +16,7 @@
 #include "ability_connection_wrapper_proxy.h"
 
 #include "dtbschedmgr_log.h"
+#include "element_name.h"
 #include "ipc_object_proxy.h"
 #include "ipc_types.h"
 #include "parcel_helper.h"

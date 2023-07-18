@@ -15,6 +15,7 @@
 
 #include "distributed_sched_adapter.h"
 
+#include "ability_connect_callback_interface.h"
 #include "datetime_ex.h"
 #include "dfx/dms_hisysevent_report.h"
 #include "distributed_sched_service.h"
