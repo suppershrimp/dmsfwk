@@ -37,6 +37,7 @@
 #include "short_wrapper.h"
 #include "string_ex.h"
 #include "string_wrapper.h"
+#include "want_params_wrapper.h"
 #include "zchar_wrapper.h"
 
 using namespace OHOS::AppExecFwk;
@@ -121,9 +122,11 @@ DistributedWant::DistributedWant(const AAFwk::Want& want)
             (tp == DistributedWantParams::VALUE_TYPE_DOUBLE) ||
             (tp == DistributedWantParams::VALUE_TYPE_STRING) ||
             (tp == DistributedWantParams::VALUE_TYPE_ARRAY) ||
-            (tp == DistributedWantParams::VALUE_TYPE_REMOTE_OBJECT) ||
-            (tp == DistributedWantParams::VALUE_TYPE_WANTPARAMS)) {
+            (tp == DistributedWantParams::VALUE_TYPE_REMOTE_OBJECT)) {
             parameters_.SetParam(it->first, it->second);
+        } else if (tp == DistributedWantParams::VALUE_TYPE_WANTPARAMS) {
+            DistributedWantParams disWantParams(AAFwk::WantParamWrapper::Unbox(AAFwk::IWantParams::Query(it->second)));
+            parameters_.SetParam(it->first, DistributedWantParamWrapper::Box(disWantParams));
         }
     }
 }

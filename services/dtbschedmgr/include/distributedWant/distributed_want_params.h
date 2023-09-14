@@ -47,6 +47,7 @@ class DistributedWantParams final : public Parcelable {
 public:
     DistributedWantParams() = default;
     DistributedWantParams(const DistributedWantParams& wantParams);
+    DistributedWantParams(const AAFwk::WantParams& wantParams);
     inline ~DistributedWantParams()
     {}
     DistributedWantParams& operator=(const DistributedWantParams& other);

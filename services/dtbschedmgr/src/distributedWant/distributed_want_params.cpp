@@ -186,6 +186,46 @@ bool DistributedWantParams::NewParams(const DistributedWantParams& source, Distr
     return true;
 }
 
+DistributedWantParams::DistributedWantParams(const AAFwk::WantParams& wantParams)
+{
+    params_.clear();
+    auto params = wantParams.GetParams();
+    for (auto it = params.begin(); it != params.end(); it++) {
+        sptr<IInterface> o = it->second;
+        if (AAFwk::IString::Query(o) != nullptr) {
+        params_[it->first] = AAFwk::String::Box(AAFwk::String::Unbox(AAFwk::IString::Query(o)));
+        } else if (AAFwk::IBoolean::Query(o) != nullptr) {
+            params_[it->first] = AAFwk::Boolean::Box(AAFwk::Boolean::Unbox(AAFwk::IBoolean::Query(o)));
+        } else if (AAFwk::IByte::Query(o) != nullptr) {
+            params_[it->first] = AAFwk::Byte::Box(AAFwk::Byte::Unbox(AAFwk::IByte::Query(o)));
+        } else if (AAFwk::IChar::Query(o) != nullptr) {
+            params_[it->first] = AAFwk::Char::Box(AAFwk::Char::Unbox(AAFwk::IChar::Query(o)));
+        } else if (AAFwk::IShort::Query(o) != nullptr) {
+            params_[it->first] = AAFwk::Short::Box(AAFwk::Short::Unbox(AAFwk::IShort::Query(o)));
+        } else if (AAFwk::IInteger::Query(o) != nullptr) {
+            params_[it->first] = AAFwk::Integer::Box(AAFwk::Integer::Unbox(AAFwk::IInteger::Query(o)));
+        } else if (AAFwk::ILong::Query(o) != nullptr) {
+            params_[it->first] = AAFwk::Long::Box(AAFwk::Long::Unbox(AAFwk::ILong::Query(o)));
+        } else if (AAFwk::IFloat::Query(o) != nullptr) {
+            params_[it->first] = AAFwk::Float::Box(AAFwk::Float::Unbox(AAFwk::IFloat::Query(o)));
+        } else if (AAFwk::IDouble::Query(o) != nullptr) {
+            params_[it->first] = AAFwk::Double::Box(AAFwk::Double::Unbox(AAFwk::IDouble::Query(o)));
+        } else if (AAFwk::IRemoteObjectWrap::Query(o) != nullptr) {
+            params_[it->first] =
+                AAFwk::RemoteObjectWrap::Box(AAFwk::RemoteObjectWrap::UnBox(AAFwk::IRemoteObjectWrap::Query(o)));
+        } else if (AAFwk::IWantParams::Query(o) != nullptr) {
+            DistributedWantParams newDest(AAFwk::WantParamWrapper::Unbox(AAFwk::IWantParams::Query(o)));
+            params_[it->first] = DistributedWantParamWrapper::Box(newDest);
+        } else if (AAFwk::IArray::Query(o) != nullptr) {
+            sptr<AAFwk::IArray> destAO = nullptr;
+            if (!NewArrayData(AAFwk::IArray::Query(o), destAO)) {
+                continue;
+            }
+            params_[it->first] = destAO;
+        }
+    }
+}
+
 bool DistributedWantParams::NewArrayData(AAFwk::IArray* source, sptr<AAFwk::IArray>& dest)
 {
     if (AAFwk::Array::IsBooleanArray(source)) {
