@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <set>
 #include <vector>
 #include "base_interfaces.h"
@@ -186,6 +187,7 @@ private:
     std::map<std::string, sptr<AAFwk::IInterface>> params_;
     std::map<std::string, int> fds_;
     std::vector<DistributedUnsupportedData> cachedUnsupportedData_;
+    mutable std::mutex paramsLock_;
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
