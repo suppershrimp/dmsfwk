@@ -397,8 +397,13 @@ bool DistributedSchedPermission::VerifyPermission(uint32_t accessToken, const st
 bool DistributedSchedPermission::CheckAccountAccessPermission(const CallerInfo& callerInfo,
     const AccountInfo& accountInfo, const std::string& targetBundleName)
 {
-    if (accountInfo.accountType == IDistributedSched::SAME_ACCOUNT_TYPE) {
-        HILOGD("no need to check");
+    AccountInfo tempAccountInfo;
+    if (GetAccountInfo(callerInfo.sourceDeviceId, callerInfo, tempAccountInfo) != ERR_OK) {
+        HILOGE("get source info error");
+        return false;
+    }
+    if (tempAccountInfo.accountType == IDistributedSched::SAME_ACCOUNT_TYPE) {
+        HILOGE("no need to check");
         return true;
     }
     if (targetBundleName.empty() || accountInfo.groupIdList.empty()) {
