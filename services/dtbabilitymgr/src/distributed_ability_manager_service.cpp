@@ -338,6 +338,12 @@ int32_t DistributedAbilityManagerService::StartDeviceManager(
     return ERR_OK;
 }
 
+void DistributedAbilityManagerService::OnDeviceLevelChanged(int32_t type, int32_t level, std::string& action)
+{
+    HILOGD("OnDeviceLevelChanged || type:%{public}d, level:%{public}d, action:%{public}s", type, level, action.c_str());
+    return ;
+}
+
 int32_t DistributedAbilityManagerService::ConnectAbility(int32_t token,
     const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams)
 {

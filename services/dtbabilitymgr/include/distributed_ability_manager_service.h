@@ -47,6 +47,7 @@ public:
         const DeviceConnectStatus& deviceConnectStatus) override;
     int32_t StartDeviceManager(
         int32_t token, const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams = nullptr) override;
+    void OnDeviceLevelChanged(int32_t type, int32_t level, std::string& action) override;
 
     void ProcessNotifierDied(const sptr<IRemoteObject>& notifier);
     void ScheduleStartDeviceManager(const sptr<IRemoteObject>& appProxy, int32_t token,
