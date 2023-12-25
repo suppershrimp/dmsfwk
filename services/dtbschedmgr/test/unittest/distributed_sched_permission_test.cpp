@@ -77,29 +77,6 @@ void NativeTokenGet()
     ASSERT_NE(tokenId, 0);
     SetSelfTokenID(tokenId);
 }
-
-void EnablePermissionAccess(const char* perms[], size_t permsNum, uint64_t &tokenId)
-{
-    NativeTokenInfoParams infoInstance = {
-        .dcapsNum = 0,
-        .permsNum = permsNum,
-        .aclsNum = 0,
-        .dcaps = nullptr,
-        .perms = perms,
-        .acls = nullptr,
-        .aplStr = "system_basic",
-    };
-
-    infoInstance.processName = "DistributedSchedPermissionTest";
-    tokenId = GetAccessTokenId(&infoInstance);
-    SetSelfTokenID(tokenId);
-    OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
-}
-
-void DisablePermissionAccess(const uint64_t &tokenId)
-{
-    OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(tokenId);
-}
 }
 
 void DistributedSchedPermissionTest::SetUpTestCase()
@@ -118,16 +95,11 @@ void DistributedSchedPermissionTest::TearDownTestCase()
 void DistributedSchedPermissionTest::TearDown()
 {
     DTEST_LOG << "DistributedSchedPermissionTest::TearDown" << std::endl;
-    DisablePermissionAccess(tokenId_);
 }
 
 void DistributedSchedPermissionTest::SetUp()
 {
     DTEST_LOG << "DistributedSchedPermissionTest::SetUp" << std::endl;
-    const char* perms[] = {
-        "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED",
-    };
-    EnablePermissionAccess(perms, sizeof(perms) / sizeof(perms[0]), tokenId_);
     DistributedSchedUtil::MockPermission();
     DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(deviceId_);
 
@@ -197,29 +169,6 @@ HWTEST_F(DistributedSchedPermissionTest, CheckSendResultPermission_003, TestSize
         callerInfo, accountInfo, targetAbility);
     EXPECT_EQ(ret, ERR_OK);
     DTEST_LOG << "DistributedSchedPermissionTest CheckSendResultPermission_003 end ret:" << ret << std::endl;
-}
-
-/**
- * @tc.name: CheckSendResultPermission_004
- * @tc.desc: input invalid params
- * @tc.type: FUNC
- * @tc.require: issueI5T6GJ
- */
-HWTEST_F(DistributedSchedPermissionTest, CheckSendResultPermission_004, TestSize.Level3)
-{
-    DTEST_LOG << "DistributedSchedPermissionTest CheckSendResultPermission_005 begin" << std::endl;
-    AAFwk::Want want;
-    IDistributedSched::AccountInfo accountInfo;
-    accountInfo.accountType = IDistributedSched::SAME_ACCOUNT_TYPE;
-    AppExecFwk::AbilityInfo targetAbility;
-    targetAbility.visible = true;
-    targetAbility.permissions.push_back(INVALID_PERMISSION_NAME);
-    CallerInfo callerInfo;
-    callerInfo.accessToken = INVALID_ACCESS_TOKEN;
-    int32_t ret = DistributedSchedPermission::GetInstance().CheckSendResultPermission(want,
-        callerInfo, accountInfo, targetAbility);
-    EXPECT_NE(ret, ERR_OK);
-    DTEST_LOG << "DistributedSchedPermissionTest CheckSendResultPermission_005 end result:" << ret << std::endl;
 }
 
 /**
@@ -508,6 +457,7 @@ HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_001, TestSize.Level3)
 HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_002, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedPermissionTest GetTargetAbility_002 begin" << std::endl;
+    DistributedSchedUtil::MockBundlePermission();
     AAFwk::Want want;
     ElementName name;
     name.SetAbilityName(ABILITY_NAME);
@@ -528,6 +478,7 @@ HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_002, TestSize.Level3)
 HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_003, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedPermissionTest GetTargetAbility_003 begin" << std::endl;
+    DistributedSchedUtil::MockBundlePermission();
     AAFwk::Want want;
     ElementName name;
     name.SetAbilityName(ABILITY_NAME);
@@ -549,6 +500,7 @@ HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_003, TestSize.Level3)
 HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_004, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedPermissionTest GetTargetAbility_004 begin" << std::endl;
+    DistributedSchedUtil::MockBundlePermission();
     AAFwk::Want want;
     ElementName name;
     name.SetAbilityName(ABILITY_NAME);
@@ -569,6 +521,7 @@ HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_004, TestSize.Level3)
 HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_005, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedPermissionTest GetTargetAbility_005 begin" << std::endl;
+    DistributedSchedUtil::MockBundlePermission();
     AAFwk::Want want;
     ElementName name;
     name.SetAbilityName(ABILITY_NAME);
@@ -590,6 +543,7 @@ HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_005, TestSize.Level3)
 HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_006, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedPermissionTest GetTargetAbility_006 begin" << std::endl;
+    DistributedSchedUtil::MockBundlePermission();
     AAFwk::Want want;
     ElementName name;
     name.SetAbilityName(ABILITY_NAME);
@@ -612,6 +566,7 @@ HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_006, TestSize.Level3)
 HWTEST_F(DistributedSchedPermissionTest, GetTargetAbility_007, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedPermissionTest GetTargetAbility_007 begin" << std::endl;
+    DistributedSchedUtil::MockBundlePermission();
     AAFwk::Want want;
     ElementName name;
     name.SetAbilityName(ABILITY_NAME);
@@ -674,6 +629,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckGetCallerPermission_002, TestSize.
 HWTEST_F(DistributedSchedPermissionTest, CheckGetCallerPermission_003, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedPermissionTest CheckGetCallerPermission_003 begin" << std::endl;
+    DistributedSchedUtil::MockBundlePermission();
     AAFwk::Want want;
     CallerInfo callerInfo;
     bool result = BundleManagerInternal::GetCallerAppIdFromBms(BUNDLE_NAME, callerInfo.callerAppId);
@@ -974,6 +930,7 @@ HWTEST_F(DistributedSchedPermissionTest, CheckStartControlPermission_011, TestSi
 HWTEST_F(DistributedSchedPermissionTest, CheckStartControlPermission_012, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedPermissionTest CheckStartControlPermission_012 begin" << std::endl;
+    DistributedSchedUtil::MockBundlePermission();
     AppExecFwk::AbilityInfo targetAbility;
     targetAbility.visible = true;
     targetAbility.type = AppExecFwk::AbilityType::SERVICE;
@@ -2101,162 +2058,6 @@ HWTEST_F(DistributedSchedPermissionTest, CheckComponentAccessPermission_014, Tes
 }
 
 /**
- * @tc.name: CheckCustomPermission_001
- * @tc.desc: call CheckCustomPermission with no permissions
- * @tc.type: FUNC
- */
-HWTEST_F(DistributedSchedPermissionTest, CheckCustomPermission_001, TestSize.Level1)
-{
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_001 begin" << std::endl;
-    AppExecFwk::AbilityInfo targetAbility;
-    CallerInfo callerInfo;
-    callerInfo.accessToken = ACCESS_TOKEN;
-    bool ret = DistributedSchedPermission::GetInstance().CheckCustomPermission(targetAbility, callerInfo);
-    EXPECT_EQ(ret, true);
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_001 end result:" << ret << std::endl;
-}
-
-/**
- * @tc.name: CheckCustomPermission_002
- * @tc.desc: call CheckCustomPermission with no permissions and invalid accessToken
- * @tc.type: FUNC
- */
-HWTEST_F(DistributedSchedPermissionTest, CheckCustomPermission_002, TestSize.Level1)
-{
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_002 begin" << std::endl;
-    AppExecFwk::AbilityInfo targetAbility;
-    CallerInfo callerInfo;
-    callerInfo.accessToken = INVALID_ACCESS_TOKEN;
-    bool ret = DistributedSchedPermission::GetInstance().CheckCustomPermission(targetAbility, callerInfo);
-    EXPECT_EQ(ret, true);
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_002 end result:" << ret << std::endl;
-}
-
-/**
- * @tc.name: CheckCustomPermission_003
- * @tc.desc: call CheckCustomPermission with invalid permissions
- * @tc.type: FUNC
- */
-HWTEST_F(DistributedSchedPermissionTest, CheckCustomPermission_003, TestSize.Level1)
-{
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_003 begin" << std::endl;
-    AppExecFwk::AbilityInfo targetAbility;
-    targetAbility.permissions.emplace_back(INVALID_PERMISSION_NAME);
-    CallerInfo callerInfo;
-    callerInfo.accessToken = ACCESS_TOKEN;
-    bool ret = DistributedSchedPermission::GetInstance().CheckCustomPermission(targetAbility, callerInfo);
-    EXPECT_EQ(ret, false);
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_003 end result:" << ret << std::endl;
-}
-
-/**
- * @tc.name: CheckCustomPermission_004
- * @tc.desc: call CheckCustomPermission with invalid permissions and invalid accessToken
- * @tc.type: FUNC
- */
-HWTEST_F(DistributedSchedPermissionTest, CheckCustomPermission_004, TestSize.Level1)
-{
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_004 begin" << std::endl;
-    AppExecFwk::AbilityInfo targetAbility;
-    targetAbility.permissions.emplace_back(INVALID_PERMISSION_NAME);
-    CallerInfo callerInfo;
-    callerInfo.accessToken = INVALID_ACCESS_TOKEN;
-    bool ret = DistributedSchedPermission::GetInstance().CheckCustomPermission(targetAbility, callerInfo);
-    EXPECT_EQ(ret, false);
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_004 end result:" << ret << std::endl;
-}
-
-/**
- * @tc.name: CheckCustomPermission_005
- * @tc.desc: call CheckCustomPermission with correct permissions
- * @tc.type: FUNC
- */
-HWTEST_F(DistributedSchedPermissionTest, CheckCustomPermission_005, TestSize.Level1)
-{
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_005 begin" << std::endl;
-    AppExecFwk::AbilityInfo targetAbility;
-    targetAbility.permissions.emplace_back(PERMISSION_NAME);
-    CallerInfo callerInfo;
-    callerInfo.accessToken = ACCESS_TOKEN;
-    bool ret = DistributedSchedPermission::GetInstance().CheckCustomPermission(targetAbility, callerInfo);
-    EXPECT_EQ(ret, false);
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_005 end result:" << ret << std::endl;
-}
-
-/**
- * @tc.name: CheckCustomPermission_006
- * @tc.desc: call CheckCustomPermission with correct permissions and invalid accessToken
- * @tc.type: FUNC
- */
-HWTEST_F(DistributedSchedPermissionTest, CheckCustomPermission_006, TestSize.Level1)
-{
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_006 begin" << std::endl;
-    AppExecFwk::AbilityInfo targetAbility;
-    targetAbility.permissions.emplace_back(PERMISSION_NAME);
-    CallerInfo callerInfo;
-    callerInfo.accessToken = INVALID_ACCESS_TOKEN;
-    bool ret = DistributedSchedPermission::GetInstance().CheckCustomPermission(targetAbility, callerInfo);
-    EXPECT_EQ(ret, false);
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_006 end result:" << ret << std::endl;
-}
-
-/**
- * @tc.name: CheckCustomPermission_007
- * @tc.desc: CheckBackgroundPermission
- * @tc.type: FUNC
- * @tc.require: issueI5T6GJ
- */
-HWTEST_F(DistributedSchedPermissionTest, CheckCustomPermission_007, TestSize.Level3)
-{
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_007 begin" << std::endl;
-    std::string udid = DnetworkAdapter::GetInstance()->GetUdidByNetworkId(deviceId_);
-    std::string deviceId = udid;
-    AccessTokenKit::DeleteRemoteToken(deviceId, 0x20100000);
-    HapTokenInfo baseInfo = {
-        .apl = APL_NORMAL,
-        .ver = 1,
-        .userID = 1,
-        .bundleName = "com.ohos.dms_test",
-        .instIndex = 1,
-        .appID = "dmstest",
-        .deviceID = udid,
-        .tokenID = 0x20100000,
-        .tokenAttr = 0
-    };
-
-    PermissionStateFull infoManagerTestState = {
-        .permissionName = "ohos.permission.START_INVISIBLE_ABILITY",
-        .isGeneral = true,
-        .resDeviceID = {"local"},
-        .grantStatus = {PermissionState::PERMISSION_GRANTED}, // first grant
-        .grantFlags = {PermissionFlag::PERMISSION_SYSTEM_FIXED}};
-    std::vector<PermissionStateFull> permStateList;
-    permStateList.emplace_back(infoManagerTestState);
-
-    HapTokenInfoForSync remoteTokenInfo = {
-        .baseInfo = baseInfo,
-        .permStateList = permStateList
-    };
-
-    int result = AccessTokenKit::SetRemoteHapTokenInfo(deviceId, remoteTokenInfo);
-    ASSERT_EQ(result, RET_SUCCESS);
-
-    // Get local map token ID
-    AccessTokenID mapID = AccessTokenKit::AllocLocalTokenID(deviceId_, 0x20100000);
-    ASSERT_NE(mapID, 0);
-
-    AppExecFwk::AbilityInfo targetAbility;
-    CallerInfo callerInfo;
-    targetAbility.permissions.emplace_back("");
-    targetAbility.permissions.emplace_back(PERMISSION_NAME);
-    callerInfo.sourceDeviceId = deviceId_;
-    callerInfo.accessToken = 0x20100000;
-    bool ret = DistributedSchedPermission::GetInstance().CheckCustomPermission(targetAbility, callerInfo);
-    EXPECT_EQ(ret, false);
-    DTEST_LOG << "DistributedSchedPermissionTest CheckCustomPermission_007 end ret:" << ret << std::endl;
-}
-
-/**
  * @tc.name: CheckPermission_001
  * @tc.desc: call CheckPermission
  * @tc.type: FUNC
@@ -2391,6 +2192,36 @@ HWTEST_F(DistributedSchedPermissionTest, MarkUriPermission_002, TestSize.Level3)
         callerInfo, accountInfo, targetBundle);
     EXPECT_EQ(ret, false);
     DTEST_LOG << "DistributedSchedPermissionTest MarkUriPermission_002 end " <<  std::endl;
+}
+
+/**
+ * @tc.name: MarkUriPermission_003
+ * @tc.desc: parse groupInfo from json with invalid params
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedSchedPermissionTest, MarkUriPermission_003, TestSize.Level3)
+{
+    DTEST_LOG << "DistributedSchedPermissionTest MarkUriPermission_003 begin" << std::endl;
+    DistributedSchedUtil::MockBundlePermission();
+    AAFwk::Want want;
+    want.AddFlags(want.FLAG_AUTH_READ_URI_PERMISSION);
+    want.SetUri("file://com.ohos.mms/data/test_B");
+    const std::string bundleName = "com.ohos.mms";
+    uint32_t accessTokenId;
+    int32_t ret = BundleManagerInternal::GetBundleIdFromBms(bundleName, accessTokenId);
+    EXPECT_EQ(ret, ERR_OK);
+    DistributedSchedPermission::GetInstance().MarkUriPermission(want, accessTokenId);
+    CallerInfo callerInfo;
+    callerInfo.accessToken = ACCESS_TOKEN;
+    IDistributedSched::AccountInfo accountInfo;
+    accountInfo.accountType = IDistributedSched::DIFF_ACCOUNT_TYPE;
+    std::string groupId = INVALID_GROUP_ID;
+    accountInfo.groupIdList.push_back(groupId);
+    string targetBundle = INVALID_BUNDLE_NAME;
+    ret = DistributedSchedPermission::GetInstance().CheckAccountAccessPermission(
+        callerInfo, accountInfo, targetBundle);
+    EXPECT_EQ(ret, false);
+    DTEST_LOG << "DistributedSchedPermissionTest MarkUriPermission_003 end " <<  std::endl;
 }
 
 /**
