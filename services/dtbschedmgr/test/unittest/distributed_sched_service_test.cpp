@@ -2463,6 +2463,24 @@ HWTEST_F(DistributedSchedServiceTest, StartRemoteShareForm_003, TestSize.Level1)
 #endif
 
 /**
+ * @tc.name: StartRemoteShareForm_004
+ * @tc.desc: call StartRemoteShareForm with dms
+ * @tc.type: StartRemoteShareForm
+ * @tc.require: issueI5M62D
+ */
+HWTEST_F(DistributedSchedServiceTest, StartRemoteShareForm_004, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedSchedServiceTest StartRemoteShareForm_004 start" << std::endl;
+    sptr<IDistributedSched> proxy = GetDms();
+    const OHOS::AppExecFwk::FormShareInfo formShareInfo {};
+    auto result = proxy->StartRemoteShareForm(REMOTE_DEVICEID, formShareInfo);
+    DTEST_LOG << "result:" << result << std::endl;
+    EXPECT_NE(ERR_OK, result);
+    DTEST_LOG << "DistributedSchedServiceTest StartRemoteShareForm_004 end" << std::endl;
+}
+
+
+/**
  * @tc.name: GetConnectComponentList_001
  * @tc.desc: call GetConnectComponentList
  * @tc.type: FUNC
