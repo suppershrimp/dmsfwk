@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTEDSCHED_CONTINUE_RECV_MANAGER_H
-#define DISTRIBUTEDSCHED_CONTINUE_RECV_MANAGER_H
+#ifndef CONTINUE_RECV_MANAGER_H
+#define CONTINUE_RECV_MANAGER_H
 
 #include <deque>
 #include <map>
@@ -68,14 +68,13 @@ public:
     void NotifyDataRecv(std::string& senderNetworkId, uint8_t* payload, uint32_t dataLen);
     int32_t RegisterOnListener(const std::string& type, const sptr<IRemoteObject>& obj);
     int32_t RegisterOffListener(const std::string& type, const sptr<IRemoteObject>& obj);
-    void NotifyDeid(const sptr<IRemoteObject>& obj);
+    void NotifyDied(const sptr<IRemoteObject>& obj);
     void NotifyDeviceOffline(const std::string& networkId);
 #ifdef SUPPORT_COMMON_EVENT_SERVICE
     void NotifyScreenLockorOff();
 #endif
 
 private:
-    int32_t GetCurrentMissionId();
     void StartEvent();
     int32_t VerifyBroadcastSource(const std::string& senderNetworkId, const std::string& bundleName,
         const int32_t state);
@@ -95,4 +94,4 @@ private:
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
-#endif // DISTRIBUTEDSCHED_CONTINUE_RECV_MANAGER_H
+#endif // CONTINUE_RECV_MANAGER_H

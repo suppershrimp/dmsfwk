@@ -48,7 +48,7 @@
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
 #include "mission/distributed_mission_info.h"
 #include "mission/distributed_sched_continue_manager.h"
-#include "mission/distributed_sched_continue_recv_manager.h"
+#include "mission/continue_recv_manager.h"
 #include "mission/distributed_sched_mission_manager.h"
 #endif
 #include "os_account_manager.h"
@@ -678,7 +678,7 @@ void DistributedSchedService::NotifyCompleteContinuation(const std::u16string& d
         return;
     }
     int dSchedEventresult = dschedContinuation_->NotifyDSchedEventResult(DSCHED_EVENT_KEY, ERR_OK);
-    HILOGI("NotifyDSchedEventResult result:%{public}d", dSchedEventresult);
+    HILOGD("NotifyDSchedEventResult result:%{public}d", dSchedEventresult);
     remoteDms->NotifyContinuationResultFromRemote(sessionId, isSuccess);
 }
 

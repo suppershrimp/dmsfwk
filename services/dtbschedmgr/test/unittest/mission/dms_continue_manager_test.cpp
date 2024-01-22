@@ -18,7 +18,7 @@
 #include "dtbschedmgr_log.h"
 #define private public
 #include "mission/distributed_sched_continue_manager.h"
-#include "mission/distributed_sched_continue_recv_manager.h"
+#include "mission/continue_recv_manager.h"
 #undef private
 #include "test_log.h"
 
@@ -295,13 +295,13 @@ HWTEST_F(DMSContinueManagerTest, testDealUnfocusedBusiness001, TestSize.Level3)
     EXPECT_EQ(ret, CAN_NOT_FOUND_ABILITY_ERR);
 
     /**
-     * @tc.steps: step3. test NotifyDeid when obj is nullptr;
+     * @tc.steps: step3. test NotifyDied when obj is nullptr;
      */
     sptr<IRemoteObject> obj01 = nullptr;
-    DistributedSchedContinueManager::GetInstance().NotifyDeid(obj01);
+    DistributedSchedContinueManager::GetInstance().NotifyDied(obj01);
 
     /**
-     * @tc.steps: step4. test NotifyDeid when iterItem->second is empty;
+     * @tc.steps: step4. test NotifyDied when iterItem->second is empty;
      */
     std::vector<sptr<IRemoteObject>> objs;
     {
@@ -310,7 +310,7 @@ HWTEST_F(DMSContinueManagerTest, testDealUnfocusedBusiness001, TestSize.Level3)
         DistributedSchedContinueRecvManager::GetInstance().registerOnListener_[TYPE] = objs;
     }
     obj01 = new RemoteOnListenerStubTest();
-    DistributedSchedContinueManager::GetInstance().NotifyDeid(obj01);
+    DistributedSchedContinueManager::GetInstance().NotifyDied(obj01);
 
     DTEST_LOG << "DMSContinueManagerTest testDealUnfocusedBusiness001 end" << std::endl;
 }
@@ -461,18 +461,18 @@ HWTEST_F(DMSContinueManagerTest, testIsContinue001, TestSize.Level1)
 }
 
 /**
- * @tc.name: testNotifyDeid001
- * @tc.desc: test NotifyDeid
+ * @tc.name: testNotifyDied001
+ * @tc.desc: test NotifyDied
  * @tc.type: FUNC
  */
-HWTEST_F(DMSContinueManagerTest, testNotifyDeid001, TestSize.Level1)
+HWTEST_F(DMSContinueManagerTest, testNotifyDied001, TestSize.Level1)
 {
-    DTEST_LOG << "DMSContinueManagerTest testNotifyDeid001 start" << std::endl;
+    DTEST_LOG << "DMSContinueManagerTest testNotifyDied001 start" << std::endl;
     sptr<IRemoteObject> obj01 = new RemoteOnListenerStubTest();
     int32_t ret = DistributedSchedContinueRecvManager::GetInstance().RegisterOnListener(TYPE, obj01);
     EXPECT_EQ(false, DistributedSchedContinueRecvManager::GetInstance().registerOnListener_.empty());
-    DistributedSchedContinueManager::GetInstance().NotifyDeid(obj01);
-    DTEST_LOG << "DMSContinueManagerTest testNotifyDeid001 end" << std::endl;
+    DistributedSchedContinueManager::GetInstance().NotifyDied(obj01);
+    DTEST_LOG << "DMSContinueManagerTest testNotifyDied001 end" << std::endl;
 }
 
 /**
