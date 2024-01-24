@@ -141,6 +141,8 @@ HWTEST_F(DMSContinueManagerTest, testNotifyMissionFocused001, TestSize.Level3)
     /**
      * @tc.steps: step1. test NotifyMissionFocused when eventHandler is not nullptr;
      */
+    DMSContinueSendMgr::GetInstance().NotifyMissionFocused(0, FocusedReason::MIN);
+    DMSContinueSendMgr::GetInstance().NotifyMissionFocused(0, FocusedReason::MAX);
     DMSContinueSendMgr::GetInstance().NotifyMissionFocused(0, FocusedReason::NORMAL);
     DMSContinueSendMgr::GetInstance().NotifyMissionFocused(0, FocusedReason::SCREENOFF);
     EXPECT_NE(DMSContinueSendMgr::GetInstance().eventHandler_, nullptr);
@@ -169,16 +171,20 @@ HWTEST_F(DMSContinueManagerTest, testNotifyMissionUnfocused001, TestSize.Level3)
     /**
      * @tc.steps: step1. test NotifyMissionUnfocused when eventHandler is not nullptr;
      */
-    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(0);
-    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(0);
+    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(0, UnfocusedReason::MIN);
+    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(0, UnfocusedReason::MAX);
+    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(0, UnfocusedReason::NORMAL);
+    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(0, UnfocusedReason::NORMAL);
+    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(0, UnfocusedReason::DESTORY);
     EXPECT_NE(DMSContinueSendMgr::GetInstance().eventHandler_, nullptr);
 
     /**
      * @tc.steps: step2. test NotifyMissionUnfocused when eventHandler is nullptr;
      */
+
     DMSContinueSendMgr::GetInstance().UnInit();
-    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(0);
     EXPECT_EQ(DMSContinueSendMgr::GetInstance().eventHandler_, nullptr);
+    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(0, UnfocusedReason::NORMAL);
     DTEST_LOG << "DMSContinueManagerTest testNotifyMissionUnfocused001 end" << std::endl;
 }
 

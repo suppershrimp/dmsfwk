@@ -51,9 +51,18 @@ enum class FocusedReason {
     MAX
 };
 
+enum class UnfocusedReason {
+    MIN,
+    NORMAL,
+    DESTORY,
+    CLOSE,
+    TIMEOUT,
+    SCREENOFF,
+    MAX
+};
+
 class DMSContinueSendMgr {
     DECLARE_SINGLE_INSTANCE(DMSContinueSendMgr);
-
 public:
     constexpr static int32_t DMS_SEND_LEN = 5;
     constexpr static uint8_t DMS_0XF0 = 0xf0;
@@ -70,7 +79,7 @@ public:
     void Init();
     void UnInit();
     void NotifyMissionFocused(const int32_t missionId, FocusedReason focusedReason);
-    void NotifyMissionUnfocused(const int32_t missionId);
+    void NotifyMissionUnfocused(const int32_t missionId, UnfocusedReason unfocuseReason);
     void NotifyScreenOff();
     int32_t GetMissionId(const std::string& bundleName, int32_t& missionId);
     void NotifyDied(const sptr<IRemoteObject>& obj);
