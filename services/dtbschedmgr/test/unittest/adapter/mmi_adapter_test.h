@@ -13,4 +13,24 @@
  * limitations under the License.
  */
 
-export const GlobalThis = globalThis;
+#ifndef MMI_ADAPTER_TEST_H
+#define MMI_ADAPTER_TEST_H
+
+#include "gtest/gtest.h"
+
+#define private public
+#include "adapter/mmi_adapter.h"
+#undef private
+
+namespace OHOS {
+namespace DistributedSchedule {
+class MMIAdapterTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+};
+} // namespace DistributedSchedule
+} // namespace OHOS
+#endif // MMI_ADAPTER_TEST_H

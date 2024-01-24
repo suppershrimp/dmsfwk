@@ -171,6 +171,10 @@ if (dmsfwk_ces_listener) {
 if (dmsfwk_mmi_listener) {
   dtbschedmgr_sources +=
       [ "${distributed_service}/dtbschedmgr/src/adapter/mmi_adapter.cpp" ]
+} else {
+  dtbschedmgr_sources += [
+    "${distributed_service}/dtbschedmgr/src/adapter/mmi_adapter_common.cpp",
+  ]
 }
 
 ohos_unittest("distributedschedsvrtest") {
@@ -189,7 +193,8 @@ ohos_unittest("distributedschedsvrtest") {
   sources = [
     "unittest/distributed_sched_adapter_test.cpp",
     "unittest/distributed_sched_dumper_test.cpp",
-    "unittest/distributed_sched_service_test.cpp",
+    "unittest/distributed_sched_service_first_test.cpp",
+    "unittest/distributed_sched_service_second_test.cpp",
     "unittest/distributed_sched_stub_test.cpp",
     "unittest/dms_callback_task_test.cpp",
     "unittest/dms_token_callback_test.cpp",
@@ -376,6 +381,9 @@ ohos_unittest("dschedmissionmanagertest") {
     "unittest/mission/snapshot_test.cpp",
     "unittest/mock_remote_stub.cpp",
   ]
+  if (dmsfwk_mmi_listener) {
+    sources += [ "unittest/adapter/mmi_adapter_test.cpp" ]
+  }
   sources += dtbschedmgr_sources
   configs = [
     ":test_config",

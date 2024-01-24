@@ -71,7 +71,7 @@ public:
     void NotifyDied(const sptr<IRemoteObject>& obj);
     void NotifyDeviceOffline(const std::string& networkId);
 #ifdef SUPPORT_COMMON_EVENT_SERVICE
-    void NotifyScreenLockorOff();
+    void NotifyScreenOff();
 #endif
 
 private:
