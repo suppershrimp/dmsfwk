@@ -1023,15 +1023,14 @@ void DistributedSchedService::ProcessCalleeDied(const sptr<IRemoteObject>& conne
 void DistributedSchedService::ProcessCallResult(const sptr<IRemoteObject>& calleeConnect,
     const sptr<IRemoteObject>& callerConnect)
 {
-    sptr<IRemoteObject> token;
-    AbilityManagerClient::GetInstance()->GetAbilityTokenByCalleeObj(calleeConnect, token);
-    if (token == nullptr) {
+    int32_t recordId = AbilityManagerClient::GetInstance()->GetAbilityRecordIdByCalleeObj(calleeConnect);
+    if (recordId == -1) {
         return;
     }
     std::lock_guard<std::mutex> autoLock(observerLock_);
     for (auto iter = observerMap_.begin(); iter != observerMap_.end(); iter++) {
         if (iter->second.srcConnect == callerConnect) {
-            iter->second.token = token;
+            iter->second.recordId = recordId;
             return;
         }
     }
@@ -2498,7 +2497,7 @@ sptr<AppExecFwk::IAppMgr> DistributedSchedService::GetAppManager()
 }
 
 int32_t DistributedSchedService::NotifyStateChanged(int32_t abilityState, AppExecFwk::ElementName& element,
-    const sptr<IRemoteObject>& token)
+    int32_t recordId)
 {
     std::string srcDeviceId = "";
     int32_t connectToken = 0;
@@ -2506,7 +2505,7 @@ int32_t DistributedSchedService::NotifyStateChanged(int32_t abilityState, AppExe
         std::lock_guard<std::mutex> autoLock(observerLock_);
         for (auto iter = observerMap_.begin(); iter != observerMap_.end(); iter++) {
             if (iter->second.dstBundleName == element.GetBundleName() &&
-                iter->second.dstAbilityName == element.GetAbilityName() && token == iter->second.token) {
+                iter->second.dstAbilityName == element.GetAbilityName() && recordId == iter->second.recordId) {
                 srcDeviceId = iter->second.srcDeviceId;
                 connectToken = iter->second.connectToken;
                 HILOGD("get srcDeviceId and missionId success");

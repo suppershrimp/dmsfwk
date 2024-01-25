@@ -40,23 +40,23 @@ void AppStateObserver::OnAbilityStateChanged(const AppExecFwk::AbilityStateData&
     }
     {
         std::lock_guard<std::mutex> autoLock(countLock_);
-        if (connectAbilityMap_.count(abilityStateData.token) == 0) {
-            connectAbilityMap_[abilityStateData.token] = 1;
+        if (connectAbilityMap_.count(abilityStateData.abilityRecordId) == 0) {
+            connectAbilityMap_[abilityStateData.abilityRecordId] = 1;
         } else {
-            connectAbilityMap_[abilityStateData.token]++;
+            connectAbilityMap_[abilityStateData.abilityRecordId]++;
         }
-        if (connectAbilityMap_[abilityStateData.token] != NOTIFY_COUNT &&
+        if (connectAbilityMap_[abilityStateData.abilityRecordId] != NOTIFY_COUNT &&
             abilityStateData.abilityState == FOREGROUND) {
             HILOGD("ignore first notify");
             return;
         }
-        connectAbilityMap_[abilityStateData.token] = 0;
+        connectAbilityMap_[abilityStateData.abilityRecordId] = 0;
     }
     HILOGD("abilityState = %{public}d", abilityStateData.abilityState);
     AppExecFwk::ElementName element("", abilityStateData.bundleName, abilityStateData.abilityName,
         abilityStateData.moduleName);
     int32_t ret = DistributedSchedService::GetInstance().NotifyStateChanged(abilityStateData.abilityState,
-        element, abilityStateData.token);
+        element, abilityStateData.abilityRecordId);
     HILOGD("notify callee state changed, ret = %{public}d", ret);
 }
 
