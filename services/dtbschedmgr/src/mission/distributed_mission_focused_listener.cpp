@@ -25,23 +25,23 @@ const std::string TAG = "DistributedMissionFocusedListener";
 }
 void DistributedMissionFocusedListener::OnMissionCreated(int32_t missionId)
 {
-    HILOGI("OnMissionCreated, missionId = %{public}d", missionId);
+    HILOGD("OnMissionCreated, missionId = %{public}d", missionId);
 }
 
 void DistributedMissionFocusedListener::OnMissionDestroyed(int32_t missionId)
 {
-    HILOGI("OnMissionDestroyed, missionId = %{public}d", missionId);
+    HILOGD("OnMissionDestroyed, missionId = %{public}d", missionId);
     DistributedSchedContinueManager::GetInstance().NotifyMissionUnfocused(missionId);
 }
 
 void DistributedMissionFocusedListener::OnMissionSnapshotChanged(int32_t missionId)
 {
-    HILOGI("OnMissionSnapshotChanged, missionId = %{public}d", missionId);
+    HILOGD("OnMissionSnapshotChanged, missionId = %{public}d", missionId);
 }
 
 void DistributedMissionFocusedListener::OnMissionMovedToFront(int32_t missionId)
 {
-    HILOGI("OnMissionMovedToFront, missionId = %{public}d", missionId);
+    HILOGD("OnMissionMovedToFront, missionId = %{public}d", missionId);
 }
 
 void DistributedMissionFocusedListener::OnMissionFocused(int32_t missionId)
@@ -65,7 +65,7 @@ void DistributedMissionFocusedListener::OnMissionIconUpdated([[maybe_unused]]int
 
 void DistributedMissionFocusedListener::OnMissionClosed(int32_t missionId)
 {
-    HILOGI("OnMissionClosed, missionId = %{public}d", missionId);
+    HILOGD("OnMissionClosed, missionId = %{public}d", missionId);
     DistributedSchedContinueManager::GetInstance().NotifyMissionUnfocused(missionId);
 }
 

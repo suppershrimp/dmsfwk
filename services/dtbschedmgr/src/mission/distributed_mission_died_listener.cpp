@@ -26,7 +26,7 @@ const std::string TAG = "DistributedMissionDiedListener";
 void DistributedMissionDiedListener::OnRemoteDied(const wptr<IRemoteObject>& remote)
 {
     HILOGD("called");
-    DistributedSchedContinueManager::GetInstance().NotifyDeid(remote.promote());
+    DistributedSchedContinueManager::GetInstance().NotifyDied(remote.promote());
 }
 } // namespace DistributedSchedule
 } // namespace OHOS

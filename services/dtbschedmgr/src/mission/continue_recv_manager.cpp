@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "mission/distributed_sched_continue_recv_manager.h"
+#include "mission/continue_recv_manager.h"
 
 #include "adapter/dnetwork_adapter.h"
 #include "datetime_ex.h"
@@ -43,27 +43,19 @@ IMPLEMENT_SINGLE_INSTANCE(DistributedSchedContinueRecvManager);
 void DistributedSchedContinueRecvManager::Init()
 {
     HILOGI("Init start");
-    {
-        std::shared_ptr<SoftbusAdapterListener> missionBroadcastListener =
-            std::make_shared<DistributedMissionBroadcastListener>();
-        int32_t ret = SoftbusAdapter::GetInstance().RegisterSoftbusEventListener(missionBroadcastListener);
-        if (ret != ERR_OK) {
-            HILOGE("get RegisterSoftbusEventListener failed, ret: %{public}d", ret);
-            return;
-        }
-        missionDiedListener_ = new DistributedMissionDiedListener();
-        eventThread_ = std::thread(&DistributedSchedContinueRecvManager::StartEvent, this);
-        std::unique_lock<std::mutex> lock(eventMutex_);
-        eventCon_.wait(lock, [this] {
-            return eventHandler_ != nullptr;
-        });
-    }
-
-    int32_t missionId = GetCurrentMissionId();
-    if (missionId <= 0) {
-        HILOGW("GetCurrentMissionId failed, init end. ret: %{public}d", missionId);
+    std::shared_ptr<SoftbusAdapterListener> missionBroadcastListener =
+        std::make_shared<DistributedMissionBroadcastListener>();
+    int32_t ret = SoftbusAdapter::GetInstance().RegisterSoftbusEventListener(missionBroadcastListener);
+    if (ret != ERR_OK) {
+        HILOGE("get RegisterSoftbusEventListener failed, ret: %{public}d", ret);
         return;
     }
+    missionDiedListener_ = new DistributedMissionDiedListener();
+    eventThread_ = std::thread(&DistributedSchedContinueRecvManager::StartEvent, this);
+    std::unique_lock<std::mutex> lock(eventMutex_);
+    eventCon_.wait(lock, [this] {
+        return eventHandler_ != nullptr;
+    });
     HILOGI("Init end");
 }
 
@@ -78,20 +70,6 @@ void DistributedSchedContinueRecvManager::UnInit()
         HILOGE("eventHandler_ is nullptr");
     }
     HILOGI("UnInit end");
-}
-
-int32_t DistributedSchedContinueRecvManager::GetCurrentMissionId()
-{
-    HILOGI("GetCurrentMission begin");
-    sptr<IRemoteObject> token;
-    int ret = AAFwk::AbilityManagerClient::GetInstance()->GetTopAbility(token);
-    if (ret != ERR_OK || token == nullptr) {
-        HILOGE("GetTopAbility failed, ret: %{public}d", ret);
-        return INVALID_MISSION_ID;
-    }
-    int32_t missionId = INVALID_MISSION_ID;
-    AAFwk::AbilityManagerClient::GetInstance()->GetMissionIdByToken(token, missionId);
-    return missionId;
 }
 
 void DistributedSchedContinueRecvManager::NotifyDataRecv(std::string& senderNetworkId,
@@ -294,9 +272,9 @@ void DistributedSchedContinueRecvManager::NotifyRecvBroadcast(const sptr<IRemote
     HILOGI("NotifyRecvBroadcast end");
 }
 
-void DistributedSchedContinueRecvManager::NotifyDeid(const sptr<IRemoteObject>& obj)
+void DistributedSchedContinueRecvManager::NotifyDied(const sptr<IRemoteObject>& obj)
 {
-    HILOGI("NotifyDeid start");
+    HILOGI("NotifyDied start");
     if (obj == nullptr) {
         HILOGE("obj is null");
         return;
@@ -317,7 +295,7 @@ void DistributedSchedContinueRecvManager::NotifyDeid(const sptr<IRemoteObject>& 
             iterItem++;
         }
     }
-    HILOGI("NotifyDeid end");
+    HILOGI("NotifyDied end");
 }
 
 #ifdef SUPPORT_COMMON_EVENT_SERVICE

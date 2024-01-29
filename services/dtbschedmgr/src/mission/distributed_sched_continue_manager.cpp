@@ -120,7 +120,7 @@ void DistributedSchedContinueManager::AddCancelMissionFocusedTimer(const int32_t
     } else {
         HILOGE("eventHandler_ is nullptr");
     }
-    HILOGI("AddCancelMissionFocusedTimer end");
+    HILOGD("AddCancelMissionFocusedTimer end");
 }
 
 void DistributedSchedContinueManager::NotifyMissionFocused(const int32_t missionId, FocusedReason focusedReason)
@@ -255,7 +255,7 @@ int32_t DistributedSchedContinueManager::SendSoftbusEvent(uint32_t accessTokenId
 void DistributedSchedContinueManager::AddMMIListener()
 {
     if (mmiMonitorId_ >= 0) {
-        HILOGI("MMI listener already exist, monitor id: %{public}d", mmiMonitorId_);
+        HILOGD("MMI listener already exist, monitor id: %{public}d", mmiMonitorId_);
         return;
     }
     mmiMonitorId_ = MMIAdapter::GetInstance().AddMMIListener();
@@ -263,7 +263,7 @@ void DistributedSchedContinueManager::AddMMIListener()
         HILOGW("Add MMI listener failed, ret: %{public}d", mmiMonitorId_);
         return;
     }
-    HILOGI("MMI listener has been added, monitor id: %{public}d", mmiMonitorId_);
+    HILOGD("MMI listener has been added, monitor id: %{public}d", mmiMonitorId_);
 }
 
 void DistributedSchedContinueManager::RemoveMMIListener()
@@ -295,7 +295,7 @@ int32_t DistributedSchedContinueManager::DealFocusedBusiness(const int32_t missi
         info_.currentIsContinuable = isMissionContinuable;
     }
     if (!isMissionContinuable) {
-        HILOGW("Mission is not continuable, task abort, missionId: %{public}d", missionId);
+        HILOGI("Mission is not continuable, task abort, missionId: %{public}d", missionId);
         return REMOTE_DEVICE_BIND_ABILITY_ERR;
     }
     std::string bundleName = info.want.GetBundle();
@@ -342,7 +342,7 @@ int32_t DistributedSchedContinueManager::CheckContinueState(const int32_t missio
 
 void DistributedSchedContinueManager::DealTimerUnfocusedBussiness(const int32_t missionId)
 {
-    HILOGI("DealTimerUnfocusedBussiness start, missionId: %{public}d", missionId);
+    HILOGD("DealTimerUnfocusedBussiness start, missionId: %{public}d", missionId);
     auto unfocusedTask = [this, missionId]() {
         DealUnfocusedBusiness(missionId, false);
     };
@@ -361,11 +361,11 @@ int32_t DistributedSchedContinueManager::DealUnfocusedBusiness(const int32_t mis
     std::string bundleName;
     int32_t ret = GetBundleName(missionId, bundleName);
     if (ret != ERR_OK) {
-        HILOGW("Get bundleName failed, mission is not continuable, missionId: %{public}d, ret: %{public}d",
+        HILOGI("Get bundleName failed, mission is not continuable, missionId: %{public}d, ret: %{public}d",
             missionId, ret);
         return ret;
     }
-    HILOGI("Get bundleName success, mission is continuable, missionId: %{public}d, bundleName: %{public}s",
+    HILOGD("Get bundleName success, mission is continuable, missionId: %{public}d, bundleName: %{public}s",
         missionId, bundleName.c_str());
 
     if (isUnfocused) {
@@ -469,7 +469,7 @@ int32_t DistributedSchedContinueManager::DealSetMissionContinueStateBusiness(con
     }
 
     if (!info_.currentIsContinuable) {
-        HILOGW("mission is not continuable, broadcast task abort, missionId: %{public}d", missionId);
+        HILOGI("mission is not continuable, broadcast task abort, missionId: %{public}d", missionId);
         return INVALID_PARAMETERS_ERR;
     }
 
@@ -508,9 +508,9 @@ int32_t DistributedSchedContinueManager::DealSetMissionContinueStateBusiness(con
     return ERR_OK;
 }
 
-void DistributedSchedContinueManager::NotifyDeid(const sptr<IRemoteObject>& obj)
+void DistributedSchedContinueManager::NotifyDied(const sptr<IRemoteObject>& obj)
 {
-    HILOGI("NotifyDeid start");
+    HILOGI("NotifyDied start");
     if (obj == nullptr) {
         HILOGE("obj is null");
         return;
@@ -531,7 +531,7 @@ void DistributedSchedContinueManager::NotifyDeid(const sptr<IRemoteObject>& obj)
             iterItem++;
         }
     }
-    HILOGI("NotifyDeid end");
+    HILOGI("NotifyDied end");
 }
 
 void DistributedSchedContinueManager::OnMMIEvent()

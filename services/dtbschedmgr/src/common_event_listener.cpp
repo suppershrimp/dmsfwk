@@ -16,8 +16,7 @@
 #include "common_event_listener.h"
 
 #include "dtbschedmgr_log.h"
-#include "mission/distributed_sched_continue_recv_manager.h"
-#include "mission/distributed_sched_continue_manager.h"
+#include "mission/continue_recv_manager.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
