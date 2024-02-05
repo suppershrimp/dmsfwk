@@ -16,7 +16,7 @@
 #include "mission/distributed_mission_died_listener.h"
 
 #include "dtbschedmgr_log.h"
-#include "mission/distributed_sched_continue_manager.h"
+#include "mission/distributed_sched_continue_recv_manager.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -25,8 +25,8 @@ const std::string TAG = "DistributedMissionDiedListener";
 }
 void DistributedMissionDiedListener::OnRemoteDied(const wptr<IRemoteObject>& remote)
 {
-    HILOGD("called");
-    DistributedSchedContinueManager::GetInstance().NotifyDeid(remote.promote());
+    HILOGI("called");
+    DistributedSchedContinueRecvManager::GetInstance().NotifyDeid(remote.promote());
 }
 } // namespace DistributedSchedule
 } // namespace OHOS

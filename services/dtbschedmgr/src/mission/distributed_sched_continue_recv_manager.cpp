@@ -58,7 +58,13 @@ void DistributedSchedContinueRecvManager::Init()
             return eventHandler_ != nullptr;
         });
     }
-
+#ifdef SUPPORT_COMMON_EVENT_SERVICE
+        EventFwk::MatchingSkills matchingSkills;
+        matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
+        EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+        auto applyMonitor = std::make_shared<CommonEventListener>(subscribeInfo);
+        EventFwk::CommonEventManager::SubscribeCommonEvent(applyMonitor);
+#endif
     int32_t missionId = GetCurrentMissionId();
     if (missionId <= 0) {
         HILOGW("GetCurrentMissionId failed, init end. ret: %{public}d", missionId);
