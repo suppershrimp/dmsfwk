@@ -508,32 +508,6 @@ int32_t DistributedSchedContinueManager::DealSetMissionContinueStateBusiness(con
     return ERR_OK;
 }
 
-void DistributedSchedContinueManager::NotifyDeid(const sptr<IRemoteObject>& obj)
-{
-    HILOGI("NotifyDeid start");
-    if (obj == nullptr) {
-        HILOGE("obj is null");
-        return;
-    }
-    for (auto iterItem = registerOnListener_.begin(); iterItem != registerOnListener_.end();) {
-        for (auto iter = iterItem->second.begin(); iter != iterItem->second.end();) {
-            if (*iter == obj) {
-                obj->RemoveDeathRecipient(missionDiedListener_);
-                iter = iterItem->second.erase(iter);
-            } else {
-                iter++;
-            }
-        }
-        if (iterItem->second.empty()) {
-            std::lock_guard<std::mutex> registerOnListenerMapLock(eventMutex_);
-            iterItem = registerOnListener_.erase(iterItem);
-        } else {
-            iterItem++;
-        }
-    }
-    HILOGI("NotifyDeid end");
-}
-
 void DistributedSchedContinueManager::OnMMIEvent()
 {
     HILOGD("OnMMIEvent, missionId = %{public}d", info_.currentMissionId);

@@ -72,7 +72,6 @@ public:
     void NotifyMissionUnfocused(const int32_t missionId);
     void NotifyScreenOff();
     int32_t GetMissionId(const std::string& bundleName, int32_t& missionId);
-    void NotifyDeid(const sptr<IRemoteObject>& obj);
     int32_t SetMissionContinueState(const int32_t missionId, const AAFwk::ContinueState& state);
     void OnMMIEvent();
 
