@@ -31,6 +31,7 @@ private:
     static bool CanDump();
     static bool DumpDefault(std::string& result);
     static void ShowConnectRemoteAbility(std::string& result);
+    static void ShowDuration(std::string& result);
     static void ShowHelp(std::string& result);
     static void IllegalInput(std::string& result);
 };

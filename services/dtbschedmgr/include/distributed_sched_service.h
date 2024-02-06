@@ -89,6 +89,7 @@ public:
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
     void DeviceOnlineNotify(const std::string& deviceId);
     void DeviceOfflineNotify(const std::string& deviceId);
+    void DurationInit();
 
     int32_t StartRemoteAbility(const OHOS::AAFwk::Want& want, int32_t callerUid, int32_t requestCode,
         uint32_t accessToken) override;
@@ -183,6 +184,7 @@ public:
 private:
     DistributedSchedService();
     bool Init();
+    void InitCommonEventListener();
     void RemoteConnectAbilityMappingLocked(const sptr<IRemoteObject>& connect, const std::string& localDeviceId,
         const std::string& remoteDeviceId, const AppExecFwk::ElementName& element, const CallerInfo& callerInfo,
         TargetComponent targetComponent);
