@@ -30,8 +30,8 @@ void DistributedMissionFocusedListener::OnMissionCreated(int32_t missionId)
 
 void DistributedMissionFocusedListener::OnMissionDestroyed(int32_t missionId)
 {
-    HILOGD("OnMissionDestroyed, missionId = %{public}d", missionId);
-    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId);
+    HILOGI("OnMissionDestroyed, missionId = %{public}d", missionId);
+    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId, UnfocusedReason::DESTORY);
 }
 
 void DistributedMissionFocusedListener::OnMissionSnapshotChanged(int32_t missionId)
@@ -53,7 +53,7 @@ void DistributedMissionFocusedListener::OnMissionFocused(int32_t missionId)
 void DistributedMissionFocusedListener::OnMissionUnfocused(int32_t missionId)
 {
     HILOGI("OnMissionUnFocused, missionId = %{public}d", missionId);
-    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId);
+    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId, UnfocusedReason::NORMAL);
 }
 
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
@@ -65,8 +65,8 @@ void DistributedMissionFocusedListener::OnMissionIconUpdated([[maybe_unused]]int
 
 void DistributedMissionFocusedListener::OnMissionClosed(int32_t missionId)
 {
-    HILOGD("OnMissionClosed, missionId = %{public}d", missionId);
-    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId);
+    HILOGI("OnMissionClosed, missionId = %{public}d", missionId);
+    DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId, UnfocusedReason::CLOSE);
 }
 
 void DistributedMissionFocusedListener::OnMissionLabelUpdated([[maybe_unused]]int32_t missionId)

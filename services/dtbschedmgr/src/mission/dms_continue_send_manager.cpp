@@ -111,7 +111,7 @@ void DMSContinueSendMgr::AddCancelMissionFocusedTimer(const int32_t missionId,
     HILOGD("AddCancelMissionFocusedTimer start, missionId: %{public}d", missionId);
     auto cancelfunc = [this, missionId, delay]() {
         if (delay == CANCEL_FOCUSED_DELAYED) {
-            screenLockInfo_[missionId] = 0;
+            screenLockInfo_[missionId] = 0; // 0: Flag means timed-unfocused.
         }
         DealTimerUnfocusedBussiness(missionId);
     };
@@ -142,7 +142,9 @@ void DMSContinueSendMgr::NotifyMissionFocused(const int32_t missionId, FocusedRe
     };
 
     if (eventHandler_ != nullptr) {
-        eventHandler_->RemoveTask(SCREEN_OFF_TASK);
+        if (focusedReason != FocusedReason::SCREENOFF) {
+            eventHandler_->RemoveTask(SCREEN_OFF_TASK);
+        }
         eventHandler_->RemoveTask(CANCEL_FOCUSED_TASK);
         eventHandler_->PostTask(feedfunc);
     } else {
@@ -151,17 +153,26 @@ void DMSContinueSendMgr::NotifyMissionFocused(const int32_t missionId, FocusedRe
     HILOGI("NotifyMissionFocused end");
 }
 
-void DMSContinueSendMgr::NotifyMissionUnfocused(const int32_t missionId)
+void DMSContinueSendMgr::NotifyMissionUnfocused(const int32_t missionId, UnfocusedReason unfocuseReason)
 {
-    HILOGI("NotifyMissionUnfocused start, missionId: %{public}d", missionId);
-
-    auto feedfunc = [this, missionId]() {
-        if (screenLockInfo_.empty()) {
-            int64_t time = GetTickCount();
-            screenLockInfo_[missionId] = time;
+    HILOGI("NotifyMissionUnfocused start, missionId: %{public}d， unfocused reason: %{public}d",
+        missionId, unfocuseReason);
+    if (unfocuseReason <= UnfocusedReason::MIN || unfocuseReason >= UnfocusedReason::MAX) {
+        HILOGE("Unknow unfocusedReason, no need to deal NotifyMissionUnfocused");
+        return;
+    }
+    auto feedfunc = [this, missionId, unfocuseReason]() {
+        if (unfocuseReason == UnfocusedReason::DESTORY || unfocuseReason == UnfocusedReason::CLOSE) {
+            screenLockInfo_.clear();
         } else {
-            HILOGI("Screen lock now, no need to NotifyMissionUnfocused");
-            return;
+            auto it = screenLockInfo_.find(missionId);
+            if (it == screenLockInfo_.end()) {
+                int64_t time = GetTickCount();
+                screenLockInfo_[missionId] = time;
+            } else {
+                HILOGI("Screen lock now, no need to NotifyMissionUnfocused");
+                return;
+            }
         }
         DealUnfocusedBusiness(missionId, true);
     };
@@ -193,14 +204,14 @@ void DMSContinueSendMgr::NotifyScreenOff()
 void DMSContinueSendMgr::DealScreenOff()
 {
     int32_t missionId = info_.currentMissionId;
-    if (screenLockInfo_.count(missionId) != 0 && screenLockInfo_[missionId] == 0) {
+    auto iter = screenLockInfo_.find(missionId);
+    if (iter != screenLockInfo_.end() && iter->second == 0) {
         HILOGI("no need to deal screenlock process in case of timed-unfocused");
         return;
     }
     int64_t time = GetTickCount();
-    if (screenLockInfo_.size() != 0) {
-        auto it = screenLockInfo_.begin();
-        if (time - it->second < TIME_DELAYED) {
+    if (iter != screenLockInfo_.end()) {
+        if (time - iter->second < TIME_DELAYED) {
             NotifyMissionFocused(missionId, FocusedReason::SCREENOFF);
         }
     } else {
@@ -536,8 +547,17 @@ void DMSContinueSendMgr::NotifyDied(const sptr<IRemoteObject>& obj)
 
 void DMSContinueSendMgr::OnMMIEvent()
 {
-    HILOGD("OnMMIEvent, missionId = %{public}d", info_.currentMissionId);
-    DMSContinueSendMgr::GetInstance().NotifyMissionFocused(info_.currentMissionId, FocusedReason::MMI);
+    HILOGD("OnMMIEvent start");
+    auto feedfunc = [this]() {
+        NotifyMissionFocused(info_.currentMissionId, FocusedReason::MMI);
+    };
+    if (eventHandler_ != nullptr) {
+        eventHandler_->RemoveTask(CANCEL_FOCUSED_TASK);
+        eventHandler_->PostTask(feedfunc);
+    } else {
+        HILOGE("eventHandler_ is nullptr");
+    }
+    HILOGI("OnMMIEvent end");
 }
 
 uint32_t DMSContinueSendMgr::NotifyDeviceOnline()
