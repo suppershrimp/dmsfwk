@@ -298,7 +298,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, StartRemoteFreeInstall_001, TestSize
 HWTEST_F(DistributedSchedServiceSecondTest, NotifyCompleteFreeInstall_001, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedServiceSecondTest NotifyCompleteFreeInstall_001 start" << std::endl;
-    
+
     sptr<IDistributedSched> proxy = GetDms();
     if (proxy == nullptr) {
         return;
@@ -475,7 +475,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, NotifyStateChangedFromRemote_006, Te
 HWTEST_F(DistributedSchedServiceSecondTest, NotifyStateChanged_001, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedServiceSecondTest NotifyStateChanged_001 start" << std::endl;
-    
+
     sptr<IDistributedSched> proxy = GetDms();
 
     AAFwk::Want want;
@@ -500,11 +500,11 @@ HWTEST_F(DistributedSchedServiceSecondTest, NotifyStateChanged_001, TestSize.Lev
     want.SetElement(element2);
     int result2 = DistributedSchedService::GetInstance().SendResultFromRemote(want, 0, callerInfo, accountInfo, 0);
     DTEST_LOG << "result2:" << result2 << std::endl;
-    
+
     int32_t abilityState = FOREGROUND;
     std::string localDeviceId;
     AppExecFwk::ElementName element3(localDeviceId, BUNDLE_NAME, ABILITY_NAME);
-    int32_t ret = DistributedSchedService::GetInstance().NotifyStateChanged(abilityState, element3, nullptr);
+    int32_t ret = DistributedSchedService::GetInstance().NotifyStateChanged(abilityState, element3, -1);
     DTEST_LOG << "ret:" << ret << std::endl;
     EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
     DTEST_LOG << "DistributedSchedServiceSecondTest NotifyStateChanged_001 end" << std::endl;
@@ -527,7 +527,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, NotifyStateChanged_002, TestSize.Lev
     DistributedSchedService::GetInstance().observerMap_[connect] = {appStateObserver, localDeviceId, 0, BUNDLE_NAME,
         ABILITY_NAME};
     AppExecFwk::ElementName element(localDeviceId, BUNDLE_NAME, ABILITY_NAME);
-    int32_t ret = DistributedSchedService::GetInstance().NotifyStateChanged(abilityState, element, nullptr);
+    int32_t ret = DistributedSchedService::GetInstance().NotifyStateChanged(abilityState, element, -1);
     DTEST_LOG << "ret:" << ret << std::endl;
     DistributedSchedService::GetInstance().observerMap_.clear();
     EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
@@ -551,7 +551,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, NotifyStateChanged_003, TestSize.Lev
     DistributedSchedService::GetInstance().observerMap_[connect] = {appStateObserver, REMOTE_DEVICEID, 0, BUNDLE_NAME,
         ABILITY_NAME};
     AppExecFwk::ElementName element(localDeviceId, BUNDLE_NAME, ABILITY_NAME);
-    int32_t ret = DistributedSchedService::GetInstance().NotifyStateChanged(abilityState, element, nullptr);
+    int32_t ret = DistributedSchedService::GetInstance().NotifyStateChanged(abilityState, element, -1);
     DTEST_LOG << "ret:" << ret << std::endl;
     DistributedSchedService::GetInstance().observerMap_.clear();
     EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
@@ -661,7 +661,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, StopExtensionAbilityFromRemote_001, 
 HWTEST_F(DistributedSchedServiceSecondTest, StopExtensionAbilityFromRemote_002, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedServiceSecondTest StopExtensionAbilityFromRemote_002 start" << std::endl;
-    
+
     sptr<IDistributedSched> proxy = GetDms();
     if (proxy == nullptr) {
         return;
@@ -688,7 +688,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, StopExtensionAbilityFromRemote_002, 
         int result = proxy->SendResultFromRemote(want, 0, callerInfo, accountInfo, 0);
         DTEST_LOG << "pressure" + to_string(index) + " result is " << result << std::endl;
     }
-    
+
     AAFwk::Want remoteWant;
     AppExecFwk::ElementName element1("abcdefg123456", "com.ohos.distributedmusicplayer",
         "com.ohos.distributedmusicplayer.MainAbility");
@@ -843,7 +843,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, TryConnectRemoteAbility002, TestSize
 HWTEST_F(DistributedSchedServiceSecondTest, SetCallerInfo_001, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedServiceSecondTest SetCallerInfo_001 start" << std::endl;
-    
+
     sptr<IDistributedSched> proxy = GetDms();
     if (proxy == nullptr) {
         return;
@@ -870,7 +870,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, SetCallerInfo_001, TestSize.Level3)
         int result = proxy->StartAbilityFromRemote(want, abilityInfo, 0, callerInfo, accountInfo);
         DTEST_LOG << "pressure" + to_string(index) + " result is " << result << std::endl;
     }
-    
+
     /**
     * @tc.steps: step1. call SetCallerInfo with invalid parameters.
     */

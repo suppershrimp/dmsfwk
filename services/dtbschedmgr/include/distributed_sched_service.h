@@ -75,7 +75,7 @@ struct ObserverInfo {
     std::string dstBundleName;
     std::string dstAbilityName;
     sptr<IRemoteObject> srcConnect;
-    sptr<IRemoteObject> token;
+    int32_t recordId = -1;
 };
 
 class DistributedSchedService : public SystemAbility, public DistributedSchedStub {
@@ -182,7 +182,7 @@ public:
     int32_t NotifyStateChangedFromRemote(int32_t abilityState, int32_t connectToken,
         const AppExecFwk::ElementName& element) override;
     int32_t NotifyStateChanged(int32_t abilityState, AppExecFwk::ElementName& element,
-        const sptr<IRemoteObject>& token);
+        int32_t recordId);
     int32_t StopRemoteExtensionAbility(const OHOS::AAFwk::Want& want, int32_t callerUid,
         uint32_t accessToken, int32_t extensionType) override;
     int32_t StopExtensionAbilityFromRemote(const OHOS::AAFwk::Want& remoteWant, const CallerInfo& callerInfo,
