@@ -17,6 +17,7 @@
 
 #include "datetime_ex.h"
 #include "dfx/dms_hisysevent_report.h"
+#include "distributed_radar.h"
 #include "distributed_sched_service.h"
 #include "dtbschedmgr_device_info_storage.h"
 #include "dtbschedmgr_log.h"
@@ -355,6 +356,10 @@ int32_t DistributedSchedAdapter::RegisterMissionListener(const sptr<IMissionList
         return errCode;
     }
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->RegisterMissionListener(listener);
+    std::string func = "RegisterMissionListener";
+    if (!DmsRadar::GetInstance().RegisterFocusedRes(func, ret)) {
+        HILOGE("RegisterFocusedRes failed");
+    }
     if (ret != ERR_OK) {
         HILOGE("RegisterMissionListener failed, ret=%{public}d", ret);
         return ret;

@@ -17,6 +17,7 @@
 
 #include "adapter/dnetwork_adapter.h"
 #include "datetime_ex.h"
+#include "distributed_radar.h"
 #include "distributed_sched_adapter.h"
 #include "dtbschedmgr_device_info_storage.h"
 #include "dtbschedmgr_log.h"
@@ -94,8 +95,16 @@ void DMSContinueRecvMgr::NotifyDataRecv(std::string& senderNetworkId,
     uint32_t accessTokenId = payload[1] << CONTINUE_SHIFT_24 | payload[INDEX_2] << CONTINUE_SHIFT_16 |
         payload[INDEX_3] << CONTINUE_SHIFT_08 | payload[INDEX_4];
     int32_t state = ACTIVE;
+    std::string func = "NotifyDataRecv";
     if (type == DMS_UNFOCUSED_TYPE) {
         state = INACTIVE;
+        if (!DmsRadar::GetInstance().RecvFocused(func)) {
+            HILOGE("RecvFocused failed");
+        }
+    }else {
+        if (!DmsRadar::GetInstance().RecvUnfocused(func)) {
+            HILOGE("RecvUnfocused failed");
+        }
     }
     PostOnBroadcastBusiness(senderNetworkId, accessTokenId, state);
     HILOGI("NotifyDataRecv end");
@@ -223,6 +232,16 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
         DnetworkAdapter::AnonymizeNetworkId(senderNetworkId).c_str(), accessTokenId, state);
     std::string bundleName;
     int32_t ret = BundleManagerInternal::GetBundleNameFromDbms(senderNetworkId, accessTokenId, bundleName);
+    std::string func = "GetBundleNameFromDbms";
+    if (state == INACTIVE) {
+        if (!DmsRadar::GetInstance().FocusedGetBundleName(func, ret)) {
+            HILOGE("FocusedGetBundleName failed");
+        }
+    } else {
+        if (!DmsRadar::GetInstance().UnfocusedGetBundleName(func, ret)) {
+            HILOGE("UnfocusedGetBundleName failed");
+        }
+    }
     if (ret != ERR_OK) {
         HILOGW("get bundleName failed, ret: %{public}d, try = %{public}d", ret, retry);
         if (retry == DBMS_RETRY_MAX_TIME) {
@@ -280,6 +299,16 @@ void DMSContinueRecvMgr::NotifyRecvBroadcast(const sptr<IRemoteObject>& obj,
     PARCEL_WRITE_HELPER_NORET(data, String, bundleName);
     HILOGI("[PerformanceTest] NotifyRecvBroadcast called, IPC begin = %{public}" PRId64, GetTickCount());
     int32_t error = obj->SendRequest(ON_CALLBACK, data, reply, option);
+    std::string func = "NotifyRecvBroadcast";
+    if (state == INACTIVE) {
+        if (!DmsRadar::GetInstance().NotifyDockFocused(func, error)) {
+            HILOGE("NotifyDockFocused failed");
+        }
+    } else {
+        if (!DmsRadar::GetInstance().NotifyDockUnfocused(func, error)) {
+            HILOGE("NotifyDockUnfocused failed");
+        }
+    }
     if (error != ERR_NONE) {
         HILOGE("NotifyRecvBroadcast fail, error: %{public}d", error);
         return;

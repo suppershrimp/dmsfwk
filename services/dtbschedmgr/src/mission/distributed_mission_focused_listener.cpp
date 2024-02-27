@@ -15,6 +15,7 @@
 
 #include "mission/distributed_mission_focused_listener.h"
 
+#include "distributed_radar.h"
 #include "dtbschedmgr_log.h"
 #include "mission/dms_continue_send_manager.h"
 
@@ -31,6 +32,10 @@ void DistributedMissionFocusedListener::OnMissionCreated(int32_t missionId)
 void DistributedMissionFocusedListener::OnMissionDestroyed(int32_t missionId)
 {
     HILOGD("OnMissionDestroyed, missionId = %{public}d", missionId);
+    std::string func = "OnMissionDestroyed";
+    if (!DmsRadar::GetInstance().DmsUnfocused(func)) {
+        HILOGE("DmsUnfocused failed");
+    }
     DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId, UnfocusedReason::DESTORY);
 }
 
@@ -47,12 +52,20 @@ void DistributedMissionFocusedListener::OnMissionMovedToFront(int32_t missionId)
 void DistributedMissionFocusedListener::OnMissionFocused(int32_t missionId)
 {
     HILOGD("OnMissionFocused, missionId = %{public}d", missionId);
-    DMSContinueSendMgr::GetInstance().NotifyMissionFocused(missionId, FocusedReason::NORMAL);
+    std::string func = "OnMissionFocused";
+    if (!DmsRadar::GetInstance().DmsFocused(func, NORMAL)) {
+        HILOGE("DmsFocused failed");
+    }
+    DMSContinueSendMgr::GetInstance().NotifyMissionFocused(missionId, UnfocusedReason::NORMAL);
 }
 
 void DistributedMissionFocusedListener::OnMissionUnfocused(int32_t missionId)
 {
     HILOGD("OnMissionUnFocused, missionId = %{public}d", missionId);
+    std::string func = "OnMissionUnfocused";
+    if (!DmsRadar::GetInstance().DmsUnfocused(func)) {
+        HILOGE("DmsUnfocused failed");
+    }
     DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId, UnfocusedReason::NORMAL);
 }
 
@@ -66,6 +79,10 @@ void DistributedMissionFocusedListener::OnMissionIconUpdated([[maybe_unused]]int
 void DistributedMissionFocusedListener::OnMissionClosed(int32_t missionId)
 {
     HILOGD("OnMissionClosed, missionId = %{public}d", missionId);
+    std::string func = "OnMissionClosed";
+    if (!DmsRadar::GetInstance().DmsUnfocused(func)) {
+        HILOGE("DmsUnfocused failed");
+    }
     DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId, UnfocusedReason::CLOSE);
 }
 
