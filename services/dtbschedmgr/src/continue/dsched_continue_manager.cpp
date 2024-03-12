@@ -27,11 +27,13 @@ IMPLEMENT_SINGLE_INSTANCE(DSchedContinueManager);
 
 DSchedContinueManager::DSchedContinueManager()
 {
+    DSchedTransportSoftbusAdapter::GetInstance().InitChannel();
 }
 
 DSchedContinueManager::~DSchedContinueManager()
 {
     HILOGI("DSchedContinueManager delete");
+    DSchedTransportSoftbusAdapter::GetInstance().ReleaseChannel();
 }
 
 int32_t DSchedContinueManager::ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
