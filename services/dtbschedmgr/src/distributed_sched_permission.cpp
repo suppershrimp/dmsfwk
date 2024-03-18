@@ -257,12 +257,12 @@ int32_t DistributedSchedPermission::CheckGetCallerPermission(const AAFwk::Want& 
 bool DistributedSchedPermission::IsFoundationCall() const
 {
     uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
-    AccessToken::NativeTokenInfo nativeTokenInfo;
-    int32_t result = AccessToken::AccessTokenKit::GetNativeTokenInfo(accessToken, nativeTokenInfo);
-    if (result == ERR_OK && nativeTokenInfo.processName == FOUNDATION_PROCESS_NAME) {
+    std::string processName;
+    int32_t result = AccessToken::AccessTokenKit::GetNativeTokenName(accessToken, processName);
+    if (result == ERR_OK && processName == FOUNDATION_PROCESS_NAME) {
         return true;
     }
-    HILOGE("not foundation called, processName:%{private}s", nativeTokenInfo.processName.c_str());
+    HILOGE("not foundation called, processName:%{private}s", processName.c_str());
     return false;
 }
 

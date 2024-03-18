@@ -59,9 +59,9 @@ bool DistributedAbilityManagerDumper::Dump(const std::vector<std::string>& args,
 bool DistributedAbilityManagerDumper::CanDump()
 {
     uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
-    Security::AccessToken::NativeTokenInfo nativeTokenInfo;
-    int32_t result = Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(accessToken, nativeTokenInfo);
-    if (result == ERR_OK && nativeTokenInfo.processName == HIDUMPER_PROCESS_NAME) {
+    std::string processName;
+    int32_t result = Security::AccessToken::AccessTokenKit::GetNativeTokenName(accessToken, processName);
+    if (result == ERR_OK && processName == HIDUMPER_PROCESS_NAME) {
         return true;
     }
     return false;
