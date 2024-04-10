@@ -18,14 +18,14 @@ namespace OHOS {
 namespace DistributedSchedule {
 DmsSaClient &DmsSaClient::GetInstance()
 {
-    HILOGI("%{public}s called.", __func__);
+    HILOGI("called.");
     static DmsSaClient instance;
     return instance;
 }
 
 bool DmsSaClient::SubscribeDmsSA()
 {
-    HILOGI("%{public}s called.", __func__);
+    HILOGI("called.");
     sptr<DmsSystemAbilityStatusChange> callback(new DmsSystemAbilityStatusChange());
     int32_t ret = saMgrProxy_->SubscribeSystemAbility(DISTRIBUTED_SCHED_SA_ID, callback);
     if (ret != ERR_OK) {
