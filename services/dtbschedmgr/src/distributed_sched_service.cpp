@@ -18,6 +18,7 @@
 #include <cinttypes>
 #include <unistd.h>
 
+#include "ability_continue_session.h"
 #include "ability_manager_client.h"
 #include "ability_manager_errors.h"
 #include "bool_wrapper.h"
@@ -100,6 +101,8 @@ const std::string SUPPORT_CONTINUE_SOURCE_EXIT_KEY = "ohos.extra.param.key.suppo
 const std::string SUPPORT_CONTINUE_MODULE_NAME_UPDATE_KEY = "ohos.extra.param.key.supportContinueModuleNameUpdate";
 const std::string DSCHED_EVENT_KEY = "IDSchedEventListener";
 const std::string DMSDURATION_SAVETIME = "ohos.dschedule.SaveDataTime";
+const std::string DMS_CONTINUE_SESSION_ID = "ohos.dms.continueSessionId";
+const std::string DMS_PERSISTENT_ID = "ohos.dms.persistentId";
 constexpr int32_t DEFAULT_DMS_MISSION_ID = -1;
 constexpr int32_t DEFAULT_DMS_CONNECT_TOKEN = -1;
 constexpr int32_t BIND_CONNECT_RETRY_TIMES = 3;
@@ -329,7 +332,15 @@ int32_t DistributedSchedService::StartAbilityFromRemote(const OHOS::AAFwk::Want&
         HILOGE("CheckTargetPermission failed!!");
         return result;
     }
-    return StartAbility(want, requestCode);
+
+    int32_t persistentId;
+    AAFwk::Want newWant = want;
+    int32_t err = AbilityContinueSession::GetInstance().GetPersistentId(persistentId);
+    if (err == ERR_OK) {
+        HILOGI("get persistentId success, persistentId: %{public}d", persistentId);
+        newWant.SetParam(DMS_PERSISTENT_ID, persistentId);
+    }
+    return StartAbility(newWant, requestCode);
 }
 
 int32_t DistributedSchedService::SendResultFromRemote(OHOS::AAFwk::Want& want, int32_t requestCode,
@@ -563,6 +574,37 @@ int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDev
         HILOGD("NotifyDSchedEventResult result:%{public}d", dSchedEventresult);
     }
     return result;
+}
+
+int32_t DistributedSchedService::QuickStartAbility(std::string& bundleName)
+{
+    HILOGI("%{public}s called", __func__);
+    if (!Rosen::SceneBoardJudgement::IsSceneBoardEnabked()) {
+        HILOGE("sceneBoard not available.");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    BundleInfo localBundleInfo;
+    if (BundleManagerInternal::GetLocalBundleInfo(bundleName, localBundleInfo) != ERR_OK) {
+        HILOGE("get local bundle info failed.");
+        return INVALID_PARAMETERS_ERR;
+    }
+    if (localBundleInfo.abilityInfos.empty() || localBundleInfo.abilityInfos.size() > 1) {
+        HILOGE("quick start is not supported, abilityInfos size: %{public}d",
+               static_cast<int32_t>(localBundleInfo.abilityInfos.size()));
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    auto abilityInfo = localBundleInfo.abilityInfos.front();
+    AbilityContinueSession::GetInstance().UpdateContinueSessionId(bundleName, abilityInfo.name);
+    std::string continueSessionId = AbilityContinueSession::GetInstance().GetContinueSessionId();
+    HILOGI("continueSessionId is %{public}s", continueSessionId.c_str());
+
+    AAFwk::want want;
+    want.SetElementName(bundleName, abilityInfo.name);
+    want.SetParam(DMS_CONTINUE_SESSION_ID, continueSessionId);
+
+    return StartAbility(want, DEFAULT_REQUEST_CODE);
 }
 
 int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,

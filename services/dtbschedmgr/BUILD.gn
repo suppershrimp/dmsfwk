@@ -77,6 +77,7 @@ ohos_shared_library("distributedschedsvr") {
   sources = [
     "src/ability_connection_wrapper_proxy.cpp",
     "src/ability_connection_wrapper_stub.cpp",
+    "src/ability_continue_session.cpp",
     "src/adapter/dnetwork_adapter.cpp",
     "src/app_state_observer.cpp",
     "src/bundle/bundle_manager_callback_stub.cpp",
@@ -171,6 +172,8 @@ ohos_shared_library("distributedschedsvr") {
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "window_manager::scene_session",
+    "window_manager::session_manager_lite",
   ]
   if (os_account_part) {
     external_deps += [ "os_account:os_account_innerkits" ]
