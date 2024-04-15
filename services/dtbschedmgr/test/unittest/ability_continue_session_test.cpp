@@ -62,7 +62,7 @@ HWTEST_F(AbilityContinueSessionTest, UpdateContinueSessionId_001, TestSize.Level
 
 /**
  * @tc.name: GetPersistentId_001
- * @tc.desc: generated continueSessionId by bundleName and abilityName
+ * @tc.desc: get persistentId by continueSessionId
  * @tc.type: FUNC
  * @tc.require: SR20240116512594
  */
@@ -72,7 +72,7 @@ HWTEST_F(AbilityContinueSessionTest, GetPersistentId_001, TestSize.Level3)
     int32_t persistentId;
     int32_t err = AbilityContinueSession::GetInstance().GetPersistentId(persistentId);
     EXPECT_NE(INVALID_PARAMETERS_ERR, err);
-    DTEST_LOG << "AbilityContinueSessionTest UpdateContinueSessionId_001 end" << std::endl;
+    DTEST_LOG << "AbilityContinueSessionTest GetPersistentId_001 end" << std::endl;
 }
 }
 }

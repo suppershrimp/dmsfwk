@@ -33,4 +33,4 @@ public:
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
-#endif // DMS_TOKEN_CB_TEST_H
+#endif // ABILITY_CONTINUE_SESSION_TEST_H
