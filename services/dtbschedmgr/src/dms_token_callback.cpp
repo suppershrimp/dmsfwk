@@ -39,10 +39,10 @@ const std::string DMS_SRC_NETWORK_ID = "dmsSrcNetworkId";
 int32_t DmsTokenCallback::SendResult(OHOS::AAFwk::Want& want, int32_t callerUid,
     int32_t requestCode, uint32_t accessToken, int32_t resultCode)
 {
-    AccessToken::NativeTokenInfo nativeTokenInfo;
-    int32_t ret = AccessToken::AccessTokenKit::GetNativeTokenInfo(IPCSkeleton::GetCallingTokenID(),
-        nativeTokenInfo);
-    if (ret != ERR_OK || nativeTokenInfo.processName != FOUNDATION_PROCESS_NAME) {
+    std::string processName;
+    int32_t ret = AccessToken::AccessTokenKit::GetNativeTokenName(IPCSkeleton::GetCallingTokenID(),
+        processName);
+    if (ret != ERR_OK || processName != FOUNDATION_PROCESS_NAME) {
         HILOGE("check foundation call failed");
         return INVALID_PARAMETERS_ERR;
     }
