@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_I_DATA_LISTENER_H
-#define OHOS_I_DATA_LISTENER_H
+#ifndef ABILITY_CONTINUE_SESSION_TEST_H
+#define ABILITY_CONTINUE_SESSION_TEST_H
 
-#include "socket.h"
+#include <gtest/gtest.h>
+
+#include "continue_scene_session_handler.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
-class IDataListener {
+class ContinueSceneSessionHandlerTest : public testing::Test {
 public:
-    IDataListener() {}
-    virtual ~IDataListener() {}
-
-    virtual void OnBind(int32_t socket, PeerSocketInfo info) = 0;
-    virtual void OnShutdown(int32_t socket, bool isSelfCalled) = 0;
-    virtual void OnDataRecv(int32_t socket, std::shared_ptr<DSchedDataBuffer> dataBuffer) = 0;
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
 };
-}  // namespace DistributedSchedule
-}  // namespace OHOS
-#endif  // OHOS_I_DATA_LISTENER_H
+} // namespace DistributedSchedule
+} // namespace OHOS
+#endif // ABILITY_CONTINUE_SESSION_TEST_H

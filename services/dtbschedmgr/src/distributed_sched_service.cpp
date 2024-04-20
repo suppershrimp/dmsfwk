@@ -42,6 +42,7 @@
 #include "adapter/dnetwork_adapter.h"
 #include "bundle/bundle_manager_internal.h"
 #include "connect_death_recipient.h"
+#include "continue_scene_session_handler.h"
 #include "dfx/dms_continue_time_dumper.h"
 #include "distributed_radar.h"
 #include "distributed_sched_adapter.h"
@@ -55,6 +56,7 @@
 #include "dtbschedmgr_device_info_storage.h"
 #include "dtbschedmgr_log.h"
 #include "parcel_helper.h"
+#include "scene_board_judgement.h"
 #include "switch_status_dependency.h"
 #ifdef SUPPORT_COMMON_EVENT_SERVICE
 #include "common_event_listener.h"
@@ -101,6 +103,8 @@ const std::string SUPPORT_CONTINUE_SOURCE_EXIT_KEY = "ohos.extra.param.key.suppo
 const std::string SUPPORT_CONTINUE_MODULE_NAME_UPDATE_KEY = "ohos.extra.param.key.supportContinueModuleNameUpdate";
 const std::string DSCHED_EVENT_KEY = "IDSchedEventListener";
 const std::string DMSDURATION_SAVETIME = "ohos.dschedule.SaveDataTime";
+const std::string DMS_CONTINUE_SESSION_ID = "ohos.dms.continueSessionId";
+const std::string DMS_PERSISTENT_ID = "ohos.dms.persistentId";
 constexpr int32_t DEFAULT_DMS_MISSION_ID = -1;
 constexpr int32_t DEFAULT_DMS_CONNECT_TOKEN = -1;
 constexpr int32_t BIND_CONNECT_RETRY_TIMES = 3;
@@ -348,7 +352,15 @@ int32_t DistributedSchedService::StartAbilityFromRemote(const OHOS::AAFwk::Want&
         HILOGE("CheckTargetPermission failed!!");
         return result;
     }
-    return StartAbility(want, requestCode);
+
+    int32_t persistentId;
+    AAFwk::Want newWant = want;
+    int32_t err = ContinueSceneSessionHandler::GetInstance().GetPersistentId(persistentId);
+    if (err == ERR_OK) {
+        HILOGI("get persistentId success, persistentId: %{public}d", persistentId);
+        newWant.SetParam(DMS_PERSISTENT_ID, persistentId);
+    }
+    return StartAbility(newWant, requestCode);
 }
 
 int32_t DistributedSchedService::SendResultFromRemote(OHOS::AAFwk::Want& want, int32_t requestCode,
@@ -452,7 +464,6 @@ int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDevi
     const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
 {
     bool IsContinueSwitchOn = SwitchStatusDependency::GetInstance().IsContinueSwitchOn();
-    HILOGI("IsContinueSwitchOn : %{public}d",  IsContinueSwitchOn);
     if (!IsContinueSwitchOn) {
         HILOGE("ContinueSwitch status is off");
         return DMS_PERMISSION_DENIED;
@@ -525,6 +536,10 @@ int32_t DistributedSchedService::ContinueAbilityWithTimeout(const std::string& d
 int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
     int32_t missionId, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
 {
+    if (!SwitchStatusDependency::GetInstance().IsContinueSwitchOn()) {
+        HILOGE("ContinueSwitch status is off");
+        return DMS_PERMISSION_DENIED;
+    }
     sptr<IDistributedSched> remoteDms = GetRemoteDms(srcDeviceId);
     if (remoteDms == nullptr) {
         HILOGE("get remote dms null!");
@@ -551,6 +566,8 @@ int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDev
         DmsContinueTime::GetInstance().SetDurationBegin(DMSDURATION_DSTTOSRCRPCTIME, begin);
         DmsContinueTime::GetInstance().SetDurationBegin(DMSDURATION_TOTALTIME, begin);
     }
+
+    QuickStartAbility(bundleName);
     sptr<IDistributedSched> remoteDms = GetRemoteDms(srcDeviceId);
     if (remoteDms == nullptr) {
         HILOGE("get remote dms null!");
@@ -558,6 +575,7 @@ int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDev
             HILOGE("continuation object null!");
             return INVALID_PARAMETERS_ERR;
         }
+        ContinueSceneSessionHandler::GetInstance().ClearContinueSessionId();
         int32_t dSchedEventresult = dschedContinuation_->NotifyDSchedEventResult(DSCHED_EVENT_KEY,
             INVALID_REMOTE_PARAMETERS_ERR);
         HILOGD("NotifyDSchedEventResult result:%{public}d", dSchedEventresult);
@@ -575,10 +593,41 @@ int32_t DistributedSchedService::ContinueRemoteMission(const std::string& srcDev
             HILOGE("continuation object null!");
             return INVALID_PARAMETERS_ERR;
         }
+        ContinueSceneSessionHandler::GetInstance().ClearContinueSessionId();
         int32_t dSchedEventresult = dschedContinuation_->NotifyDSchedEventResult(DSCHED_EVENT_KEY, result);
         HILOGD("NotifyDSchedEventResult result:%{public}d", dSchedEventresult);
     }
     return result;
+}
+
+int32_t DistributedSchedService::QuickStartAbility(const std::string& bundleName)
+{
+    HILOGI("%{public}s called", __func__);
+    if (!Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
+        HILOGE("sceneBoard not available.");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    BundleInfo localBundleInfo;
+    if (BundleManagerInternal::GetLocalBundleInfo(bundleName, localBundleInfo) != ERR_OK) {
+        HILOGE("get local bundle info failed.");
+        return INVALID_PARAMETERS_ERR;
+    }
+    if (localBundleInfo.abilityInfos.empty() || localBundleInfo.abilityInfos.size() > 1) {
+        HILOGE("quick start is not supported, abilityInfos size: %{public}d",
+               static_cast<int32_t>(localBundleInfo.abilityInfos.size()));
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    auto abilityInfo = localBundleInfo.abilityInfos.front();
+    ContinueSceneSessionHandler::GetInstance().UpdateContinueSessionId(bundleName, abilityInfo.name);
+    std::string continueSessionId = ContinueSceneSessionHandler::GetInstance().GetContinueSessionId();
+    HILOGI("continueSessionId is %{public}s", continueSessionId.c_str());
+
+    AAFwk::Want want;
+    want.SetElementName(bundleName, abilityInfo.name);
+    want.SetParam(DMS_CONTINUE_SESSION_ID, continueSessionId);
+    return StartAbility(want, DEFAULT_REQUEST_CODE);
 }
 
 int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId,
@@ -846,6 +895,8 @@ void DistributedSchedService::NotifyCompleteContinuation(const std::u16string& d
     int dSchedEventresult = dschedContinuation_->NotifyDSchedEventResult(DSCHED_EVENT_KEY, ERR_OK);
     HILOGD("NotifyDSchedEventResult result:%{public}d", dSchedEventresult);
     remoteDms->NotifyContinuationResultFromRemote(sessionId, isSuccess, dstInfo);
+    dschedContinuation_->continueInfo_.srcNetworkId = "";
+    dschedContinuation_->continueInfo_.dstNetworkId = "";
     DmsRadar::GetInstance().ClickIconDmsRecvOver("NotifyContinuationResultFromRemote", ERR_OK);
 }
 
@@ -867,6 +918,8 @@ int32_t DistributedSchedService::NotifyContinuationResultFromRemote(int32_t sess
 
     int32_t missionId = sessionId;
     NotifyContinuationCallbackResult(missionId, isSuccess ? 0 : NOTIFYCOMPLETECONTINUATION_FAILED);
+    dschedContinuation_->continueInfo_.srcNetworkId = "";
+    dschedContinuation_->continueInfo_.dstNetworkId = "";
     return ERR_OK;
 }
 
@@ -2478,6 +2531,10 @@ int32_t DistributedSchedService::StartLocalAbility(const FreeInstallInfo& info, 
 
 int32_t DistributedSchedService::StartAbility(const OHOS::AAFwk::Want& want, int32_t requestCode)
 {
+    if (!SwitchStatusDependency::GetInstance().IsContinueSwitchOn()) {
+        HILOGE("ContinueSwitch status is off");
+        return DMS_PERMISSION_DENIED;
+    }
     ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->Connect();
     if (err != ERR_OK) {
         HILOGE("connect ability server failed %{public}d", err);

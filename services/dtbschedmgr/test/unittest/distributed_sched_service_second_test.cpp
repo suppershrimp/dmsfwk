@@ -25,6 +25,7 @@
 #include "distributed_sched_proxy.h"
 #include "distributed_sched_service.h"
 #include "distributed_sched_util.h"
+#include "distributed_sched_utils.h"
 #include "dtbschedmgr_device_info_storage.h"
 #include "dtbschedmgr_log.h"
 #include "form_mgr_errors.h"
@@ -901,6 +902,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, ContinueRemoteMission_001, TestSize.
     int32_t timeout = 5;
     DistributedSchedService::GetInstance().SetContinuationTimeout(missionId, timeout);
     WantParams wantParams;
+    EXPECT_EQ(ERR_OK, LoadContinueConfig());
     auto callback = GetDSchedService();
     int32_t result = DistributedSchedService::GetInstance().ContinueRemoteMission(
         "", "string", "bundleName", callback, wantParams);
@@ -917,6 +919,7 @@ HWTEST_F(DistributedSchedServiceSecondTest, ContinueRemoteMission_002, TestSize.
 {
     DTEST_LOG << "DSchedContinuationTest ContinueRemoteMission_002 start" << std::endl;
     WantParams wantParams;
+    EXPECT_EQ(ERR_OK, LoadContinueConfig());
     auto callback = GetDSchedService();
     std::string localDeviceId;
     DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(localDeviceId);
@@ -1426,6 +1429,19 @@ HWTEST_F(DistributedSchedServiceSecondTest, ContinueMissionBundleName_002, TestS
         "string", "string", "bundleName", callback, wantParams);
     EXPECT_EQ(static_cast<int>(OPERATION_DEVICE_NOT_INITIATOR_OR_TARGET), result);
     DTEST_LOG << "DSchedContinuationTest ContinueMissionBundleName_002 end" << std::endl;
+}
+
+/**
+ * @tc.name: QuickStartAbility_001
+ * @tc.desc: quick start ability test
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedSchedServiceSecondTest, QuickStartAbility_001, TestSize.Level3)
+{
+    DTEST_LOG << "DSchedContinuationTest QuickStartAbility_001 start" << std::endl;
+    auto ret = DistributedSchedService::GetInstance().QuickStartAbility("bundleName");
+    EXPECT_EQ(static_cast<int>(INVALID_PARAMETERS_ERR), ret);
+    DTEST_LOG << "DSchedContinuationTest QuickStartAbility_001 end" << std::endl;
 }
 }
 }
