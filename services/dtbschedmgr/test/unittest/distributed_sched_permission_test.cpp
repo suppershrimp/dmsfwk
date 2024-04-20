@@ -1893,9 +1893,9 @@ HWTEST_F(DistributedSchedPermissionTest, MarkUriPermission_003, TestSize.Level3)
     want.AddFlags(want.FLAG_AUTH_READ_URI_PERMISSION);
     want.SetUri("file://com.ohos.mms/data/test_B");
     const std::string bundleName = "com.ohos.mms";
-    uint32_t accessTokenId;
+    uint16_t accessTokenId;
     int32_t ret = BundleManagerInternal::GetBundleIdFromBms(bundleName, accessTokenId);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, CAN_NOT_FOUND_ABILITY_ERR);
     DistributedSchedPermission::GetInstance().MarkUriPermission(want, accessTokenId);
     CallerInfo callerInfo;
     callerInfo.accessToken = ACCESS_TOKEN;

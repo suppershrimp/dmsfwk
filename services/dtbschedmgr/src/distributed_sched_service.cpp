@@ -65,6 +65,7 @@
 #include "form_mgr_death_recipient.h"
 #endif
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
+#include "mission/distributed_bm_storage.h"
 #include "mission/distributed_mission_info.h"
 #include "mission/dms_continue_send_manager.h"
 #include "mission/dms_continue_recv_manager.h"
@@ -242,12 +243,30 @@ void DistributedSchedService::InitCommonEventListener()
 {
     HILOGI("InitCommonEventListener called");
 #ifdef SUPPORT_COMMON_EVENT_SERVICE
+    DmsBmStorage::GetInstance();
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     auto applyMonitor = std::make_shared<CommonEventListener>(subscribeInfo);
     EventFwk::CommonEventManager::SubscribeCommonEvent(applyMonitor);
+
+#ifdef OS_ACCOUNT_PART
+    std::vector<int32_t> ids;
+    int32_t errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+    if (errCode != ERR_OK || ids.empty()) {
+        HILOGE("QueryActiveOsAccountIds failed.");
+        return;
+    }
+    int32_t activeAccountId = ids[0];
+    HILOGI("get userId:  %{public}d", activeAccountId);
+#endif
+
+    DmsBmStorage::GetInstance()->UpdateDistributedData(activeAccountId);
 #endif
 }
 
