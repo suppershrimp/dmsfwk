@@ -36,6 +36,7 @@
         "components": [
           "ability_base",
           "ability_runtime",
+		  "window_manager",
           "access_token",
           "bundle_framework",
           "cJSON",
