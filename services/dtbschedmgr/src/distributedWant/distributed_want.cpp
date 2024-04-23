@@ -897,7 +897,6 @@ DistributedWant* DistributedWant::ParseUri(const std::string& uri)
         return nullptr;
     }
     bool ret = true;
-    std::size_t pos;
     std::size_t begin = WANT_HEADER.length();
     ElementName element;
     DistributedWant* want = new (std::nothrow) DistributedWant();
@@ -906,34 +905,32 @@ DistributedWant* DistributedWant::ParseUri(const std::string& uri)
     }
     DistributedWant* baseWant = want;
     bool inPicker = false;
-    pos = uri.find_first_of(";", begin);
+    std::size_t pos = uri.find_first_of(";", begin);
     do {
-        if (pos != std::string::npos) {
-            std::string content = uri.substr(begin, pos - begin);
-            if (content.compare("PICK") == 0) {
-                want = new (std::nothrow) DistributedWant();
-                if (want == nullptr) {
-                    return nullptr;
-                }
-                inPicker = true;
-                continue;
+        if (pos == std::string::npos) {
+            break;
+        }
+        std::string content = uri.substr(begin, pos - begin);
+        if (content.compare("PICK") == 0) {
+            want = new (std::nothrow) DistributedWant();
+            if (want == nullptr) {
+                delete baseWant;
+                return nullptr;
             }
-            ret = ParseUriInternal(content, element, *want);
-            if (!ret) {
-                break;
-            }
-            begin = pos + 1;
-            pos = uri.find(";", begin);
-            if (pos == std::string::npos) {
-                break;
-            }
-        } else {
+            inPicker = true;
+            continue;
+        }
+        ret = ParseUriInternal(content, element, *want);
+        if (!ret) {
+            break;
+        }
+        begin = pos + 1;
+        pos = uri.find(";", begin);
+        if (pos == std::string::npos) {
             break;
         }
     } while (true);
-    if (inPicker) {
-        want = baseWant;
-    }
+    want = inPicker ? baseWant : want;
     if (ret) {
         want->SetElement(element);
     } else {
@@ -1380,7 +1377,11 @@ bool DistributedWant::ParseContent(const std::string& content, std::string& prop
     if (dPos != std::string::npos) {
         std::string subString = content.substr(0, dPos);
         prop = Decode(subString);
-        subString = content.substr(dPos + 1, content.length() - dPos - 1);
+        std::size_t length = content.length() - dPos - 1;
+        if (length <= 0) {
+            return false;
+        }
+        subString = content.substr(dPos + 1, length);
         value = Decode(subString);
         return true;
     }
@@ -1420,7 +1421,9 @@ std::string DistributedWant::Decode(const std::string& str)
             if (str[i] == '\\') {
                 dDecode += "\\";
                 i++;
-            } else if (str[i] == '0') {
+                continue;
+            }
+            if (str[i] == '0') {
                 if (str.compare(i, OCT_EQUALSTO.length(), OCT_EQUALSTO) == 0) {
                     dDecode += "=";
                     i += OCT_EQUALSTO.length();
@@ -1431,10 +1434,10 @@ std::string DistributedWant::Decode(const std::string& str)
                     dDecode += "\\" + str.substr(i, 1);
                     i++;
                 }
-            } else {
-                dDecode += "\\" + str.substr(i, 1);
-                i++;
+                continue;
             }
+            dDecode += "\\" + str.substr(i, 1);
+            i++;
         } else {
             dDecode += str[i];
             i++;
@@ -1616,6 +1619,13 @@ bool DistributedWant::ReadFromJson(nlohmann::json& wantJson)
         HILOGE("can not read from json");
         return false;
     }
+    if (!wantJson.contains("deviceId") || !wantJson.contains("bundleName") || !wantJson.contains("abilityName") ||
+        !wantJson.contains("uri") || !wantJson.contains("type") || !wantJson.contains("flags") ||
+        !wantJson.contains("action") || !wantJson.contains("parameters") || !wantJson.contains("entities")) {
+        HILOGE("data is empty");
+        return false;
+    }
+    
     std::string deviceId = wantJson.at("deviceId").get<std::string>();
     std::string bundleName = wantJson.at("bundleName").get<std::string>();
     std::string abilityName = wantJson.at("abilityName").get<std::string>();
@@ -1627,6 +1637,9 @@ bool DistributedWant::ReadFromJson(nlohmann::json& wantJson)
     std::string type = wantJson.at("type").get<std::string>();
     SetType(type);
 
+    if (!wantJson.at("flags").is_number()) {
+        return false;
+    }
     unsigned int flags = wantJson.at("flags").get<unsigned int>();
     SetFlags(flags);
 
@@ -1658,6 +1671,9 @@ DistributedWant* DistributedWant::FromString(std::string& string)
     }
 
     nlohmann::json wantJson = nlohmann::json::parse(string);
+    if (wantJson.is_discarded()) {
+        return nullptr;
+    }
 
     DistributedWant* want = new (std::nothrow) DistributedWant();
     if (want != nullptr && !want->ReadFromJson(wantJson)) {
