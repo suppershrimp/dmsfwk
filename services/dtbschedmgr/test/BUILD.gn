@@ -66,6 +66,7 @@ dsched_external_deps = [
   "kv_store:distributeddata_inner",
   "safwk:system_ability_fwk",
   "samgr:samgr_proxy",
+  "window_manager:libwsutils",
   "window_manager:scene_session",
   "window_manager:session_manager_lite",
 ]
@@ -150,6 +151,8 @@ dtbschedmgr_sources = [
 
 if (dmsfwk_mission_manager) {
   dtbschedmgr_sources += [
+    "${distributed_service}/dtbschedmgr/src/mission/distributed_bm_storage.cpp",
+    "${distributed_service}/dtbschedmgr/src/mission/distributed_bundle_info.cpp",
     "${distributed_service}/dtbschedmgr/src/mission/distributed_data_change_listener.cpp",
     "${distributed_service}/dtbschedmgr/src/mission/distributed_data_storage.cpp",
     "${distributed_service}/dtbschedmgr/src/mission/distributed_mission_broadcast_listener.cpp",
@@ -385,6 +388,7 @@ ohos_unittest("dschedmissionmanagertest") {
   }
   module_out_path = module_output_path
   sources = [
+    "unittest/mission/distributed_bm_storage_test.cpp",
     "unittest/mission/distributed_data_storage_test.cpp",
     "unittest/mission/distributed_mission_info_test.cpp",
     "unittest/mission/dms_continue_manager_test.cpp",
