@@ -15,7 +15,9 @@
 
 #include "dsched_continue.h"
 
+#include <chrono>
 #include <sys/prctl.h>
+#include <thread>
 
 #include "ability_manager_client.h"
 #include "bool_wrapper.h"
@@ -68,6 +70,8 @@ constexpr int32_t CONTINUE_TOTAL_TIME = 2;
 constexpr int32_t CONTINUE_FIRST_TRANS_TIME = 3;
 constexpr int32_t CONTINUE_DATA_TRANS_TIME = 5;
 constexpr int32_t CONTINUE_START_ABILITY_TIME = 6;
+constexpr int32_t GET_ABILITY_STATE_RETRY_TIMES = 10;
+constexpr int32_t GET_ABILITY_STATE_SLEEP_TIME = 50;
 }
 
 DSchedContinue::DSchedContinue(int32_t subServiceType, int32_t direction,  const sptr<IRemoteObject>& callback,
@@ -739,6 +743,7 @@ int32_t DSchedContinue::ExecuteContinueData(std::shared_ptr<DSchedContinueDataCm
 
     int32_t persistentId;
     if (ContinueSceneSessionHandler::GetInstance().GetPersistentId(persistentId) == ERR_OK) {
+        WaitAbilityStateInitial(persistentId);
         HILOGI("get persistentId success, persistentId: %d", persistentId);
         cmd->want_.SetParam(DMS_PERSISTENT_ID, persistentId);
     }
@@ -754,6 +759,24 @@ int32_t DSchedContinue::ExecuteContinueData(std::shared_ptr<DSchedContinueDataCm
     stateMachine_->UpdateState(DSCHED_CONTINUE_SINK_WAIT_END_STATE);
     HILOGI("ExecuteContinueData end");
     return ERR_OK;
+}
+
+bool DistributedSchedService::WaitAbilityStateInitial(int32_t persistentId)
+{
+    int32_t retryTimeout = GET_ABILITY_STATE_RETRY_TIMES;
+    bool state = false;
+    do {
+        int32_t ret = AAFwk::AbilityManagerClient::GetInstance()->GetAbilityStateByPersistentId(persistentId, state);
+        if(ret == ERR_OK && state) {
+            HILOGI("ability state is initial.");
+            return state;
+        }
+        HILOGE("get ability state failed, persistentId: %{public}d, errorCode: %{public}d",
+            persistentId, ret);
+        std::this_thread::sleep_for(std::chrono::milliseconds(GET_ABILITY_STATE_SLEEP_TIME));
+    } while (--retryTimeout > 0);
+
+    return state;
 }
 
 void DSchedContinue::DurationDumperBeforeStartAbility(std::shared_ptr<DSchedContinueDataCmd> cmd)
