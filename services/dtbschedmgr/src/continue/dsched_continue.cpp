@@ -70,7 +70,7 @@ constexpr int32_t CONTINUE_TOTAL_TIME = 2;
 constexpr int32_t CONTINUE_FIRST_TRANS_TIME = 3;
 constexpr int32_t CONTINUE_DATA_TRANS_TIME = 5;
 constexpr int32_t CONTINUE_START_ABILITY_TIME = 6;
-constexpr int32_t GET_ABILITY_STATE_RETRY_TIMES = 10;
+constexpr int32_t GET_ABILITY_STATE_RETRY_TIMES = 40;
 constexpr int32_t GET_ABILITY_STATE_SLEEP_TIME = 50;
 }
 
