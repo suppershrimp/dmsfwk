@@ -35,6 +35,7 @@ const std::string BUNDLENAME_01 = "bundleName01";
 const std::string BUNDLENAME_02 = "bundleName02";
 const std::string NETWORKID_01 = "networkId01";
 const std::string NETWORKID_02 = "networkId02";
+const std::string ABILITY_NAME_01 = "abilityName01";
 const std::string CANCEL_FOCUSED_TASK = "cancel_mission_focused_task";
 constexpr static int32_t DMS_SEND_LEN = 5;
 constexpr static uint8_t DMS_0X0F = 0x0f;
@@ -405,13 +406,15 @@ HWTEST_F(DMSContinueManagerTest, testDealOnBroadcastBusiness001, TestSize.Level3
      * @tc.steps: step1. test DealOnBroadcastBusiness when senderNetworkId is invalid;
      */
     std::string senderNetworkId = "invalid senderNetworkId";
-    uint32_t accessTokenId = 0;
+    uint32_t bundleNameId = 0;
+    uint8_t continueTypeId = 0;
     int32_t state = 0;
-    int32_t ret = DMSContinueRecvMgr::GetInstance().DealOnBroadcastBusiness(senderNetworkId, accessTokenId, state,
-        DBMS_RETRY_MAX_TIME);
+    int32_t ret = DMSContinueRecvMgr::GetInstance().DealOnBroadcastBusiness(senderNetworkId, bundleNameId, continueTypeId,
+        state, DBMS_RETRY_MAX_TIME);
     EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
 
-    ret = DMSContinueRecvMgr::GetInstance().DealOnBroadcastBusiness(senderNetworkId, accessTokenId, state, 0);
+    ret = DMSContinueRecvMgr::GetInstance().DealOnBroadcastBusiness(senderNetworkId, bundleNameId, continueTypeId,
+        state, 0);
     EXPECT_EQ(ret, 0);
 
     /**
@@ -420,13 +423,14 @@ HWTEST_F(DMSContinueManagerTest, testDealOnBroadcastBusiness001, TestSize.Level3
     sptr<IRemoteObject> obj = nullptr;
     std::string networkId = "invalid networkId";
     std::string bundleName = "invalid bundleName";
-    DMSContinueRecvMgr::GetInstance().NotifyRecvBroadcast(obj, networkId, bundleName, state);
+    std::string continueType = "invalid continueType";
+    DMSContinueRecvMgr::GetInstance().NotifyRecvBroadcast(obj, networkId, bundleName, state, continueType);
 
     /**
      * @tc.steps: step3. test NotifyRecvBroadcast when missionId is invalid;
      */
     obj =  new RemoteOnListenerStubTest();
-    DMSContinueRecvMgr::GetInstance().NotifyRecvBroadcast(obj, networkId, bundleName, state);
+    DMSContinueRecvMgr::GetInstance().NotifyRecvBroadcast(obj, networkId, bundleName, state, continueType);
 
     DTEST_LOG << "DMSContinueManagerTest testDealOnBroadcastBusiness001 end" << std::endl;
 }
@@ -440,10 +444,11 @@ HWTEST_F(DMSContinueManagerTest, testPostOnBroadcastBusiness001, TestSize.Level1
 {
     DTEST_LOG << "DMSContinueManagerTest testPostOnBroadcastBusiness001 start" << std::endl;
     std::string senderNetworkId = "invalid senderNetworkId";
-    uint32_t accessTokenId = 0;
+    uint32_t bundleNameId = 0;
+    uint8_t continueTypeId = 0;
     int32_t state = 0;
 
-    DMSContinueRecvMgr::GetInstance().PostOnBroadcastBusiness(senderNetworkId, accessTokenId, state);
+    DMSContinueRecvMgr::GetInstance().PostOnBroadcastBusiness(senderNetworkId, bundleNameId, continueTypeId, state);
     EXPECT_NE(DMSContinueRecvMgr::GetInstance().eventHandler_, nullptr);
 
     DTEST_LOG << "DMSContinueManagerTest testPostOnBroadcastBusiness001 end" << std::endl;
@@ -684,6 +689,57 @@ HWTEST_F(DMSContinueManagerTest, testNotifyDeviceOnline001, TestSize.Level1)
     uint32_t ret = DMSContinueSendMgr::GetInstance().NotifyDeviceOnline();
     EXPECT_EQ(ret, ERR_OK);
     DTEST_LOG << "DMSContinueManagerTest testNotifyDeviceOnline001 end" << std::endl;
+}
+
+/**
+ * @tc.name: testGetAbilityNameByMissionId001
+ * @tc.desc: test GetAbilityNameByMissionId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DMSContinueManagerTest, testGetAbilityNameByMissionId001, TestSize.Level1)
+{
+    DTEST_LOG << "DMSContinueManagerTest testGetAbilityNameByMissionId001 start" << std::endl;
+    DMSContinueSendMgr::GetInstance().focusedMission_[MISSIONID_01] = ABILITY_NAME_01;
+    std::string abilityName;
+    int32_t ret = DMSContinueSendMgr::GetInstance().GetAbilityNameByMissionId(MISSIONID_01, abilityName);
+    EXPECT_EQ(abilityName, ABILITY_NAME_01);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = DMSContinueSendMgr::GetInstance().GetBundleNameByMissionId(MISSIONID_02, abilityName);
+    EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
+    DTEST_LOG << "DMSContinueManagerTest testGetAbilityNameByMissionId001 end" << std::endl;
+}
+
+/**
+ * @tc.name: testFocusedBusinessSendEvent001
+ * @tc.desc: test FocusedBusinessSendEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(DMSContinueManagerTest, testFocusedBusinessSendEvent001, TestSize.Level1)
+{
+    DTEST_LOG << "DMSContinueManagerTest testFocusedBusinessSendEvent001 start" << std::endl;
+    DMSContinueSendMgr::GetInstance().focusedMission_[BUNDLENAME_01] = MISSIONID_01;
+    int32_t ret = DMSContinueSendMgr::GetInstance().FocusedBusinessSendEvent(BUNDLENAME_01, ABILITY_NAME_01);
+   
+    EXPECT_EQ(ret, CAN_NOT_FOUND_ABILITY_ERR);
+    DTEST_LOG << "DMSContinueManagerTest testFocusedBusinessSendEvent001 end" << std::endl;
+}
+
+/**
+ * @tc.name: testSetStateGetContinueTypeId001
+ * @tc.desc: test SetStateGetContinueTypeId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DMSContinueManagerTest, testSetStateGetContinueTypeId001, TestSize.Level1)
+{
+    DTEST_LOG << "DMSContinueManagerTest testSetStateGetContinueTypeId001 start" << std::endl;
+    DMSContinueSendMgr::GetInstance().focusedMission_[BUNDLENAME_01] = MISSIONID_01;
+    uint8_t continueTypeId = 0;
+    int32_t ret = DMSContinueSendMgr::GetInstance().SetStateGetContinueTypeId(MISSIONID_01,
+        BUNDLENAME_01, continueTypeId);
+    
+    EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
+    DTEST_LOG << "DMSContinueManagerTest testSetStateGetContinueTypeId001 end" << std::endl;
 }
 } // namespace DistributedSchedule
 } // namespace OHOS
