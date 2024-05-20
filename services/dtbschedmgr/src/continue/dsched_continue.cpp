@@ -57,6 +57,7 @@ const std::string DMSDURATION_SAVETIME = "ohos.dschedule.SaveDataTime";
 const std::string DMS_PERSISTENT_ID = "ohos.dms.persistentId";
 const std::string DMS_CONTINUE_SESSION_ID = "ohos.dms.continueSessionId";
 const std::string DSCHED_EVENT_KEY = "IDSchedEventListener";
+const std::string QUICK_START_CONFIGURATION = "ContinueQuickStart";
 const std::u16string NAPI_MISSION_CALLBACK_INTERFACE_TOKEN = u"ohos.DistributedSchedule.IMissionCallback";
 
 constexpr int32_t DSCHED_CONTINUE_PROTOCOL_VERSION = 1;
@@ -407,7 +408,7 @@ int32_t DSchedContinue::ExecuteContinueReq(std::shared_ptr<DistributedWantParams
     HILOGI("ExecuteContinueReq start, continueInfo: %s", continueInfo_.toString().c_str());
     DurationDumperStart();
 
-    if (subServiceType_ == CONTINUE_PULL) {
+    if (subServiceType_ == CONTINUE_PULL && CheckQuickSTartConfiguration()) {
         DmsRadar::GetInstance().ClickIconDmsContinue("ContinueMission", ERR_OK);
         QuickStartAbility();
     }
@@ -440,6 +441,18 @@ int32_t DSchedContinue::ExecuteContinueReq(std::shared_ptr<DistributedWantParams
     }
     HILOGI("ExecuteContinueReq end");
     return ERR_OK;
+}
+
+bool DSchedContinue::CheckQuickSTartConfiguration()
+{
+    std::string continueType = continueInfo_.continueType_;
+    std::string suffix = QUICK_START_CONFIGURATION;
+
+    HILOGI("CheckQuickSTartConfiguration continueType: %s", continueType.c_str());
+    if (suffix.length() > continueType.length()) {
+        return false;
+    }
+    return (continueType.rfind(suffix) == (continueType.length() - suffix.length()));
 }
 
 int32_t DSchedContinue::QuickStartAbility()
@@ -779,8 +792,9 @@ int32_t DSchedContinue::ExecuteContinueData(std::shared_ptr<DSchedContinueDataCm
     }
 
     OHOS::AAFwk::Want want = cmd->want_;
-    if (subServiceType_ == CONTINUE_PULL && !continueInfo_.continueType_.empty()) {
-        UpdateWantForContinueType(want);
+    UpdateWantForContinueType(want);
+    if (subServiceType_ == CONTINUE_PULL &&
+        !ContinueSceneSessionHandler::GetInstance().GetContinueSessionId().empty()) {
         int32_t persistentId;
         if (ContinueSceneSessionHandler::GetInstance().GetPersistentId(persistentId) != ERR_OK) {
             HILOGE("get persistentId failed, stop start ability");
