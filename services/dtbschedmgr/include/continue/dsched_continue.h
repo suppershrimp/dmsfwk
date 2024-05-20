@@ -191,6 +191,7 @@ private:
     std::string QuerySinkAbilityName();
     int32_t QuickStartAbility();
     int32_t UpdateWantForContinueType(OHOS::AAFwk::Want& want);
+    int32_t bool CheckQuickSTartConfiguration();
 
 private:
     std::shared_ptr<DSchedContinueStateMachine> stateMachine_;
