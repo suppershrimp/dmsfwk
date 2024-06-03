@@ -72,7 +72,7 @@ HWTEST_F(BundleManagerInternalTest, BundleManagerInternalTest_001, TestSize.Leve
     bool ret = BundleManagerInternal::QueryExtensionAbilityInfo(want, extensionInfo);
     EXPECT_TRUE(!ret);
     EXPECT_TRUE(extensionInfo.name.empty());
-    DTEST_LOG << "BundleManagerInternalTest BundleManagerInternalTest_001 end ret:" << ret << std::endl;
+    DTEST_LOG << "BundleManagerInternalTest BundleManagerInternalTest_001 end ret: test tyj" << ret << std::endl;
 }
 
 /**
