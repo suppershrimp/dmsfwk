@@ -16,8 +16,10 @@
 
 #include "mission/wifi_state_listener.h"
 
+#include "distributed_sched_utils.h"
 #include "dtbschedmgr_log.h"
 #include "mission/dms_continue_recv_manager.h"
+#include "mission/dms_continue_send_manager.h"
 #include "mission/wifi_state_adapter.h"
 #include "wifi_device.h"
 #include "wifi_msg.h"
@@ -40,6 +42,10 @@ void WifiStateListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
             }
             WifiStateAdapter::GetInstance().UpdateWifiState(false);
             DMSContinueRecvMgr::GetInstance().OnContinueSwitchOff();
+            int32_t missionId = GetCurrentMissionId();
+            if (missionId > 0) {
+                DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId, UnfocusedReason::NORMAL);
+            }
             break;
         }
 
