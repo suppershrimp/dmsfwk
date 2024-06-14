@@ -15,6 +15,7 @@
 #include "distributed_ability_manager_service_test.h"
 
 #include <thread>
+#include "ability_manager_client.h"
 #include "distributed_sched_test_util.h"
 #include "dtbschedmgr_log.h"
 #define private public
@@ -398,7 +399,7 @@ HWTEST_F(DistributedAbilityManagerServiceTest, RegisterDeviceSelectionCallback_0
     EXPECT_EQ(ret, ERR_OK);
     ret = dtbabilitymgrService_->RegisterDeviceSelectionCallback(token, EVENT_CONNECT, notifier);
     EXPECT_EQ(ret, CALLBACK_HAS_REGISTERED);
-    
+
     ret = dtbabilitymgrService_->UnregisterDeviceSelectionCallback(token, EVENT_CONNECT);
     EXPECT_EQ(ret, ERR_OK);
     ret = dtbabilitymgrService_->Unregister(token);
@@ -431,7 +432,7 @@ HWTEST_F(DistributedAbilityManagerServiceTest, RegisterDeviceSelectionCallback_0
     EXPECT_EQ(ret, ERR_OK);
     ret = dtbabilitymgrService_->RegisterDeviceSelectionCallback(token, EVENT_DISCONNECT, notifier);
     EXPECT_EQ(ret, ERR_OK);
-    
+
     ret = dtbabilitymgrService_->UnregisterDeviceSelectionCallback(token, EVENT_CONNECT);
     ret = dtbabilitymgrService_->UnregisterDeviceSelectionCallback(token, EVENT_DISCONNECT);
     EXPECT_EQ(ret, ERR_OK);
