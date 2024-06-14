@@ -46,6 +46,12 @@ public:
     {
         return ERR_OK;
     };
+    int32_t UpdateFormByHqf(const std::string &bundleName, const std::string &moduleName,
+                            const int &patchVersion, const int32_t recordId,
+                            const sptr<IQuickFixCallback> &callback) override
+    {
+        return ERR_OK;
+    }
     int32_t ReleaseForm(const int64_t formId, const sptr<IRemoteObject> &callerToken, const bool delCache) override
     {
         return ERR_OK;
