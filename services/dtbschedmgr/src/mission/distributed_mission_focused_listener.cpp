@@ -15,6 +15,7 @@
 
 #include "mission/distributed_mission_focused_listener.h"
 
+#include "continue/dsched_continue_manager.h"
 #include "distributed_radar.h"
 #include "dtbschedmgr_log.h"
 #include "mission/dms_continue_send_manager.h"
@@ -27,12 +28,15 @@ const std::string TAG = "DistributedMissionFocusedListener";
 void DistributedMissionFocusedListener::OnMissionCreated(int32_t missionId)
 {
     HILOGD("OnMissionCreated, missionId = %{public}d", missionId);
+    DSchedContinueManager::GetInstance().UpdateAliveMissionInfo(missionId);
 }
 
 void DistributedMissionFocusedListener::OnMissionDestroyed(int32_t missionId)
 {
     HILOGD("OnMissionDestroyed, missionId = %{public}d", missionId);
     DMSContinueSendMgr::GetInstance().NotifyMissionUnfocused(missionId, UnfocusedReason::DESTORY);
+    DSchedContinueManager::GetInstance().NotifyTerminateContinuation(missionId);
+    DSchedContinueManager::GetInstance().DeleteAliveMissionInfo(missionId);
 }
 
 void DistributedMissionFocusedListener::OnMissionSnapshotChanged(int32_t missionId)
