@@ -545,6 +545,61 @@ void DSchedContinueManager::OnShutdown(int32_t socket, bool isSelfCalled)
     return;
 }
 
+void DSchedContinueManager::NotifyTerminateContinuation(const int32_t missionId)
+{
+    HILOGI("begin, missionId %{public}d", missionId);
+    {
+        std::lock_guard<std::mutex> continueLock(continueMutex_);
+        if (continues_.empty()) {
+            HILOGW("No continuation in progress.");
+            return;
+        }
+ 
+        AliveMissionInfo missionInfo;
+        auto iterItem = aliveMission_.find(missionId);
+        if (iterItem != aliveMission_.end()) {
+            missionInfo = iterItem->second;
+        } else {
+            HILOGE("get missionInfo failed from aliveMission_");
+            return;
+        }
+
+        HILOGI("alive missionInfo bundleName is %{public}s, abilityName is %{public}s",
+            missionInfo.bundleName.c_str(), missionInfo.abilityName.c_str());
+        for (auto iter = continues_.begin(); iter != continues_.end(); iter++) {
+            if (iter->second != nullptr
+                && iter->second->GetContinueInfo().sinkBundleName_ = missionInfo.bundleName
+                && iter->second->GetContinueInfo().sinkAbilityName_ = missionInfo.abilityName) {
+                HILOGE("Excute onContinueEnd");
+                iter->second->OnContinueEnd(CONTINUE_SINK_ABILITY_TERMINATED);
+                return;
+            }
+        }
+    }
+    HILOGW("Not match an existing continuation.");
+}
+ 
+void DSchedContinueManager::UpdateAliveMissionInfo(const int32_t missionId)
+{
+    HILOGI("start, missionId: %{public}d", missionId);
+    AAFwk::MissionInfo info;
+    int32_t ret = AAFwk::AbilityManagerClient::GetInstance()->GetMissionInfo("", missionId, info);
+    if (ret != ERR_OK) {
+        HILOGE("get missionInfo failed, missionId: %{public}d, ret: %{public}d", missionId, ret);
+        return;
+    }
+
+    std::lock_guard<std::mutex> aliveMissionMapLock(eventMutex_);
+    aliveMission_[missionId] = { info.want.GetBundle(), info.want.GetElement().GetAbilityName() };
+}
+
+void DSchedContinueManager::DeleteAliveMissionInfo(const int32_t missionId)
+{
+    HILOGI("called, missionId: %{public}d", missionId);
+    std::lock_guard<std::mutex> aliveMissionMapLock(eventMutex_);
+    aliveMission_.erase(missionId);
+}
+
 void DSchedContinueManager::SoftbusListener::OnBind(int32_t socket, PeerSocketInfo info)
 {
 }

@@ -34,6 +34,12 @@ constexpr int32_t MAX_CONCURRENT_SINK = 1;
 constexpr int32_t MAX_CONCURRENT_SOURCE = 1;
 constexpr int32_t CONTINUE_TIMEOUT = 7000;
 }
+
+struct AliveMissionInfo {
+    std::string bundleName;
+    std::string abilityName;
+};
+
 class DSchedContinueManager {
 DECLARE_SINGLE_INSTANCE_BASE(DSchedContinueManager);
 public:
@@ -58,6 +64,9 @@ public:
     int32_t GetContinueInfo(std::string &srcDeviceId, std::string &dstDeviceId);
     std::shared_ptr<DSchedContinue> GetDSchedContinueByWant(const OHOS::AAFwk::Want& want, int32_t missionId);
     std::shared_ptr<DSchedContinue> GetDSchedContinueByDevId(const std::u16string& devId, int32_t missionId);
+    void NotifyTerminateContinuation(const int32_t missionId);
+    void UpdateAliveMissionInfo(const int32_t missionId);
+    void DeleteAliveMissionInfo(const int32_t missionId);
     
 private:
     void StartEvent();
@@ -98,6 +107,8 @@ private:
 
     std::atomic<int32_t> cntSink_ {0};
     std::atomic<int32_t> cntSource_ {0};
+
+    std::map<int32_t, AliveMissionInfo> aliveMission_;
 };
 }  // namespace DistributedSchedule
 }  // namespace OHOS
