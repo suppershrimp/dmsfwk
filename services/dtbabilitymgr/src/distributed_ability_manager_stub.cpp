@@ -61,26 +61,31 @@ int32_t DistributedAbilityManagerStub::OnRemoteRequest(uint32_t code, MessagePar
     MessageParcel& reply, MessageOption& option)
 {
     HILOGI("code = %{public}u", code);
-    auto iter = funcsMap_.find(code);
-    if (iter != funcsMap_.end()) {
-        auto func = iter->second;
-        if (!EnforceInterfaceToken(data)) {
-            HILOGE("interface token check failed!");
-            return DMS_PERMISSION_DENIED;
-        }
-        uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
-        if (!VerifyPermission(accessToken, PERMISSION_DISTRIBUTED_DATASYNC)) {
-            HILOGE("DISTRIBUTED_DATASYNC permission check failed!");
-            return DMS_PERMISSION_DENIED;
-        }
-        if (func != nullptr) {
-            return (this->*func)(data, reply);
-        } else {
-            HILOGE("func is nullptr");
-            return ERR_NULL_OBJECT;
-        }
+    if (!EnforceInterfaceToken(data)) {
+        HILOGE("interface token check failed!");
+        return DMS_PERMISSION_DENIED;
     }
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    uint32_t accessToken = IPCSkeleton::GetCallingTokenID();
+    if (!VerifyPermission(accessToken, PERMISSION_DISTRIBUTED_DATASYNC)) {
+        HILOGE("DISTRIBUTED_DATASYNC permission check failed!");
+        return DMS_PERMISSION_DENIED;
+    }
+    switch (code) {
+        case static_cast<uint32_t>(IDAbilityManagerInterfaceCode::REGISTER):
+            return RegisterInner(data, reply);
+        case static_cast<uint32_t>(IDAbilityManagerInterfaceCode::UNREGISTER):
+            return UnregisterInner(data, reply);
+        case static_cast<uint32_t>(IDAbilityManagerInterfaceCode::REGISTER_DEVICE_SELECTION_CALLBACK):
+            return RegisterDeviceSelectionCallbackInner(data, reply);
+        case static_cast<uint32_t>(IDAbilityManagerInterfaceCode::UNREGISTER_DEVICE_SELECTION_CALLBACK):
+            return UnregisterDeviceSelectionCallbackInner(data, reply);
+        case static_cast<uint32_t>(IDAbilityManagerInterfaceCode::UPDATE_CONNECT_STATUS):
+            return UpdateConnectStatusInner(data, reply);
+        case static_cast<uint32_t>(IDAbilityManagerInterfaceCode::START_DEVICE_MANAGER):
+            return StartDeviceManagerInner(data, reply);
+        default:
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
 }
 
 bool DistributedAbilityManagerStub::EnforceInterfaceToken(MessageParcel& data)

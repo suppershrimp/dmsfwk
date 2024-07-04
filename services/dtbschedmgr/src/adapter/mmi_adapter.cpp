@@ -38,7 +38,7 @@ void MMIAdapter::Init()
 {
     HILOGI("Init");
     mmiCallback_ = std::make_shared<MMIAdapter::MMIEventCallback>();
-    eventThread_ = std::thread(&MMIAdapter::StartEvent, this);
+    eventThread_ = std::thread([this]() { this->StartEvent(); });
     std::unique_lock<std::mutex> lock(eventMutex_);
     eventCon_.wait(lock, [this] {
         return eventHandler_ != nullptr;

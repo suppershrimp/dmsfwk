@@ -212,28 +212,162 @@ void DistributedSchedStub::InitRemoteFuncsInner()
         &DistributedSchedStub::StopExtensionAbilityFromRemoteInner;
 }
 
+int32_t DistributedSchedStub::LocalFuncsInner(uint32_t code, MessageParcel& data,
+    MessageParcel& reply, MessageOption& option)
+{
+    switch (code) {
+#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
+        case static_cast<uint32_t>(IDSchedInterfaceCode::REGISTER_DSCHED_EVENT_LISTENER):
+            return RegisterDSchedEventListenerInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::UNREGISTER_DSCHED_EVENT_LISTENER):
+            return UnRegisterDSchedEventListenerInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::GET_CONTINUE_INFO):
+            return GetContinueInfoInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::GET_DSCHED_EVENT_INFO):
+            return GetDSchedEventInfoInner(data, reply);
+#endif
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_REMOTE_ABILITY):
+            return StartRemoteAbilityInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_MISSION):
+            return ContinueMissionInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_MISSION_OF_BUNDLENAME):
+            return ContinueMissionOfBundleNameInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_CONTINUATION):
+            return StartContinuationInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_COMPLETE_CONTINUATION):
+            return NotifyCompleteContinuationInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::CONNECT_REMOTE_ABILITY):
+            return ConnectRemoteAbilityInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::DISCONNECT_REMOTE_ABILITY):
+            return DisconnectRemoteAbilityInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_REMOTE_ABILITY_BY_CALL):
+            return StartRemoteAbilityByCallInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::RELEASE_REMOTE_ABILITY):
+            return ReleaseRemoteAbilityInner(data, reply);
+#ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_REMOTE_SHARE_FORM):
+            return StartRemoteShareFormInner(data, reply);
+#endif
+        case static_cast<uint32_t>(IDSchedInterfaceCode::GET_DISTRIBUTED_COMPONENT_LIST):
+            return GetDistributedComponentListInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_REMOTE_FREE_INSTALL):
+            return StartRemoteFreeInstallInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::STOP_REMOTE_EXTERNSION_ABILITY):
+            return StopRemoteExtensionAbilityInner(data, reply);
+        default:
+            return LocalMissionManagerFunc(code, data, reply, option);
+    }
+}
+
+int32_t DistributedSchedStub::LocalMissionManagerFunc(uint32_t code,
+    MessageParcel& data, MessageParcel& reply, MessageOption& option)
+{
+    switch (code) {
+#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
+        case static_cast<uint32_t>(IDSchedInterfaceCode::GET_REMOTE_MISSION_SNAPSHOT_INFO):
+            return GetRemoteMissionSnapshotInfoInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::REGISTER_MISSION_LISTENER):
+            return RegisterMissionListenerInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::REGISTER_ON_LISTENER):
+            return RegisterOnListenerInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::REGISTER_OFF_LISTENER):
+            return RegisterOffListenerInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::UNREGISTER_MISSION_LISTENER):
+            return UnRegisterMissionListenerInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::GET_MISSION_INFOS):
+            return GetMissionInfosInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_SYNC_MISSIONS):
+            return StartSyncRemoteMissionsInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::STOP_SYNC_MISSIONS):
+            return StopSyncRemoteMissionsInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::SET_MISSION_CONTINUE_STATE):
+            return SetMissionContinueStateInner(data, reply);
+#endif
+        default:
+            HILOGW("OnRemoteRequest default case, need check.");
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
+}
+
+int32_t DistributedSchedStub::RemoteFuncsInner(uint32_t code,
+    MessageParcel& data, MessageParcel& reply, MessageOption& option)
+{
+    switch (code) {
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_ABILITY_FROM_REMOTE):
+            return StartAbilityFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::STOP_ABILITY_FROM_REMOTE):
+            return StopAbilityFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::SEND_RESULT_FROM_REMOTE):
+            return SendResultFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_CONTINUATION_RESULT_FROM_REMOTE):
+            return NotifyContinuationResultFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_DSCHED_EVENT_RESULT_FROM_REMOTE):
+            return NotifyDSchedEventResultFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::CONNECT_ABILITY_FROM_REMOTE):
+            return ConnectAbilityFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::DISCONNECT_ABILITY_FROM_REMOTE):
+            return DisconnectAbilityFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_PROCESS_DIED_FROM_REMOTE):
+            return NotifyProcessDiedFromRemoteInner(data, reply);
+#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_SYNC_MISSIONS_FROM_REMOTE):
+            return StartSyncMissionsFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::STOP_SYNC_MISSIONS_FROM_REMOTE):
+            return StopSyncMissionsFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_MISSIONS_CHANGED_FROM_REMOTE):
+            return NotifyMissionsChangedFromRemoteInner(data, reply);
+#endif
+        case static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_MISSION):
+            return ContinueMissionInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_MISSION_OF_BUNDLENAME):
+            return ContinueMissionOfBundleNameInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_ABILITY_BY_CALL_FROM_REMOTE):
+            return StartAbilityByCallFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::RELEASE_ABILITY_FROM_REMOTE):
+            return ReleaseAbilityFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_STATE_CHANGED_FROM_REMOTE):
+            return NotifyStateChangedFromRemoteInner(data, reply);
+        default:
+            return RemoteFuncsAdapterInner(code, data, reply, option);
+    }
+}
+
+int32_t DistributedSchedStub::RemoteFuncsAdapterInner(uint32_t code,
+    MessageParcel& data, MessageParcel& reply, MessageOption& option)
+{
+    switch (code) {
+#ifdef DMSFWK_INTERACTIVE_ADAPTER
+        case static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_STATE_CHANGED_FROM_REMOTE):
+            return NotifyAbilityLifecycleChangedFromRemoteAdapterInner(data, reply);
+#endif
+
+#ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_SHARE_FORM_FROM_REMOTE):
+            return StartShareFormFromRemoteInner(data, reply);
+#endif
+        case static_cast<uint32_t>(IDSchedInterfaceCode::START_FREE_INSTALL_FROM_REMOTE):
+            return StartFreeInstallFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_COMPLETE_FREE_INSTALL_FROM_REMOTE):
+            return NotifyCompleteFreeInstallFromRemoteInner(data, reply);
+        case static_cast<uint32_t>(IDSchedInterfaceCode::STOP_EXTERNSION_ABILITY_FROM_REMOTE):
+            return StopExtensionAbilityFromRemoteInner(data, reply);
+        default:
+            HILOGW("OnRemoteRequest default case, need check.");
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
+}
+
 int32_t DistributedSchedStub::OnRemoteRequest(uint32_t code,
     MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     bool IsLocalCalling = IPCSkeleton::IsLocalCalling();
     HILOGI("OnRemoteRequest, code = %{public}u, flags = %{public}d, IsLocalCalling = %{public}d.",
         code, option.GetFlags(), IsLocalCalling);
-
-    const auto& funcsMap = IsLocalCalling ? localFuncsMap_ : remoteFuncsMap_;
-    auto iter = funcsMap.find(code);
-    if (iter != funcsMap.end()) {
-        auto func = iter->second;
-        if (!EnforceInterfaceToken(data)) {
-            HILOGW("OnRemoteRequest interface token check failed!");
-            return DMS_PERMISSION_DENIED;
-        }
-        if (func != nullptr) {
-            return (this->*func)(data, reply);
-        }
+    if (IsLocalCalling) {
+        return LocalFuncsInner(code, data, reply, option);
+    } else {
+        return RemoteFuncsInner(code, data, reply, option);
     }
-
-    HILOGW("OnRemoteRequest default case, need check.");
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 int32_t DistributedSchedStub::StartRemoteAbilityInner(MessageParcel& data, MessageParcel& reply)

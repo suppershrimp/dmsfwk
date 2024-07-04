@@ -161,7 +161,7 @@ int32_t DSchedContinue::Init()
         stateMachine_->UpdateState(DSCHED_CONTINUE_SINK_START_STATE);
     }
 
-    eventThread_ = std::thread(&DSchedContinue::StartEventHandler, this);
+    eventThread_ = std::thread([this]() { this->StartEventHandler(); });
     std::unique_lock<std::mutex> lock(eventMutex_);
     eventCon_.wait(lock, [this] {
         return eventHandler_ != nullptr;

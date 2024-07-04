@@ -28,6 +28,14 @@ class DistributedSchedStub : public IRemoteStub<IDistributedSched> {
 public:
     DistributedSchedStub();
     ~DistributedSchedStub();
+    int32_t LocalFuncsInner(uint32_t code, MessageParcel& data,
+        MessageParcel& reply, MessageOption& option);
+    int32_t LocalMissionManagerFunc(uint32_t code, MessageParcel& data,
+        MessageParcel& reply, MessageOption& option);
+    int32_t RemoteFuncsInner(uint32_t code, MessageParcel& data,
+        MessageParcel& reply, MessageOption& option);
+    int32_t RemoteFuncsAdapterInner(uint32_t code, MessageParcel& data,
+        MessageParcel& reply, MessageOption& option);
     int32_t OnRemoteRequest(uint32_t code, MessageParcel& data,
         MessageParcel& reply, MessageOption& option) override;
 

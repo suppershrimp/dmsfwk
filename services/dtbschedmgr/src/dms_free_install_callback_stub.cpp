@@ -52,14 +52,13 @@ int32_t DmsFreeInstallCallbackStub::OnRemoteRequest(
         HILOGE("Local descriptor is not equal to remote");
         return ERR_INVALID_STATE;
     }
-
-    auto it = memberFuncMap_.find(code);
-    if (it == memberFuncMap_.end()) {
-        HILOGE("Not found");
-        return ERR_INVALID_STATE;
+    switch (code) {
+        case static_cast<uint32_t>(IDRreeInstallCallbackInterfaceCode::ON_FREE_INSTALL_DONE):
+            return OnInstallFinishedInner(data, reply);
+        default:
+            HILOGE("Not found");
+            return ERR_INVALID_STATE;
     }
-
-    return (this->*(it->second))(data, reply);
 }
 }  // namespace DistributedSchedule
 }  // namespace OHOS

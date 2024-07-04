@@ -58,7 +58,7 @@ void DSchedContinueManager::Init()
     DSchedTransportSoftbusAdapter::GetInstance().InitChannel();
     softbusListener_ = std::make_shared<DSchedContinueManager::SoftbusListener>();
     DSchedTransportSoftbusAdapter::GetInstance().RegisterListener(SERVICE_TYPE_CONTINUE, softbusListener_);
-    eventThread_ = std::thread(&DSchedContinueManager::StartEvent, this);
+    eventThread_ = std::thread([this]() { this->StartEvent(); });
     std::unique_lock<std::mutex> lock(eventMutex_);
     eventCon_.wait(lock, [this] {
         return eventHandler_ != nullptr;
