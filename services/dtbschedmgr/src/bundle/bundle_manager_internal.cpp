@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
+#include "adapter/dnetwork_adapter.h"
 #include "bundle/bundle_manager_internal.h"
 #include "bundle/bundle_manager_callback_stub.h"
 #include "distributed_sched_adapter.h"
+#include "distributed_sched_utils.h"
 #include "dtbschedmgr_log.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
@@ -57,8 +59,23 @@ bool BundleManagerInternal::GetCallerAppIdFromBms(const std::string& bundleName,
         return false;
     }
     appId = bundleMgr->GetAppIdByBundleName(bundleName, activeAccountId);
-    HILOGD("appId:%s", appId.c_str());
+    HILOGD("appId:%s", GetAnonymStr(appId).c_str());
     return true;
+}
+
+bool BundleManagerInternal::GetSpecifyBundleNameFromBms(int32_t callingUid, std::string& bundleName)
+{
+    auto bundleMgr = GetBundleManager();
+    if (bundleMgr == nullptr) {
+        HILOGE("failed to get bms");
+        return false;
+    }
+    bool result = bundleMgr->GetBundleNameForUid(callingUid, bundleName);
+    if (!result) {
+        HILOGE("Get specify bundle name for uid failed, result: %{public}d", result);
+        return false;
+    }
+    return result;
 }
 
 bool BundleManagerInternal::GetBundleNameListFromBms(int32_t callingUid, std::vector<std::string>& bundleNameList)
@@ -70,7 +87,7 @@ bool BundleManagerInternal::GetBundleNameListFromBms(int32_t callingUid, std::ve
     }
     bool result = bundleMgr->GetBundlesForUid(callingUid, bundleNameList);
     if (!result) {
-        HILOGE("GetBundlesForUid failed, result: %{public}d", result);
+        HILOGE("Get bundle name list for userId which the uid belongs failed, result: %{public}d", result);
         return false;
     }
     return result;
@@ -81,7 +98,7 @@ bool BundleManagerInternal::GetBundleNameListFromBms(int32_t callingUid,
 {
     std::vector<std::string> bundleNameList;
     if (!GetBundleNameListFromBms(callingUid, bundleNameList)) {
-        HILOGE("GetBundleNameListFromBms failed");
+        HILOGE("Get bundle name list for userId which the uid belongs failed.");
         return false;
     }
     for (const std::string& bundleName : bundleNameList) {
@@ -153,16 +170,16 @@ bool BundleManagerInternal::IsSameAppId(const std::string& callerAppId, const st
 {
     if (targetBundleName.empty() || callerAppId.empty()) {
         HILOGE("targetBundleName:%{public}s or callerAppId:%s is empty",
-            targetBundleName.c_str(), callerAppId.c_str());
+            targetBundleName.c_str(), GetAnonymStr(callerAppId).c_str());
         return false;
     }
-    HILOGD("callerAppId:%s", callerAppId.c_str());
+    HILOGD("callerAppId:%s", GetAnonymStr(callerAppId).c_str());
     std::string calleeAppId;
     if (!GetCallerAppIdFromBms(targetBundleName, calleeAppId)) {
         HILOGE("GetCallerAppIdFromBms failed");
         return false;
     }
-    HILOGD("calleeAppId:%s", calleeAppId.c_str());
+    HILOGD("calleeAppId:%s", GetAnonymStr(calleeAppId).c_str());
     return callerAppId == calleeAppId;
 }
 
@@ -248,11 +265,12 @@ bool BundleManagerInternal::CheckIfRemoteCanInstall(const AAFwk::Want& want, int
     std::string moduleName = want.GetElement().GetModuleName();
     std::string abilityName = want.GetElement().GetAbilityName();
     std::string deviceId = want.GetElement().GetDeviceID();
-    HILOGD("bundleName = %{public}s, moduleName = %{public}s, abilityName = %{public}s, deviceId = %{public}s",
-        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), deviceId.c_str());
+    std::string udid = DnetworkAdapter::GetInstance()->GetUdidByNetworkId(deviceId);
+    HILOGD("bundleName = %{public}s, moduleName = %{public}s, abilityName = %{public}s, udid = %{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), GetAnonymStr(udid).c_str());
 
-    if (bundleName.empty() || moduleName.empty() || abilityName.empty() || deviceId.empty()) {
-        HILOGE("deviceId or bundle or module or ability name is empty");
+    if (bundleName.empty() || moduleName.empty() || abilityName.empty() || udid.empty()) {
+        HILOGE("udid or bundle or module or ability name is empty");
         return false;
     }
     auto bms = GetBundleManager();
@@ -262,7 +280,7 @@ bool BundleManagerInternal::CheckIfRemoteCanInstall(const AAFwk::Want& want, int
     }
 
     AAFwk::Want newWant;
-    newWant.SetElementName(deviceId, bundleName, abilityName, moduleName);
+    newWant.SetElementName(udid, bundleName, abilityName, moduleName);
     int32_t activeAccountId = 0;
     ErrCode err = QueryOsAccount(activeAccountId);
     if (err != ERR_OK) {
@@ -362,8 +380,7 @@ int32_t BundleManagerInternal::GetContinueTypeId(const std::string &bundleName,
 std::string BundleManagerInternal::GetAbilityName(const std::string &networkId,
     std::string &bundleName, std::string &continueType)
 {
-    HILOGD("called.");
-    HILOGI("continueType: %{public}s ", continueType.c_str());
+    HILOGI("called. continueType: %{public}s ", continueType.c_str());
     std::string abilityName = DmsBmStorage::GetInstance()->GetAbilityName(networkId, bundleName, continueType);
     if (abilityName == "") {
         HILOGE("can not get abilityName!");

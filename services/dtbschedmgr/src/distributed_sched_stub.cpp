@@ -29,6 +29,8 @@
 #include "dfx/dms_hitrace_constants.h"
 #include "distributed_want.h"
 #include "distributed_sched_permission.h"
+#include "distributed_sched_service.h"
+#include "distributed_sched_types.h"
 #include "distributed_sched_utils.h"
 #include "dms_version_manager.h"
 #include "dsched_continue_manager.h"
@@ -59,12 +61,12 @@ const std::string TAG = "DistributedSchedStub";
 const std::u16string DMS_STUB_INTERFACE_TOKEN = u"ohos.distributedschedule.accessToken";
 const std::string EXTRO_INFO_JSON_KEY_ACCESS_TOKEN = "accessTokenID";
 const std::string EXTRO_INFO_JSON_KEY_REQUEST_CODE = "requestCode";
-const std::string PERMISSION_DISTRIBUTED_DATASYNC = "ohos.permission.DISTRIBUTED_DATASYNC";
 const std::string PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
 const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
 const std::string CMPT_PARAM_FREEINSTALL_BUNDLENAMES = "ohos.extra.param.key.allowedBundles";
 const std::string FEATURE_ABILITY_FLAG_KEY = "ohos.dms.faFlag";
 const std::string DMS_VERSION_ID = "dmsVersion";
+const std::string DMS_UID_SPEC_BUNDLE_NAME = "dmsCallerUidBundleName";
 constexpr int32_t QOS_THRESHOLD_VERSION = 5;
 const int DEFAULT_REQUEST_CODE = -1;
 }
@@ -92,6 +94,8 @@ void DistributedSchedStub::InitExtendedLocalFuncsInner()
         &DistributedSchedStub::UnRegisterDSchedEventListenerInner;
     localFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::GET_CONTINUE_INFO)] =
         &DistributedSchedStub::GetContinueInfoInner;
+    localFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::GET_DSCHED_EVENT_INFO)] =
+        &DistributedSchedStub::GetDSchedEventInfoInner;
 #endif
 }
 
@@ -157,6 +161,8 @@ void DistributedSchedStub::InitRemoteFuncsInner()
 {
     remoteFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::START_ABILITY_FROM_REMOTE)] =
         &DistributedSchedStub::StartAbilityFromRemoteInner;
+    remoteFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::STOP_ABILITY_FROM_REMOTE)] =
+        &DistributedSchedStub::StopAbilityFromRemoteInner;
     remoteFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::SEND_RESULT_FROM_REMOTE)] =
         &DistributedSchedStub::SendResultFromRemoteInner;
     remoteFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_CONTINUATION_RESULT_FROM_REMOTE)] =
@@ -188,6 +194,12 @@ void DistributedSchedStub::InitRemoteFuncsInner()
         &DistributedSchedStub::ReleaseAbilityFromRemoteInner;
     remoteFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_STATE_CHANGED_FROM_REMOTE)] =
         &DistributedSchedStub::NotifyStateChangedFromRemoteInner;
+
+#ifdef DMSFWK_INTERACTIVE_ADAPTER
+    remoteFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::NOTIFY_STATE_CHANGED_FROM_REMOTE)] =
+        &DistributedSchedStub::NotifyAbilityLifecycleChangedFromRemoteAdapterInner;
+#endif
+
 #ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
     remoteFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::START_SHARE_FORM_FROM_REMOTE)] =
         &DistributedSchedStub::StartShareFormFromRemoteInner;
@@ -243,11 +255,6 @@ int32_t DistributedSchedStub::StartRemoteAbilityInner(MessageParcel& data, Messa
     uint32_t accessToken = 0;
     PARCEL_READ_HELPER(data, Uint32, accessToken);
     HILOGD("get callerUid = %{public}d, AccessTokenID = %{private}u", callerUid, accessToken);
-    if (DistributedSchedPermission::GetInstance().CheckPermission(accessToken,
-        PERMISSION_DISTRIBUTED_DATASYNC) != ERR_OK) {
-        HILOGE("check data_sync permission failed!");
-        return DMS_PERMISSION_DENIED;
-    }
     DistributedSchedPermission::GetInstance().MarkUriPermission(*want, accessToken);
     int32_t result = StartRemoteAbility(*want, callerUid, requestCode, accessToken);
     ReportEvent(*want, BehaviorEvent::START_REMOTE_ABILITY, result, callerUid);
@@ -288,36 +295,26 @@ shared_ptr<AAFwk::Want> DistributedSchedStub::ReadDistributedWant(MessageParcel&
     return want;
 }
 
-int32_t DistributedSchedStub::StartAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply)
+int32_t DistributedSchedStub::GetStartAbilityFromRemoteExParam(MessageParcel& data,
+    OHOS::AppExecFwk::AbilityInfo& abilityInfo, int32_t& requestCode,
+    CallerInfo& callerInfo, AccountInfo& accountInfo)
 {
-    if (!CheckCallingUid()) {
-        HILOGW("request DENIED!");
-        return DMS_PERMISSION_DENIED;
-    }
-    shared_ptr<AAFwk::Want> want = ReadDistributedWant(data);
-    if (want == nullptr) {
-        HILOGW("want readParcelable failed!");
-        return ERR_NULL_OBJECT;
-    }
     unique_ptr<CompatibleAbilityInfo> cmpAbilityInfo(data.ReadParcelable<CompatibleAbilityInfo>());
     if (cmpAbilityInfo == nullptr) {
-        HILOGW("AbilityInfo readParcelable failed!");
+        HILOGE("AbilityInfo readParcelable failed!");
         return ERR_NULL_OBJECT;
     }
-    AbilityInfo abilityInfo;
     cmpAbilityInfo->ConvertToAbilityInfo(abilityInfo);
-    std::string package = abilityInfo.bundleName;
-    std::string deviceId = abilityInfo.deviceId;
-    int64_t begin = GetTickCount();
-    int32_t requestCode = 0;
+
     PARCEL_READ_HELPER(data, Int32, requestCode);
-    CallerInfo callerInfo;
+
     PARCEL_READ_HELPER(data, Int32, callerInfo.uid);
     PARCEL_READ_HELPER(data, String, callerInfo.sourceDeviceId);
     callerInfo.callerType = CALLER_TYPE_HARMONY;
-    AccountInfo accountInfo;
+
     accountInfo.accountType = data.ReadInt32();
     PARCEL_READ_HELPER(data, StringVector, &accountInfo.groupIdList);
+
     callerInfo.callerAppId = data.ReadString();
     std::string extraInfo = data.ReadString();
     if (!extraInfo.empty()) {
@@ -327,6 +324,70 @@ int32_t DistributedSchedStub::StartAbilityFromRemoteInner(MessageParcel& data, M
             HILOGD("parse extra info");
         }
     }
+    return ERR_OK;
+}
+
+int32_t DistributedSchedStub::GetConnectAbilityFromRemoteExParam(MessageParcel& data,
+    AppExecFwk::AbilityInfo& abilityInfo, sptr<IRemoteObject>& connect,
+    CallerInfo& callerInfo, AccountInfo& accountInfo)
+{
+    unique_ptr<CompatibleAbilityInfo> cmpAbilityInfo(data.ReadParcelable<CompatibleAbilityInfo>());
+    if (cmpAbilityInfo == nullptr) {
+        HILOGE("abilityInfo readParcelable failed!");
+        return ERR_NULL_OBJECT;
+    }
+    cmpAbilityInfo->ConvertToAbilityInfo(abilityInfo);
+
+    connect = data.ReadRemoteObject();
+
+    int32_t result = ReadDataForConnect(data, callerInfo, accountInfo);
+    if (result != ERR_NONE) {
+        HILOGD("Read callerInfo and accountInfo for connect fail, ret %{public}d.", result);
+        return result;
+    }
+    std::string extraInfo = data.ReadString();
+    if (extraInfo.empty()) {
+        HILOGD("extra info is empty!");
+    }
+    nlohmann::json extraInfoJson = nlohmann::json::parse(extraInfo, nullptr, false);
+    if (!extraInfoJson.is_discarded()) {
+        SaveExtraInfo(extraInfoJson, callerInfo);
+        HILOGD("parse extra info");
+    }
+    return ERR_OK;
+}
+
+int32_t DistributedSchedStub::StartAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply)
+{
+#ifdef DMSFWK_INTERACTIVE_ADAPTER
+    if (CheckRemoteOsType(IPCSkeleton::GetCallingDeviceID())) {
+        return StartAbilityFromRemoteAdapterInner(data, reply);
+    }
+#endif
+
+    if (!CheckCallingUid()) {
+        HILOGW("request DENIED!");
+        return DMS_PERMISSION_DENIED;
+    }
+    int64_t begin = GetTickCount();
+
+    shared_ptr<AAFwk::Want> want = ReadDistributedWant(data);
+    if (want == nullptr) {
+        HILOGW("want readParcelable failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+    AbilityInfo abilityInfo;
+    int32_t requestCode = 0;
+    CallerInfo callerInfo;
+    AccountInfo accountInfo;
+    if (GetStartAbilityFromRemoteExParam(data, abilityInfo, requestCode, callerInfo, accountInfo) != ERR_OK) {
+        HILOGE("Get start ability from remote exParam fail!");
+        return INVALID_PARAMETERS_ERR;
+    }
+    std::string package = abilityInfo.bundleName;
+    std::string deviceId = abilityInfo.deviceId;
+
     int32_t result = StartAbilityFromRemote(*want, abilityInfo, requestCode, callerInfo, accountInfo);
     BehaviorEventParam eventParam = { EventCallingType::REMOTE, BehaviorEvent::START_REMOTE_ABILITY, result,
         want->GetElement().GetBundleName(), want->GetElement().GetAbilityName(), callerInfo.uid };
@@ -340,6 +401,17 @@ int32_t DistributedSchedStub::StartAbilityFromRemoteInner(MessageParcel& data, M
     return ERR_NONE;
 }
 
+int32_t DistributedSchedStub::StopAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply)
+{
+#ifdef DMSFWK_INTERACTIVE_ADAPTER
+    if (CheckRemoteOsType(IPCSkeleton::GetCallingDeviceID())) {
+        return StopAbilityFromRemoteAdapterInner(data, reply);
+    }
+#endif
+    int32_t result = ERR_OK;
+    PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
 void DistributedSchedStub::SaveExtraInfo(const nlohmann::json& extraInfoJson, CallerInfo& callerInfo)
 {
     if (extraInfoJson.find(EXTRO_INFO_JSON_KEY_ACCESS_TOKEN) != extraInfoJson.end() &&
@@ -348,11 +420,18 @@ void DistributedSchedStub::SaveExtraInfo(const nlohmann::json& extraInfoJson, Ca
         callerInfo.accessToken = accessToken;
         HILOGD("parse extra info, accessTokenID = %u", accessToken);
     }
+
     if (extraInfoJson.find(DMS_VERSION_ID) != extraInfoJson.end() && extraInfoJson[DMS_VERSION_ID].is_string()) {
         std::string dmsVersion = extraInfoJson[DMS_VERSION_ID];
         callerInfo.extraInfoJson[DMS_VERSION_ID] = dmsVersion;
-        HILOGD("save dms version");
     }
+
+    if (extraInfoJson.find(DMS_UID_SPEC_BUNDLE_NAME) != extraInfoJson.end() &&
+        extraInfoJson[DMS_UID_SPEC_BUNDLE_NAME].is_string()) {
+        std::string uidBundleName = extraInfoJson[DMS_UID_SPEC_BUNDLE_NAME];
+        callerInfo.extraInfoJson[DMS_UID_SPEC_BUNDLE_NAME] = uidBundleName;
+    }
+    HILOGD("save dms version");
 }
 
 int32_t DistributedSchedStub::SendResultFromRemoteInner(MessageParcel& data, MessageParcel& reply)
@@ -423,9 +502,17 @@ int32_t DistributedSchedStub::ContinueMissionInner(MessageParcel& data, MessageP
     }
 
     int32_t result = ERR_OK;
+    AAFwk::MissionInfo missionInfo;
     if (isLocalCalling) {
         std::string remoteDeviceId = (IPCSkeleton::GetCallingDeviceID() == srcDevId) ? dstDevId : srcDevId;
-        if (IsUsingQos(remoteDeviceId)) {
+        if (AAFwk::AbilityManagerClient::GetInstance()->GetMissionInfo("", missionId, missionInfo) != ERR_OK) {
+            return ERR_NULL_OBJECT;
+        }
+        std::string sourceBundleName = missionInfo.want.GetBundle();
+        missionInfo.want.SetParams(*wantParams);
+        bool isFreeInstall = missionInfo.want.GetBoolParam("isFreeInstall", false);
+        if ((!isFreeInstall && IsUsingQos(remoteDeviceId)) ||
+            (isFreeInstall && IsRemoteInstall(remoteDeviceId, sourceBundleName))) {
             DSchedTransportSoftbusAdapter::GetInstance().SetCallingTokenId(IPCSkeleton::GetCallingTokenID());
             result = DSchedContinueManager::GetInstance().ContinueMission(srcDevId, dstDevId, missionId, callback,
                 *wantParams);
@@ -473,9 +560,13 @@ int32_t DistributedSchedStub::ContinueMissionOfBundleNameInner(MessageParcel& da
     }
 
     int32_t result = ERR_OK;
+    AAFwk::MissionInfo missionInfo;
     if (isLocalCalling) {
         std::string remoteDeviceId = (IPCSkeleton::GetCallingDeviceID() == srcDevId) ? dstDevId : srcDevId;
-        if (IsUsingQos(remoteDeviceId)) {
+        missionInfo.want.SetParams(*wantParams);
+        bool isFreeInstall = missionInfo.want.GetBoolParam("isFreeInstall", false);
+        if ((!isFreeInstall && IsUsingQos(remoteDeviceId)) ||
+            (isFreeInstall && IsRemoteInstall(remoteDeviceId, bundleName))) {
             DSchedTransportSoftbusAdapter::GetInstance().SetCallingTokenId(IPCSkeleton::GetCallingTokenID());
             result = DSchedContinueManager::GetInstance().ContinueMission(srcDevId, dstDevId, bundleName, continueType,
                 callback, *wantParams);
@@ -486,6 +577,16 @@ int32_t DistributedSchedStub::ContinueMissionOfBundleNameInner(MessageParcel& da
     result = ContinueMission(srcDevId, dstDevId, bundleName, callback, *wantParams);
     HILOGI("result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+bool DistributedSchedStub::IsRemoteInstall(const std::string &networkId, const std::string &bundleName)
+{
+    DmsBundleInfo info;
+    DmsBmStorage::GetInstance()->GetStorageDistributeInfo(networkId, bundleName, info);
+    if (info.bundleName.empty()) {
+        return false;
+    }
+    return true;
 }
 
 int32_t DistributedSchedStub::StartContinuationInner(MessageParcel& data, MessageParcel& reply)
@@ -511,15 +612,11 @@ int32_t DistributedSchedStub::StartContinuationInner(MessageParcel& data, Messag
     HILOGI("get AccessTokenID = %{public}u", accessToken);
     DistributedSchedPermission::GetInstance().MarkUriPermission(*want, accessToken);
 
-    std::string deviceId = want->GetElement().GetDeviceID();
-
     // set in ability runtime, used to seperate callings from FA or stage model
-    bool isFA = want->GetBoolParam(FEATURE_ABILITY_FLAG_KEY, false);
     want->RemoveParam(FEATURE_ABILITY_FLAG_KEY);
-
-    int32_t result = (!isFA && IsUsingQos(deviceId)) ?
-        DSchedContinueManager::GetInstance().StartContinuation(*want, missionId, callerUid, status, accessToken) :
-        StartContinuation(*want, missionId, callerUid, status, accessToken);
+    int32_t result = DSchedContinueManager::GetInstance().GetDSchedContinueByWant(*want, missionId) != nullptr
+        ? DSchedContinueManager::GetInstance().StartContinuation(*want, missionId, callerUid, status, accessToken)
+        : StartContinuation(*want, missionId, callerUid, status, accessToken);
     ReportEvent(*want, BehaviorEvent::START_CONTINUATION, result, callerUid);
     HILOGI("result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
@@ -542,7 +639,8 @@ int32_t DistributedSchedStub::NotifyCompleteContinuationInner(MessageParcel& dat
     PARCEL_READ_HELPER(data, Int32, sessionId);
     bool continuationResult = false;
     PARCEL_READ_HELPER(data, Bool, continuationResult);
-    if (IsUsingQos(Str16ToStr8(devId))) {
+    auto dContinue = DSchedContinueManager::GetInstance().GetDSchedContinueByDevId(devId, sessionId);
+    if (dContinue != nullptr) {
         DSchedContinueManager::GetInstance().NotifyCompleteContinuation(devId, sessionId, continuationResult);
     } else {
         NotifyCompleteContinuation(devId, sessionId, continuationResult);
@@ -562,6 +660,7 @@ bool DistributedSchedStub::IsUsingQos(const std::string& remoteDeviceId)
         HILOGW("remote dms not support qos, using rpc");
         return false;
     }
+    HILOGI("remote device satisfied qos condition");
     return true;
 }
 
@@ -618,11 +717,6 @@ int32_t DistributedSchedStub::ConnectRemoteAbilityInner(MessageParcel& data, Mes
     PARCEL_READ_HELPER(data, Uint32, accessToken);
     HILOGD("get callerUid = %{public}d, callerPid = %{public}d, AccessTokenID = %{private}u", callerUid, callerPid,
         accessToken);
-    if (DistributedSchedPermission::GetInstance().CheckPermission(accessToken,
-        PERMISSION_DISTRIBUTED_DATASYNC) != ERR_OK) {
-        HILOGE("check data_sync permission failed!");
-        return DMS_PERMISSION_DENIED;
-    }
     int32_t result = ConnectRemoteAbility(*want, connect, callerUid, callerPid, accessToken);
     ReportEvent(*want, BehaviorEvent::CONNECT_REMOTE_ABILITY, result, callerUid);
     HILOGI("result = %{public}d", result);
@@ -642,11 +736,6 @@ int32_t DistributedSchedStub::DisconnectRemoteAbilityInner(MessageParcel& data, 
     uint32_t accessToken = 0;
     PARCEL_READ_HELPER(data, Uint32, accessToken);
     HILOGD("get callerUid = %{public}d, AccessTokenID = %{private}u", callerUid, accessToken);
-    if (DistributedSchedPermission::GetInstance().CheckPermission(accessToken,
-        PERMISSION_DISTRIBUTED_DATASYNC) != ERR_OK) {
-        HILOGE("check data_sync permission failed!");
-        return DMS_PERMISSION_DENIED;
-    }
     int32_t result = DisconnectRemoteAbility(connect, callerUid, accessToken);
     BehaviorEventParam eventParam = { EventCallingType::LOCAL, BehaviorEvent::DISCONNECT_REMOTE_ABILITY, result };
     DmsHiSysEventReport::ReportBehaviorEvent(eventParam);
@@ -668,42 +757,36 @@ int32_t DistributedSchedStub::ReadDataForConnect(MessageParcel& data, CallerInfo
 
 int32_t DistributedSchedStub::ConnectAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply)
 {
+#ifdef DMSFWK_INTERACTIVE_ADAPTER
+    if (CheckRemoteOsType(IPCSkeleton::GetCallingDeviceID())) {
+        return ConnectAbilityFromRemoteAdapterInner(data, reply);
+    }
+#endif
+
     if (!CheckCallingUid()) {
         HILOGW("request DENIED!");
         return DMS_PERMISSION_DENIED;
     }
+
     shared_ptr<AAFwk::Want> want = ReadDistributedWant(data);
     if (want == nullptr) {
         HILOGW("want readParcelable failed!");
         return ERR_NULL_OBJECT;
     }
-    unique_ptr<CompatibleAbilityInfo> cmpAbilityInfo(data.ReadParcelable<CompatibleAbilityInfo>());
-    if (cmpAbilityInfo == nullptr) {
-        HILOGW("abilityInfo readParcelable failed!");
-        return ERR_NULL_OBJECT;
-    }
+
     AbilityInfo abilityInfo;
-    cmpAbilityInfo->ConvertToAbilityInfo(abilityInfo);
-    sptr<IRemoteObject> connect = data.ReadRemoteObject();
+    sptr<IRemoteObject> connect = nullptr;
     CallerInfo callerInfo;
     AccountInfo accountInfo;
-    int32_t result = ReadDataForConnect(data, callerInfo, accountInfo);
-    if (result != ERR_NONE) {
-        return result;
+    if (GetConnectAbilityFromRemoteExParam(data, abilityInfo, connect, callerInfo, accountInfo) != ERR_OK) {
+        HILOGE("Get connect ability from remote exParam fail!");
+        return INVALID_PARAMETERS_ERR;
     }
-    std::string extraInfo = data.ReadString();
-    if (extraInfo.empty()) {
-        HILOGD("extra info is empty!");
-    }
-    nlohmann::json extraInfoJson = nlohmann::json::parse(extraInfo, nullptr, false);
-    if (!extraInfoJson.is_discarded()) {
-        SaveExtraInfo(extraInfoJson, callerInfo);
-        HILOGD("parse extra info");
-    }
+
     std::string package = abilityInfo.bundleName;
     std::string deviceId = abilityInfo.deviceId;
     int64_t begin = GetTickCount();
-    result = ConnectAbilityFromRemote(*want, abilityInfo, connect, callerInfo, accountInfo);
+    int32_t result = ConnectAbilityFromRemote(*want, abilityInfo, connect, callerInfo, accountInfo);
     BehaviorEventParam eventParam = { EventCallingType::REMOTE, BehaviorEvent::CONNECT_REMOTE_ABILITY, result,
         want->GetElement().GetBundleName(), want->GetElement().GetAbilityName(), callerInfo.uid };
     DmsHiSysEventReport::ReportBehaviorEvent(eventParam);
@@ -718,6 +801,12 @@ int32_t DistributedSchedStub::ConnectAbilityFromRemoteInner(MessageParcel& data,
 
 int32_t DistributedSchedStub::DisconnectAbilityFromRemoteInner(MessageParcel& data, MessageParcel& reply)
 {
+#ifdef DMSFWK_INTERACTIVE_ADAPTER
+    if (CheckRemoteOsType(IPCSkeleton::GetCallingDeviceID())) {
+        return DisconnectAbilityFromRemoteAdapterInner(data, reply);
+    }
+#endif
+
     if (!CheckCallingUid()) {
         HILOGW("request DENIED!");
         return DMS_PERMISSION_DENIED;
@@ -856,11 +945,7 @@ int32_t DistributedSchedStub::RegisterDSchedEventListenerInner(MessageParcel& da
         HILOGW("request DENIED!");
         return DMS_PERMISSION_DENIED;
     }
-    uint8_t type = data.ReadUint8();
-    if (type != DMS_CONTINUE && type != DMS_COLLABRATION && type != DMS_ALL) {
-        HILOGW("read type failed!");
-        return ERR_FLATTEN_OBJECT;
-    }
+    DSchedEventType type = static_cast<DSchedEventType>(data.ReadUint8());
     sptr<IRemoteObject> dSchedEventListener = data.ReadRemoteObject();
     if (dSchedEventListener == nullptr) {
         HILOGW("read IRemoteObject failed!");
@@ -877,11 +962,7 @@ int32_t DistributedSchedStub::UnRegisterDSchedEventListenerInner(MessageParcel& 
         HILOGW("request DENIED!");
         return DMS_PERMISSION_DENIED;
     }
-    uint8_t type = data.ReadUint8();
-    if (type != DMS_CONTINUE && type != DMS_COLLABRATION && type != DMS_ALL) {
-        HILOGW("read type failed!");
-        return ERR_FLATTEN_OBJECT;
-    }
+    DSchedEventType type = static_cast<DSchedEventType>(data.ReadUint8());
     sptr<IRemoteObject> dSchedEventListener = data.ReadRemoteObject();
     if (dSchedEventListener == nullptr) {
         HILOGW("read IRemoteObject failed!");
@@ -899,6 +980,41 @@ int32_t DistributedSchedStub::GetContinueInfoInner(MessageParcel& data, MessageP
     int32_t result = DSchedContinueManager::GetInstance().GetContinueInfo(dstNetworkId, srcNetworkId);
     PARCEL_WRITE_HELPER(reply, String, dstNetworkId);
     PARCEL_WRITE_HELPER(reply, String, srcNetworkId);
+    return result;
+}
+
+int32_t DistributedSchedStub::GetEncodeDSchedEventNotify(const EventNotify& event, MessageParcel& reply)
+{
+    PARCEL_WRITE_HELPER(reply, Int32, event.eventResult_);
+    PARCEL_WRITE_HELPER(reply, String, event.srcNetworkId_);
+    PARCEL_WRITE_HELPER(reply, String, event.dstNetworkId_);
+    PARCEL_WRITE_HELPER(reply, String, event.srcBundleName_);
+    PARCEL_WRITE_HELPER(reply, String, event.srcModuleName_);
+    PARCEL_WRITE_HELPER(reply, String, event.srcAbilityName_);
+    PARCEL_WRITE_HELPER(reply, String, event.destBundleName_);
+    PARCEL_WRITE_HELPER(reply, String, event.destModuleName_);
+    PARCEL_WRITE_HELPER(reply, String, event.destAbilityName_);
+    PARCEL_WRITE_HELPER(reply, Int32, event.dSchedEventType_);
+    PARCEL_WRITE_HELPER(reply, Int32, event.state_);
+    return ERR_OK;
+}
+
+int32_t DistributedSchedStub::GetDSchedEventInfoInner(MessageParcel& data, MessageParcel& reply)
+{
+    HILOGI("[PerformanceTest] called, IPC end = %{public}" PRId64, GetTickCount());
+    DSchedEventType type = static_cast<DSchedEventType>(data.ReadInt32());
+    std::vector<EventNotify> eventInfos;
+    int32_t result = GetDSchedEventInfo(type, eventInfos);
+
+    PARCEL_WRITE_HELPER(reply, Int32, result);
+    PARCEL_WRITE_HELPER(reply, Uint32, eventInfos.size());
+    for (const auto &event : eventInfos) {
+        result = GetEncodeDSchedEventNotify(event, reply);
+        if (result != ERR_OK) {
+            HILOGE("Get encode Dms event notify failed!");
+            return DMS_WRITE_FILE_FAILED_ERR;
+        }
+    }
     return result;
 }
 
@@ -1120,11 +1236,6 @@ int32_t DistributedSchedStub::StartRemoteAbilityByCallInner(MessageParcel& data,
     PARCEL_READ_HELPER(data, Int32, callerPid);
     uint32_t accessToken = 0;
     PARCEL_READ_HELPER(data, Uint32, accessToken);
-    if (DistributedSchedPermission::GetInstance().CheckPermission(accessToken,
-        PERMISSION_DISTRIBUTED_DATASYNC) != ERR_OK) {
-        HILOGE("check data_sync permission failed!");
-        return DMS_PERMISSION_DENIED;
-    }
     int32_t result = StartRemoteAbilityByCall(*want, connect, callerUid, callerPid, accessToken);
     ReportEvent(*want, BehaviorEvent::START_REMOTE_ABILITY_BYCALL, result, callerUid);
     HILOGI("result = %{public}d", result);
@@ -1323,11 +1434,6 @@ int32_t DistributedSchedStub::StartRemoteFreeInstallInner(MessageParcel& data, M
         HILOGE("read callback failed!");
         return ERR_NULL_OBJECT;
     }
-    if (DistributedSchedPermission::GetInstance().CheckPermission(accessToken,
-        PERMISSION_DISTRIBUTED_DATASYNC) != ERR_OK) {
-        HILOGE("check data_sync permission failed!");
-        return DMS_PERMISSION_DENIED;
-    }
     int32_t result = StartRemoteFreeInstall(*want, callerUid, requestCode, accessToken, callback);
     HILOGI("result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
@@ -1392,7 +1498,7 @@ int32_t DistributedSchedStub::StartFreeInstallFromRemoteInner(MessageParcel& dat
     }
     int32_t requestCode = CreateJsonObject(extraInfo, callerInfo);
     FreeInstallInfo info = {
-        .want = *want, .callerInfo = callerInfo, .requestCode = requestCode, .accountInfo = accountInfo};
+        .want = *want, .requestCode = requestCode, .callerInfo = callerInfo, .accountInfo = accountInfo};
     info.want.RemoveParam(PARAM_FREEINSTALL_APPID);
     info.want.SetParam(PARAM_FREEINSTALL_APPID, callerInfo.callerAppId);
     info.want.RemoveParam(PARAM_FREEINSTALL_BUNDLENAMES);
@@ -1439,11 +1545,6 @@ int32_t DistributedSchedStub::StopRemoteExtensionAbilityInner(MessageParcel& dat
     int32_t serviceType = 0;
     PARCEL_READ_HELPER(data, Int32, serviceType);
     HILOGD("get callerUid = %{private}d, AccessTokenID = %{private}u", callerUid, accessToken);
-    if (DistributedSchedPermission::GetInstance().CheckPermission(accessToken,
-        PERMISSION_DISTRIBUTED_DATASYNC) != ERR_OK) {
-        HILOGE("check data_sync permission failed!");
-        return DMS_PERMISSION_DENIED;
-    }
     auto result = StopRemoteExtensionAbility(*want, callerUid, accessToken, serviceType);
     HILOGD("StartRemoteAbilityInner result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
@@ -1490,5 +1591,78 @@ int32_t DistributedSchedStub::StopExtensionAbilityFromRemoteInner(MessageParcel&
     PARCEL_WRITE_HELPER(reply, Int32, result);
     return ERR_NONE;
 }
+
+#ifdef DMSFWK_INTERACTIVE_ADAPTER
+bool DistributedSchedStub::CheckDmsExtensionCallingUid()
+{
+    // never allow non-system uid for distributed request
+    constexpr int32_t MULTIUSER_HAP_PER_USER_RANGE_EXT = 100000;
+    constexpr int32_t HID_HAP_EXT = 10000;
+    auto callingUid = IPCSkeleton::GetCallingUid();
+    auto uid = callingUid % MULTIUSER_HAP_PER_USER_RANGE_EXT;
+    return uid < HID_HAP_EXT;
+}
+
+int32_t DistributedSchedStub::StartAbilityFromRemoteAdapterInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!CheckDmsExtensionCallingUid()) {
+        HILOGW("Start ability from remote adapter request DENIED!");
+        return DMS_PERMISSION_DENIED;
+    }
+
+    int32_t result = StartAbilityFromRemoteAdapter(data, reply);
+    HILOGI("Start ability from remote adapter result = %{public}d", result);
+    return result;
+}
+
+int32_t DistributedSchedStub::StopAbilityFromRemoteAdapterInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!CheckDmsExtensionCallingUid()) {
+        HILOGW("Stop ability from remote adapter request DENIED!");
+        return DMS_PERMISSION_DENIED;
+    }
+
+    int32_t result = StopAbilityFromRemoteAdapter(data, reply);
+    HILOGI("Stop ability from remote adapter result = %{public}d", result);
+    return ERR_OK;
+}
+
+int32_t DistributedSchedStub::ConnectAbilityFromRemoteAdapterInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!CheckDmsExtensionCallingUid()) {
+        HILOGW("Connect ability from remote adapter request DENIED!");
+        return DMS_PERMISSION_DENIED;
+    }
+
+    int32_t result = ConnectAbilityFromRemoteAdapter(data, reply);
+    HILOGI("Connect ability from remote adapter result = %{public}d", result);
+    return ERR_OK;
+}
+
+int32_t DistributedSchedStub::DisconnectAbilityFromRemoteAdapterInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!CheckDmsExtensionCallingUid()) {
+        HILOGW("Disconnect ability from remote adapter request DENIED!");
+        return DMS_PERMISSION_DENIED;
+    }
+
+    int32_t result = DisconnectAbilityFromRemoteAdapter(data, reply);
+    HILOGI("Disconnect ability from remote adapter result = %{public}d", result);
+    return ERR_OK;
+}
+
+int32_t DistributedSchedStub::NotifyAbilityLifecycleChangedFromRemoteAdapterInner(MessageParcel& data,
+    MessageParcel& reply)
+{
+    if (!CheckDmsExtensionCallingUid()) {
+        HILOGW("Disconnect ability from remote adapter request DENIED!");
+        return DMS_PERMISSION_DENIED;
+    }
+
+    int32_t result = NotifyAbilityLifecycleChangedFromRemoteAdapter(data, reply);
+    HILOGI("Disconnect ability from remote adapter result = %{public}d", result);
+    return ERR_OK;
+}
+#endif
 } // namespace DistributedSchedule
 } // namespace OHOS

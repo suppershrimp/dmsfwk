@@ -138,17 +138,17 @@ void DSchedContinue::SetEventData()
     ContinueEventInfo dstContinueInfo;
     DmsBmStorage::GetInstance()->GetContinueEventInfo(continueInfo_.sinkDeviceId_, continueInfo_.sinkBundleName_,
         continueInfo_.continueType_, dstContinueInfo);
-    eventData_.eventResult = 0;
-    eventData_.srcNetworkId = srcContinueInfo.networkId;
-    eventData_.srcBundleName = srcContinueInfo.bundleName;
-    eventData_.srcModuleName = srcContinueInfo.moduleName;
-    eventData_.srcAbilityName = srcContinueInfo.abilityName;
-    eventData_.dstNetworkId = dstContinueInfo.networkId;
-    eventData_.destBundleName = dstContinueInfo.bundleName;
-    eventData_.destModuleName = dstContinueInfo.moduleName;
-    eventData_.destAbilityName = dstContinueInfo.abilityName;
-    eventData_.dSchedEventType = DMS_CONTINUE;
-    eventData_.state = DMS_DSCHED_EVENT_START;
+    eventData_.eventResult_ = 0;
+    eventData_.srcNetworkId_ = srcContinueInfo.networkId;
+    eventData_.srcBundleName_ = srcContinueInfo.bundleName;
+    eventData_.srcModuleName_ = srcContinueInfo.moduleName;
+    eventData_.srcAbilityName_ = srcContinueInfo.abilityName;
+    eventData_.dstNetworkId_ = dstContinueInfo.networkId;
+    eventData_.destBundleName_ = dstContinueInfo.bundleName;
+    eventData_.destModuleName_ = dstContinueInfo.moduleName;
+    eventData_.destAbilityName_ = dstContinueInfo.abilityName;
+    eventData_.dSchedEventType_ = DMS_CONTINUE;
+    eventData_.state_ = DMS_DSCHED_EVENT_START;
 }
 
 int32_t DSchedContinue::Init()
@@ -429,7 +429,7 @@ void DSchedContinue::ProcessEvent(const AppExecFwk::InnerEvent::Pointer &event)
     HILOGI("process event %{public}d with state %{public}d", eventId, stateMachine_->GetStateType());
     int32_t ret = stateMachine_->Execute(event);
     if (ret != ERR_OK) {
-        HILOGE("event %{public}d excute failed, ret %{public}d", eventId, ret);
+        HILOGE("event %{public}d execute failed, ret %{public}d", eventId, ret);
         OnContinueEnd(ret);
     }
     return;
@@ -873,20 +873,6 @@ int32_t DSchedContinue::ExecuteContinueData(std::shared_ptr<DSchedContinueDataCm
     return ret;
 }
 
-void DSchedContinue::DurationDumperBeforeStartAbility(std::shared_ptr<DSchedContinueDataCmd> cmd)
-{
-    if (subServiceType_ == CONTINUE_PULL) {
-        std::string timeInfo = cmd->want_.GetStringParam(DMS_DURATION_SAVETIME);
-        cmd->want_.RemoveParam(DMS_DURATION_SAVETIME);
-        DmsContinueTime::GetInstance().ReadDurationInfo(timeInfo.c_str());
-        DmsContinueTime::GetInstance().SetSrcBundleName(cmd->want_.GetElement().GetBundleName());
-        DmsContinueTime::GetInstance().SetSrcAbilityName(cmd->want_.GetElement().GetAbilityName());
-        DmsContinueTime::GetInstance().SetDstBundleName(cmd->want_.GetElement().GetBundleName());
-        DmsContinueTime::GetInstance().SetDstAbilityName(cmd->want_.GetElement().GetAbilityName());
-    }
-    DmsContinueTime::GetInstance().SetDurationBegin(CONTINUE_START_ABILITY_TIME, GetTickCount());
-}
-
 int32_t DSchedContinue::UpdateWantForContinueType(OHOS::AAFwk::Want& want)
 {
     std::string srcAbilityName = want.GetElement().GetAbilityName();
@@ -906,6 +892,19 @@ int32_t DSchedContinue::UpdateWantForContinueType(OHOS::AAFwk::Want& want)
         newWant.SetParam("sessionId", wantSessionId);
     }
     return ERR_OK;
+}
+
+void DSchedContinue::DurationDumperBeforeStartAbility(std::shared_ptr<DSchedContinueDataCmd> cmd)
+{
+    if (subServiceType_ == CONTINUE_PULL) {
+        std::string timeInfo = cmd->want_.GetStringParam(DMSDURATION_SAVETIME);
+        DmsContinueTime::GetInstance().ReadDurationInfo(timeInfo.c_str());
+        DmsContinueTime::GetInstance().SetSrcBundleName(cmd->want_.GetElement().GetBundleName());
+        DmsContinueTime::GetInstance().SetSrcAbilityName(cmd->want_.GetElement().GetAbilityName());
+        DmsContinueTime::GetInstance().SetDstBundleName(cmd->want_.GetElement().GetBundleName());
+        DmsContinueTime::GetInstance().SetDstAbilityName(cmd->want_.GetElement().GetAbilityName());
+    }
+    DmsContinueTime::GetInstance().SetDurationBegin(CONTINUE_START_ABILITY_TIME, GetTickCount());
 }
 
 bool DSchedContinue::WaitAbilityStateInitial(int32_t persistentId)
@@ -943,8 +942,9 @@ int32_t DSchedContinue::StartAbility(const OHOS::AAFwk::Want& want, int32_t requ
         return ret;
     }
 
-    HILOGI("ExecuteContinueData StartAbility start");
+    HILOGI("ExecuteContinueData StartAbility start, flag is %{public}d", want.GetFlags());
     DmsRadar::GetInstance().ClickIconDmsStartAbility("StartAbility", ret);
+    continueInfo_.sinkAbilityName_ = want.GetElement().GetAbilityName();
     ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, DEFAULT_REQUEST_CODE, activeAccountId);
     if (ret != ERR_OK) {
         HILOGE("StartAbility failed %{public}d", ret);
@@ -1026,9 +1026,9 @@ int32_t DSchedContinue::ExecuteContinueEnd(int32_t result)
     }
 
     if (result != ERR_OK) {
-        eventData_.state = DMS_DSCHED_EVENT_STOP;
+        eventData_.state_ = DMS_DSCHED_EVENT_STOP;
     } else {
-        eventData_.state = DMS_DSCHED_EVENT_FINISH;
+        eventData_.state_ = DMS_DSCHED_EVENT_FINISH;
     }
     if (result == ERR_OK && direction_ == CONTINUE_SOURCE && isSourceExit_) {
         int32_t ret = AbilityManagerClient::GetInstance()->CleanMission(continueInfo_.missionId_);
@@ -1065,6 +1065,7 @@ void DSchedContinue::NotifyContinuationCallbackResult(int32_t result)
     MessageParcel reply;
     MessageOption option;
     int32_t ret = callback_->SendRequest(NOTIFY_MISSION_CALLBACK_RESULT, data, reply, option);
+    callback_ = nullptr;
     if (ret != ERR_OK) {
         HILOGE("send request failed, ret: %{public}d", ret);
     }
@@ -1184,9 +1185,9 @@ bool DSchedContinue::CheckDeviceIdFromRemote(const std::string& localDevId, cons
         HILOGE("destDevId is not same with localDevId");
         return false;
     }
-    HILOGD("CheckDeviceIdFromRemote srcDevId %{public}s", srcDevId.c_str());
-    HILOGD("CheckDeviceIdFromRemote localDevId %{public}s", localDevId.c_str());
-    HILOGD("CheckDeviceIdFromRemote destDevId %{public}s", destDevId.c_str());
+    HILOGD("CheckDeviceIdFromRemote srcDevId %{public}s", GetAnonymStr(srcDevId).c_str());
+    HILOGD("CheckDeviceIdFromRemote localDevId %{public}s", GetAnonymStr(localDevId).c_str());
+    HILOGD("CheckDeviceIdFromRemote destDevId %{public}s", GetAnonymStr(destDevId).c_str());
 
     if (srcDevId == destDevId || srcDevId == localDevId) {
         HILOGE("destDevId is different with localDevId and destDevId");

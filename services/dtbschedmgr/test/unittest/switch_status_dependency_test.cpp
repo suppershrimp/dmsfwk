@@ -24,8 +24,8 @@ namespace OHOS {
 namespace DistributedSchedule {
 namespace {
     const std::string CONTINUE_SWITCH_STATUS_KEY = "Continue_Switch_Status";
-    const std::string CONTINUE_SWITCH_OFF = "continue_switch_off";
-    const std::string CONTINUE_SWITCH_ON = "continue_switch_on";
+    const std::string CONTINUE_SWITCH_OFF = "0";
+    const std::string CONTINUE_SWITCH_ON = "1";
 }
 
 void SwitchStatusDependencyTest::SetUpTestCase()
@@ -72,6 +72,7 @@ HWTEST_F(SwitchStatusDependencyTest, IsCreateDataShareHelper_001, TestSize.Level
     DTEST_LOG << "SwitchStatusDependencyTest IsCreateDataShareHelper_001 begin" << std::endl;
     std::string key = "";
     std::string defaultValue = CONTINUE_SWITCH_ON;
+    SwitchStatusDependency::GetInstance().GetDataShareHelper();
     EXPECT_EQ(CONTINUE_SWITCH_ON,
         SwitchStatusDependency::GetInstance().GetSwitchStatus(key, defaultValue));
     key = CONTINUE_SWITCH_STATUS_KEY;
@@ -83,19 +84,6 @@ HWTEST_F(SwitchStatusDependencyTest, IsCreateDataShareHelper_001, TestSize.Level
     EXPECT_EQ(CONTINUE_SWITCH_OFF,
         SwitchStatusDependency::GetInstance().GetSwitchStatus(key, defaultValue));
     DTEST_LOG << "SwitchStatusDependencyTest IsCreateDataShareHelper_001 end" << std::endl;
-}
-
-/**
- * @tc.name: GetDataShareHelper_001
- * @tc.desc: GetDataShareHelper
- * @tc.type: FUNC
- * @tc.require: SR20240116513791
- */
-HWTEST_F(SwitchStatusDependencyTest, GetDataShareHelper_001, TestSize.Level3)
-{
-    DTEST_LOG << "SwitchStatusDependencyTest GetDataShareHelper_001 begin" << std::endl;
-    SwitchStatusDependency::GetInstance().GetDataShareHelper();
-    DTEST_LOG << "SwitchStatusDependencyTest GetDataShareHelper_001 end" << std::endl;
 }
 }
 }

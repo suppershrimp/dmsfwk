@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,6 +45,10 @@ enum class IDSchedInterfaceCode : uint32_t {
     START_FREE_INSTALL_FROM_REMOTE = 51,
     NOTIFY_COMPLETE_FREE_INSTALL_FROM_REMOTE = 52,
 
+#ifdef DMSFWK_INTERACTIVE_ADAPTER
+    NOTIFY_ABILITY_LIFECYCLE_CHANGED_FROM_REMOTE = 66,
+#endif
+
     // request code for mission
     GET_MISSION_INFOS = 80,
     REGISTER_MISSION_LISTENER = 84,
@@ -73,7 +77,7 @@ enum class IDSchedInterfaceCode : uint32_t {
 
     // request code for upload distributed component info
     GET_DISTRIBUTED_COMPONENT_LIST = 161,
-    
+
     START_REMOTE_FREE_INSTALL = 200,
     // form share
     START_REMOTE_SHARE_FORM = 220,
@@ -87,6 +91,7 @@ enum class IDSchedInterfaceCode : uint32_t {
     REGISTER_DSCHED_EVENT_LISTENER = 262,
     UNREGISTER_DSCHED_EVENT_LISTENER = 263,
     GET_CONTINUE_INFO = 264,
+    GET_DSCHED_EVENT_INFO = 265,
 
     // request code for set continue state
     SET_MISSION_CONTINUE_STATE = 300,

@@ -56,7 +56,10 @@ public:
     void OnBind();
 
     int32_t GetContinueInfo(std::string &srcDeviceId, std::string &dstDeviceId);
-
+    std::shared_ptr<DSchedContinue> GetDSchedContinueByWant(const OHOS::AAFwk::Want& want, int32_t missionId);
+    std::shared_ptr<DSchedContinue> GetDSchedContinueByDevId(const std::u16string& devId, int32_t missionId);
+    void NotifyTerminateContinuation(const int32_t missionId);
+    
 private:
     void StartEvent();
     void HandleContinueMission(const std::string& srcDeviceId, const std::string& dstDeviceId, int32_t missionId,
@@ -76,7 +79,6 @@ private:
     int32_t CheckContinuationLimit(const std::string& srcDeviceId, const std::string& dstDeviceId);
     void SetTimeOut(const DSchedContinueInfo& info, int32_t timeout);
     void RemoveTimeout(const DSchedContinueInfo& info);
-    bool GetLocalDeviceId(std::string& localDeviceId);
 
     class SoftbusListener : public IDataListener {
         void OnBind(int32_t socket, PeerSocketInfo info);

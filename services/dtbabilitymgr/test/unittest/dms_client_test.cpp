@@ -56,17 +56,6 @@ void BusinessHandlerTest::DSchedEventNotify(EventNotify &notify)
 {
 }
 
-sptr<IRemoteObject> DistributedClientTest::GetDmsProxy()
-{
-    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    EXPECT_TRUE(samgrProxy != nullptr);
-    if (samgrProxy == nullptr) {
-        HILOG_ERROR("fail to get samgr.");
-        return nullptr;
-    }
-    return nullptr;
-}
-
 /**
  * @tc.name: RegisterDSchedEventListener_001
  * @tc.desc: RegisterDSchedEventListener
@@ -76,29 +65,10 @@ sptr<IRemoteObject> DistributedClientTest::GetDmsProxy()
 HWTEST_F(DistributedClientTest, RegisterDSchedEventListener_001, TestSize.Level3)
 {
     DTEST_LOG << "DistributedClientTest RegisterDSchedEventListener_001 start" << std::endl;
-    sptr<IRemoteObject> proxy = GetDmsProxy();
-    if (proxy == nullptr) {
-        return;
-    }
     sptr<IDSchedEventListener> listener = sptr<IDSchedEventListener>(new BusinessHandlerTest());
     int32_t result = distributedClient_.RegisterDSchedEventListener(DMS_CONTINUE, listener);;
-    EXPECT_TRUE(result != ERR_NONE);
+    EXPECT_EQ(result, ERR_NONE);
     DTEST_LOG << "DistributedClientTest RegisterDSchedEventListener_001 end" << std::endl;
-}
-
-/**
- * @tc.name: RegisterDSchedEventListener_002
- * @tc.desc: RegisterDSchedEventListener
- * @tc.type: FUNC
- * @tc.require: I64FU7
- */
-HWTEST_F(DistributedClientTest, RegisterDSchedEventListener_002, TestSize.Level3)
-{
-    DTEST_LOG << "DistributedClientTest RegisterDSchedEventListener_002 start" << std::endl;
-    sptr<IDSchedEventListener> listener = sptr<IDSchedEventListener>(new BusinessHandlerTest());
-    int32_t result = distributedClient_.RegisterDSchedEventListener(DMS_CONTINUE, listener);;
-    EXPECT_TRUE(result != ERR_NONE);
-    DTEST_LOG << "DistributedClientTest RegisterDSchedEventListener_002 end" << std::endl;
 }
 
 /**
@@ -110,29 +80,10 @@ HWTEST_F(DistributedClientTest, RegisterDSchedEventListener_002, TestSize.Level3
 HWTEST_F(DistributedClientTest, UnRegisterDSchedEventListener_001, TestSize.Level3)
 {
     DTEST_LOG << "DistributedClientTest UnRegisterDSchedEventListener_001 start" << std::endl;
-    sptr<IRemoteObject> proxy = GetDmsProxy();
-    if (proxy == nullptr) {
-        return;
-    }
     sptr<IDSchedEventListener> listener = sptr<IDSchedEventListener>(new BusinessHandlerTest());
     int32_t result = distributedClient_.UnRegisterDSchedEventListener(DMS_CONTINUE, listener);;
     EXPECT_EQ(result, ERR_NONE);
     DTEST_LOG << "DistributedClientTest UnRegisterDSchedEventListener_001 end" << std::endl;
-}
-
-/**
- * @tc.name: UnRegisterDSchedEventListener_002
- * @tc.desc: UnRegisterDSchedEventListener
- * @tc.type: FUNC
- * @tc.require: I64FU7
- */
-HWTEST_F(DistributedClientTest, UnRegisterDSchedEventListener_002, TestSize.Level3)
-{
-    DTEST_LOG << "DistributedClientTest UnRegisterDSchedEventListener_002 start" << std::endl;
-    sptr<IDSchedEventListener> listener = sptr<IDSchedEventListener>(new BusinessHandlerTest());
-    int32_t result = distributedClient_.UnRegisterDSchedEventListener(DMS_CONTINUE, listener);;
-    EXPECT_EQ(result, ERR_NONE);
-    DTEST_LOG << "DistributedClientTest UnRegisterDSchedEventListener_002 end" << std::endl;
 }
 
 /**
@@ -148,6 +99,21 @@ HWTEST_F(DistributedClientTest, GetContinueInfo_001, TestSize.Level3)
     int32_t result = distributedClient_.GetContinueInfo(continueInfo);
     EXPECT_EQ(result, ERR_FLATTEN_OBJECT);
     DTEST_LOG << "DistributedClientTest GetContinueInfo_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: GetDSchedEventInfo_001
+ * @tc.desc: GetDSchedEventInfo
+ * @tc.type: FUNC
+ * @tc.require: I64FU7
+ */
+HWTEST_F(DistributedClientTest, GetDSchedEventInfo_001, TestSize.Level3)
+{
+    DTEST_LOG << "DistributedClientTest GetDSchedEventInfo_001 start" << std::endl;
+    std::vector<EventNotify> events;
+    int32_t result = distributedClient_.GetDSchedEventInfo(DMS_UNKNOW, events);
+    EXPECT_NE(result, ERR_NONE);
+    DTEST_LOG << "DistributedClientTest GetDSchedEventInfo_001 end" << std::endl;
 }
 }
 }

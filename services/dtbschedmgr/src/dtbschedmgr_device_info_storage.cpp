@@ -28,6 +28,7 @@
 #include "distributed_sched_service.h"
 #include "distributed_sched_utils.h"
 #include "dtbschedmgr_log.h"
+#include "mission/dms_continue_recv_manager.h"
 
 using namespace std;
 namespace OHOS {
@@ -190,8 +191,13 @@ bool DtbschedmgrDeviceInfoStorage::UpdateDeviceInfoStorage()
         return false;
     }
     for (const auto& dmDeviceInfo : dmDeviceInfoList) {
-        auto deviceInfo = std::make_shared<DmsDeviceInfo>(
-            dmDeviceInfo.deviceName, dmDeviceInfo.deviceTypeId, dmDeviceInfo.networkId);
+        int32_t osType = Constants::OH_OS_TYPE;
+        std::string osVersion = "";
+        if (!GetOsInfoFromDM(dmDeviceInfo.extraData, osType, osVersion)) {
+            HILOGE("Get Os info from DM device info fail, extraData %{public}s.", dmDeviceInfo.extraData.c_str());
+        }
+        auto deviceInfo = std::make_shared<DmsDeviceInfo>(dmDeviceInfo.deviceName, dmDeviceInfo.deviceTypeId,
+            dmDeviceInfo.networkId, ONLINE, osType, osVersion);
         std::string networkId = deviceInfo->GetNetworkId();
         RegisterUuidNetworkIdMap(networkId);
         {
@@ -205,16 +211,6 @@ bool DtbschedmgrDeviceInfoStorage::UpdateDeviceInfoStorage()
 }
 
 bool DtbschedmgrDeviceInfoStorage::GetLocalDeviceId(std::string& networkId)
-{
-    return GetLocalDeviceFromDnet(networkId);
-}
-
-bool DtbschedmgrDeviceInfoStorage::GetLocalUdid(std::string& udid)
-{
-    return GetLocalDeviceUdid(udid);
-}
-
-bool DtbschedmgrDeviceInfoStorage::GetLocalDeviceFromDnet(std::string& networkId)
 {
     auto dnetworkAdapter = DnetworkAdapter::GetInstance();
     if (dnetworkAdapter == nullptr) {
@@ -231,7 +227,7 @@ bool DtbschedmgrDeviceInfoStorage::GetLocalDeviceFromDnet(std::string& networkId
     return true;
 }
 
-bool DtbschedmgrDeviceInfoStorage::GetLocalDeviceUdid(std::string& udid)
+bool DtbschedmgrDeviceInfoStorage::GetLocalUdid(std::string& udid)
 {
     auto dnetworkAdapter = DnetworkAdapter::GetInstance();
     if (dnetworkAdapter == nullptr) {
@@ -331,6 +327,7 @@ std::string DtbschedmgrDeviceInfoStorage::GetNetworkIdByUuid(const std::string& 
         return "";
     }
 }
+
 void DtbschedmgrDeviceInfoStorage::DeviceOnlineNotify(const std::shared_ptr<DmsDeviceInfo> devInfo)
 {
     if (devInfo == nullptr) {
@@ -346,8 +343,9 @@ void DtbschedmgrDeviceInfoStorage::DeviceOnlineNotify(const std::shared_ptr<DmsD
         std::string networkId = devInfo->GetNetworkId();
         RegisterUuidNetworkIdMap(networkId);
         std::string uuid = GetUuidByNetworkId(networkId);
-        HILOGI("networkId: %{public}s, uuid: %{public}s, deviceName: %{public}s", GetAnonymStr(networkId).c_str(),
-            GetAnonymStr(uuid).c_str(), devInfo->GetDeviceName().c_str());
+        HILOGI("networkId: %{public}s, uuid: %{public}s, deviceName: %{public}s, osType: %{public}d, "
+            "osVersion: %{public}s.", GetAnonymStr(networkId).c_str(), GetAnonymStr(uuid).c_str(),
+            devInfo->GetDeviceName().c_str(), devInfo->GetDeviceOSType(), devInfo->GetGetDeviceOSVersion().c_str());
         {
             lock_guard<mutex> autoLock(deviceLock_);
             remoteDevices_[networkId] = devInfo;
@@ -387,6 +385,11 @@ void DtbschedmgrDeviceInfoStorage::DeviceOfflineNotify(const std::string& networ
 void DtbschedmgrDeviceInfoStorage::OnDeviceInfoChanged(const std::string& deviceId)
 {
     HILOGI("OnDeviceInfoChanged called");
+    if (!DMSContinueRecvMgr::GetInstance().CheckRegSoftbusListener() &&
+        DistributedHardware::DeviceManager::GetInstance().IsSameAccount(deviceId)) {
+        HILOGI("DMSContinueRecvMgr need init");
+        DMSContinueRecvMgr::GetInstance().Init();
+    }
 }
 
 void DnetServiceDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& remote)

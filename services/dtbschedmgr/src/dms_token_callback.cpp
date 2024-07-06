@@ -19,6 +19,7 @@
 #include "bundle/bundle_manager_internal.h"
 #include "distributed_sched_permission.h"
 #include "distributed_sched_service.h"
+#include "distributed_sched_utils.h"
 #include "dtbschedmgr_device_info_storage.h"
 #include "dtbschedmgr_log.h"
 #include "ipc_skeleton.h"
@@ -32,7 +33,6 @@ using namespace OHOS::Security;
 namespace OHOS {
 namespace DistributedSchedule {
 const std::string TAG = "DmsTokenCallback";
-const std::string PERMISSION_DISTRIBUTED_DATASYNC = "ohos.permission.DISTRIBUTED_DATASYNC";
 const std::string FOUNDATION_PROCESS_NAME = "foundation";
 const std::string DMS_SRC_NETWORK_ID = "dmsSrcNetworkId";
 
@@ -115,7 +115,7 @@ sptr<IDistributedSched> DmsTokenCallback::GetRemoteDms(const std::string& remote
     auto object = samgr->CheckSystemAbility(DISTRIBUTED_SCHED_SA_ID, remoteDeviceId);
     HILOGD("[PerformanceTest] GetRemoteDms end");
     if (object == nullptr) {
-        HILOGE("GetRemoteDms failed to get remote DistributedSched %{private}s", remoteDeviceId.c_str());
+        HILOGE("GetRemoteDms failed to get remote DistributedSched %{private}s", GetAnonymStr(remoteDeviceId).c_str());
         return nullptr;
     }
     return iface_cast<IDistributedSched>(object);

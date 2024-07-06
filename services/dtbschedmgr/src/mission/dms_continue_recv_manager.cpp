@@ -28,6 +28,7 @@
 #include "softbus_adapter/softbus_adapter.h"
 #include "switch_status_dependency.h"
 #include "datashare_manager.h"
+#include "mission/wifi_state_adapter.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -37,7 +38,7 @@ constexpr int32_t ACTIVE = 0;
 constexpr int32_t INACTIVE = 1;
 constexpr int32_t INDEX_2 = 2;
 constexpr int32_t INDEX_3 = 3;
-constexpr int32_t DBMS_RETRY_MAX_TIME = 5;
+constexpr int32_t DBMS_RETRY_MAX_TIME = 0;
 constexpr int32_t DBMS_RETRY_DELAY = 1000;
 const std::string TAG = "DMSContinueRecvMgr";
 const std::string DBMS_RETRY_TASK = "retry_on_boradcast_task";
@@ -57,6 +58,7 @@ void DMSContinueRecvMgr::Init()
             HILOGE("get RegisterSoftbusEventListener failed, ret: %{public}d", ret);
             return;
         }
+        hasRegSoftbusEventListener_ = true;
         missionDiedListener_ = new DistributedMissionDiedListener();
         eventThread_ = std::thread(&DMSContinueRecvMgr::StartEvent, this);
         std::unique_lock<std::mutex> lock(eventMutex_);
@@ -88,6 +90,10 @@ void DMSContinueRecvMgr::NotifyDataRecv(std::string& senderNetworkId,
     bool IsContinueSwitchOn = SwitchStatusDependency::GetInstance().IsContinueSwitchOn();
     if (!IsContinueSwitchOn) {
         HILOGE("ContinueSwitch status is off");
+        return;
+    }
+    if (!WifiStateAdapter::GetInstance().IsWifiActive()) {
+        HILOGE("wifi is not activated");
         return;
     }
     if (dataLen < DMS_SEND_LEN) {
@@ -498,6 +504,11 @@ std::string DMSContinueRecvMgr::GetContinueType(const std::string& bundleName)
     }
 
     return iconInfo_.continueType;
+}
+
+bool DMSContinueRecvMgr::CheckRegSoftbusListener()
+{
+    return hasRegSoftbusEventListener_;
 }
 } // namespace DistributedSchedule
 } // namespace OHOS

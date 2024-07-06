@@ -48,8 +48,8 @@ dsched_external_deps = [
   "ability_runtime:dataobs_manager",
   "ability_runtime:mission_info",
   "access_token:libaccesstoken_sdk",
-  "access_token:libnativetoken",
-  "access_token:libtoken_setproc",
+  "access_token:libnativetoken_shared",
+  "access_token:libtokensetproc_shared",
   "bundle_framework:appexecfwk_base",
   "bundle_framework:appexecfwk_core",
   "cJSON:cjson",
@@ -321,7 +321,6 @@ ohos_unittest("dschedmissionmanagertest") {
   }
   module_out_path = module_output_path
   sources = [
-    "${dms_path}/common/src/distributed_sched_utils.cpp",
     "unittest/mission/distributed_bm_storage_test.cpp",
     "unittest/mission/distributed_data_storage_test.cpp",
     "unittest/mission/distributed_mission_info_test.cpp",
@@ -386,10 +385,16 @@ ohos_unittest("softbusadaptertest") {
   }
   module_out_path = module_output_path
   cflags = [ "-Dprivate=public" ]
-  sources = [
-    "unittest/softbus_adapter/softbus_adapter_test.cpp",
-    "unittest/softbus_adapter/softbus_transport_test.cpp",
-  ]
+  sources = [ "unittest/softbus_adapter/softbus_transport_test.cpp" ]
+
+  if (!dmsfwk_softbus_adapter_common) {
+    sources += [
+      "unittest/softbus_adapter/mock_softbus_adapter.cpp",
+      "unittest/softbus_adapter/softbus_adapter_test.cpp",
+    ]
+  } else {
+    sources += [ "unittest/softbus_adapter/softbus_adapter_common_test.cpp" ]
+  }
 
   configs = [
     ":test_config",

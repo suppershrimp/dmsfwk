@@ -20,6 +20,7 @@
 #include "ability_info.h"
 #include "ability_manager_interface.h"
 #include "caller_info.h"
+#include "distributed_sched_types.h"
 #include "distributedsched_ipc_interface_code.h"
 #ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
 #include "form_share_info.h"
@@ -93,18 +94,11 @@ public:
     virtual int32_t DisconnectAbilityFromRemote(const sptr<IRemoteObject>& connect,
         int32_t uid, const std::string& sourceDeviceId) = 0;
     virtual int32_t NotifyProcessDiedFromRemote(const CallerInfo& callerInfo) = 0;
-#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
-    virtual int32_t StartSyncRemoteMissions(const std::string& devId, bool fixConflict, int64_t tag) = 0;
-    virtual int32_t StartSyncMissionsFromRemote(const CallerInfo& callerInfo,
-        std::vector<DstbMissionInfo>& missionInfos) = 0;
-    virtual int32_t StopSyncRemoteMissions(const std::string& devId) = 0;
-    virtual int32_t StopSyncMissionsFromRemote(const CallerInfo& callerInfo) = 0;
-    virtual int32_t RegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) = 0;
-    virtual int32_t RegisterDSchedEventListener(const uint8_t& type, const sptr<IRemoteObject>& obj)
+    virtual int32_t RegisterDSchedEventListener(const DSchedEventType& type, const sptr<IRemoteObject>& obj)
     {
         return 0;
     }
-    virtual int32_t UnRegisterDSchedEventListener(const uint8_t& type, const sptr<IRemoteObject>& obj)
+    virtual int32_t UnRegisterDSchedEventListener(const DSchedEventType& type, const sptr<IRemoteObject>& obj)
     {
         return 0;
     }
@@ -112,6 +106,17 @@ public:
     {
         return 0;
     }
+    virtual int32_t GetDSchedEventInfo(const DSchedEventType &type, std::vector<EventNotify> &events)
+    {
+        return 0;
+    }
+#ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
+    virtual int32_t StartSyncRemoteMissions(const std::string& devId, bool fixConflict, int64_t tag) = 0;
+    virtual int32_t StartSyncMissionsFromRemote(const CallerInfo& callerInfo,
+        std::vector<DstbMissionInfo>& missionInfos) = 0;
+    virtual int32_t StopSyncRemoteMissions(const std::string& devId) = 0;
+    virtual int32_t StopSyncMissionsFromRemote(const CallerInfo& callerInfo) = 0;
+    virtual int32_t RegisterMissionListener(const std::u16string& devId, const sptr<IRemoteObject>& obj) = 0;
     virtual int32_t RegisterOnListener(const std::string& type, const sptr<IRemoteObject>& obj)
     {
         return 0;

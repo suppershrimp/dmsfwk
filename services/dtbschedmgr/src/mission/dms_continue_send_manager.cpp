@@ -31,6 +31,7 @@
 #include "switch_status_dependency.h"
 #include "dsched_continue_manager.h"
 #include "mission/dms_continue_recv_manager.h"
+#include "mission/wifi_state_adapter.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -134,6 +135,10 @@ void DMSContinueSendMgr::NotifyMissionFocused(const int32_t missionId, FocusedRe
     HILOGI("NotifyMissionFocused called, missionId: %{public}d, reason: %{public}d", missionId, reason);
     if (reason <= FocusedReason::MIN || reason >= FocusedReason::MAX) {
         HILOGI("Unknown focusedReason, no need to deal NotifyMissionFocused");
+        return;
+    }
+    if (!WifiStateAdapter::GetInstance().IsWifiActive()) {
+        HILOGE("wifi is not activated");
         return;
     }
     auto feedfunc = [this, missionId, reason]() {
@@ -280,6 +285,7 @@ int32_t DMSContinueSendMgr::DealFocusedBusiness(const int32_t missionId)
         
     std::string abilityName = info.want.GetElement().GetAbilityName();
     focusedMissionAbility_[missionId] = abilityName;
+    aliveMission_[missionId] = { bundleName, abilityName };
 
     if (info.continueState != AAFwk::ContinueState::CONTINUESTATE_ACTIVE) {
         HILOGE("Mission continue state set to INACTIVE. Broadcast task abort.");
@@ -580,7 +586,7 @@ void DMSContinueSendMgr::OnMMIEvent()
     DMSContinueSendMgr::GetInstance().NotifyMissionFocused(info_.currentMissionId, FocusedReason::MMI);
 }
 
-uint32_t DMSContinueSendMgr::NotifyDeviceOnline()
+int32_t DMSContinueSendMgr::NotifyDeviceOnline()
 {
     HILOGD("NotifyDeviceOnline called");
     if (GetCurrentMissionId() <= 0) {
@@ -704,13 +710,6 @@ int32_t DMSContinueSendMgr::GetAccessTokenIdSendEvent(std::string bundleName,
     }
 
     if (screenOffHandler_->IsDeviceScreenOn()) {
-        bool IsContinueSwitchOn = SwitchStatusDependency::GetInstance().IsContinueSwitchOn();
-        HILOGI("IsContinueSwitchOn : %{public}d", IsContinueSwitchOn);
-        if (!IsContinueSwitchOn) {
-            HILOGE("ContinueSwitch status is off");
-            return DMS_PERMISSION_DENIED;
-        }
-
         ret = SendSoftbusEvent(bundleNameId, continueTypeId, DMS_UNFOCUSED_TYPE);
         bool res = (reason != UnfocusedReason::TIMEOUT)
             ? DmsRadar::GetInstance().NormalUnfocusedSendEventRes("SendSoftbusEvent", ret)
@@ -756,6 +755,27 @@ int32_t DMSContinueSendMgr::SetStateSendEvent(const uint16_t bundleNameId, const
         return ret;
     }
     return ret;
+}
+
+void DMSContinueSendMgr::DeleteAliveMissionInfo(const int32_t missionId)
+{
+    HILOGI("called");
+    std::lock_guard<std::mutex> aliveMissionMapLock(eventMutex_);
+    aliveMission_.erase(missionId);
+}
+ 
+int32_t DMSContinueSendMgr::GetAliveMissionInfo(const int32_t missionId, AliveMissionInfo& missionInfo)
+{
+    HILOGI("start, missionId: %{public}d", missionId);
+    std::lock_guard<std::mutex> aliveMissionMapLock(eventMutex_);
+    auto iterItem = aliveMission_.find(missionId);
+    if (iterItem != aliveMission_.end()) {
+        missionInfo = iterItem->second;
+        HILOGI("get missionIdInfo end, missionId: %{public}d", missionId);
+        return ERR_OK;
+    }
+    HILOGE("get iterItem failed from aliveMission_");
+    return INVALID_PARAMETERS_ERR;
 }
 } // namespace DistributedSchedule
 } // namespace OHOS

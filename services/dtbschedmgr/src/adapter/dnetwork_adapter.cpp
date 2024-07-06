@@ -108,7 +108,7 @@ void DnetworkAdapter::DmsDeviceStateCallback::OnDeviceChanged(const DmDeviceInfo
 
 void DnetworkAdapter::DmsDeviceStateCallback::OnDeviceReady(const DmDeviceInfo& deviceInfo)
 {
-    HILOGD("called");
+    HILOGI("called");
 }
 
 bool DnetworkAdapter::AddDeviceChangeListener(const std::shared_ptr<DeviceListener>& listener)
