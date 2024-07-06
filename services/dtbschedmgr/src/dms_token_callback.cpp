@@ -105,7 +105,7 @@ sptr<IDistributedSched> DmsTokenCallback::GetRemoteDms(const std::string& remote
         HILOGE("GetRemoteDms remoteDeviceId is empty");
         return nullptr;
     }
-    HILOGD("GetRemoteDms connect deviceid is %s", remoteDeviceId.c_str());
+    HILOGD("GetRemoteDms connect deviceid is %s", GetAnonymStr(remoteDeviceId).c_str());
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         HILOGE("GetRemoteDms failed to connect to systemAbilityMgr!");

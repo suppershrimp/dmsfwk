@@ -229,7 +229,7 @@ bool DistributedSchedService::Init()
             HILOGW("GetCurrentMissionId failed, init end. ret: %{public}d", missionId);
             return;
         }
-        
+
         if (IsContinueSwitchOn) {
             DMSContinueSendMgr::GetInstance().NotifyMissionFocused(missionId, FocusedReason::INIT);
             DSchedContinueManager::GetInstance().Init();
@@ -454,6 +454,10 @@ int32_t DistributedSchedService::ContinueLocalMissionDealFreeInstall(OHOS::AAFwk
         return CONTINUE_REMOTE_UNINSTALLED_SUPPORT_FREEINSTALL;
     }
 
+    if (dschedContinuation_ == nullptr) {
+        HILOGE("continuation object null!");
+        return;
+    }
     dschedContinuation_->PushCallback(missionId, callback, dstDeviceId, true);
     SetContinuationTimeout(missionId, CHECK_REMOTE_INSTALL_ABILITY);
 
@@ -523,6 +527,10 @@ int32_t DistributedSchedService::ContinueLocalMission(const std::string& dstDevi
 int32_t DistributedSchedService::ContinueAbilityWithTimeout(const std::string& dstDeviceId, int32_t missionId,
     const sptr<IRemoteObject>& callback, uint32_t remoteBundleVersion)
 {
+    if (dschedContinuation_ == nullptr) {
+        HILOGE("continuation object null!");
+        return;
+    }
     bool isPushSucceed = dschedContinuation_->PushCallback(missionId, callback, dstDeviceId, false);
     if (!isPushSucceed) {
         HILOGE("Callback already in progress!");
@@ -869,6 +877,10 @@ int32_t DistributedSchedService::NotifyContinuationResultFromRemote(int32_t sess
 
     int32_t missionId = sessionId;
     NotifyContinuationCallbackResult(missionId, isSuccess ? 0 : NOTIFYCOMPLETECONTINUATION_FAILED);
+    if (dschedContinuation_ == nullptr) {
+        HILOGW("continuation object null!");
+        return ERR_OK;
+    }
     dschedContinuation_->continueInfo_.srcNetworkId = "";
     dschedContinuation_->continueInfo_.dstNetworkId = "";
     return ERR_OK;
@@ -1267,6 +1279,10 @@ int32_t DistributedSchedService::TryStartRemoteAbilityByCall(const OHOS::AAFwk::
 void DistributedSchedService::SaveCallerComponent(const OHOS::AAFwk::Want& want,
     const sptr<IRemoteObject>& connect, const CallerInfo& callerInfo)
 {
+    if (connect == nullptr) {
+        HILOGW("connect is nullptr");
+        return;
+    }
     std::lock_guard<std::mutex> autoLock(callerLock_);
     auto itConnect = callerMap_.find(connect);
     if (itConnect == callerMap_.end()) {
@@ -1291,6 +1307,10 @@ void DistributedSchedService::SaveCallerComponent(const OHOS::AAFwk::Want& want,
 
 void DistributedSchedService::RemoveCallerComponent(const sptr<IRemoteObject>& connect)
 {
+    if (connect == nullptr) {
+        HILOGW("connect is nullptr");
+        return;
+    }
     {
         std::lock_guard<std::mutex> autoLock(callerLock_);
         auto it = callerMap_.find(connect);
@@ -1732,7 +1752,7 @@ sptr<IDistributedSched> DistributedSchedService::GetRemoteDms(const std::string&
         HILOGE("GetRemoteDms remoteDeviceId is empty");
         return nullptr;
     }
-    HILOGD("GetRemoteDms connect deviceid is %s", remoteDeviceId.c_str());
+    HILOGD("GetRemoteDms connect deviceid is %s", GetAnonymStr(remoteDeviceId).c_str());
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         HILOGE("GetRemoteDms failed to connect to systemAbilityMgr!");
@@ -1742,7 +1762,7 @@ sptr<IDistributedSched> DistributedSchedService::GetRemoteDms(const std::string&
     auto object = samgr->CheckSystemAbility(DISTRIBUTED_SCHED_SA_ID, remoteDeviceId);
     HILOGI("[PerformanceTest] GetRemoteDms end");
     if (object == nullptr) {
-        HILOGE("GetRemoteDms failed to get remote DistributedSched %{private}s", remoteDeviceId.c_str());
+        HILOGE("GetRemoteDms failed to get remote DistributedSched %{private}s", GetAnonymStr(remoteDeviceId).c_str());
         return nullptr;
     }
     return iface_cast<IDistributedSched>(object);
@@ -1779,9 +1799,9 @@ bool DistributedSchedService::CheckDeviceIdFromRemote(const std::string& localDe
         HILOGE("destinationDeviceId is not same with localDeviceId");
         return false;
     }
-    HILOGD("CheckDeviceIdFromRemote sourceDeviceId %s", sourceDeviceId.c_str());
-    HILOGD("CheckDeviceIdFromRemote localDeviceId %s", localDeviceId.c_str());
-    HILOGD("CheckDeviceIdFromRemote destinationDeviceId %s", destinationDeviceId.c_str());
+    HILOGD("CheckDeviceIdFromRemote sourceDeviceId %s", GetAnonymStr(sourceDeviceId).c_str());
+    HILOGD("CheckDeviceIdFromRemote localDeviceId %s", GetAnonymStr(localDeviceId).c_str());
+    HILOGD("CheckDeviceIdFromRemote destinationDeviceId %s", GetAnonymStr(destinationDeviceId).c_str());
 
     if (sourceDeviceId == destinationDeviceId || sourceDeviceId == localDeviceId) {
         HILOGE("destinationDeviceId is different with localDeviceId and destinationDeviceId");
@@ -2132,6 +2152,9 @@ void DistributedSchedService::ProcessConnectDied(const sptr<IRemoteObject>& conn
 void DistributedSchedService::NotifyProcessDiedAll(const std::list<ProcessDiedNotifyInfo>& notifyList)
 {
     for (auto it = notifyList.begin(); it != notifyList.end(); ++it) {
+        if (it == nullptr) {
+            break;
+        }
         NotifyProcessDied(it->remoteDeviceId, it->callerInfo, it->targetComponent);
     }
 }
@@ -2908,6 +2931,10 @@ void DistributedSchedService::SetCleanMissionFlag(const OHOS::AAFwk::Want& want,
     bool isCleanMission = true;
     if (ao != nullptr) {
         isCleanMission = AAFwk::Boolean::Unbox(ao);
+    }
+    if (dschedContinuation_ == nullptr) {
+        HILOGW("continuation object null!");
+        return;
     }
     dschedContinuation_->SetCleanMissionFlag(missionId, isCleanMission);
 }

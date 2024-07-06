@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -265,9 +265,13 @@ int32_t DSchedContinuation::NotifyDSchedEventResult(int32_t resultCode)
     }
     int32_t error = -1;
     for (auto callback = vecCallback.begin(); callback != vecCallback.end(); ++callback) {
+        if (callback == nullptr) {
+            HILOGE("NotifyMissionCenterResult callback is null");
+            return INVALID_PARAMETERS_ERR;
+        }
         MessageParcel data;
         if (!data.WriteInterfaceToken(DSCHED_EVENT_TOKEN)) {
-            HILOGE("NotifyMissionCenterResult write token failed");
+            HILOGE("NotifyDSchedEventResult write token failed");
             return INVALID_PARAMETERS_ERR;
         }
         PARCEL_WRITE_HELPER_RET(data, Int32, resultCode, false);
@@ -285,7 +289,7 @@ int32_t DSchedContinuation::NotifyDSchedEventResult(int32_t resultCode)
         MessageParcel reply;
         MessageOption option;
         error = (*callback)->SendRequest(DSCHED_EVENT_CALLBACK, data, reply, option);
-        HILOGI("NotifyDSchedEventListenerResult transact result: %{public}d", error);
+        HILOGI("NotifyDSchedEventResult transact result: %{public}d", error);
     }
     return error;
 }
