@@ -54,9 +54,10 @@ const std::string DMS_VERSION_ID = "dmsVersion";
 const std::string SUPPORT_CONTINUE_PAGE_STACK_KEY = "ohos.extra.param.key.supportContinuePageStack";
 const std::string SUPPORT_CONTINUE_SOURCE_EXIT_KEY = "ohos.extra.param.key.supportContinueSourceExit";
 const std::string SUPPORT_CONTINUE_MODULE_NAME_UPDATE_KEY = "ohos.extra.param.key.supportContinueModuleNameUpdate";
-const std::string DMSDURATION_SAVETIME = "ohos.dschedule.SaveDataTime";
+const std::string DMS_DURATION_SAVETIME = "ohos.dms.saveDataTime";
 const std::string DMS_PERSISTENT_ID = "ohos.dms.persistentId";
 const std::string DMS_CONTINUE_SESSION_ID = "ohos.dms.continueSessionId";
+const std::string DMS_WANT_SESSION_ID = "ohos.dms.sessionId";
 const std::string QUICK_START_CONFIGURATION = "_ContinueQuickStart";
 const std::u16string NAPI_MISSION_CALLBACK_INTERFACE_TOKEN = u"ohos.DistributedSchedule.IMissionCallback";
 
@@ -249,13 +250,16 @@ int32_t DSchedContinue::PostReplyTask(std::shared_ptr<DSchedContinueReplyCmd> cm
         cmd->result_, cmd->reason_.c_str());
 
     DSchedContinueEventType eventType = DSCHED_CONTINUE_INVALID_EVENT;
+    int32_t data = 0;
     switch (cmd->replyCmd_) {
         case DSCHED_CONTINUE_CMD_START: {
             eventType = DSHCED_CONTINUE_ABILITY_EVENT;
+            data = cmd->appVersion_;
             break;
         }
         case DSCHED_CONTINUE_CMD_END: {
             eventType = DSCHED_CONTINUE_END_EVENT;
+            data = cmd->result_;
             break;
         }
         default:
@@ -270,7 +274,7 @@ int32_t DSchedContinue::PostReplyTask(std::shared_ptr<DSchedContinueReplyCmd> cm
         return INVALID_PARAMETERS_ERR;
     }
 
-    auto result = std::make_shared<int32_t>(cmd->result_);
+    auto result = std::make_shared<int32_t>(data);
     auto msgEvent = AppExecFwk::InnerEvent::Get(eventType, result, 0);
     if (!eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE)) {
         HILOGE("PostReplyTask eventHandler send event type %{public}d fail", eventType);
@@ -760,6 +764,10 @@ void DSchedContinue::SetCleanMissionFlag(const OHOS::AAFwk::Want& want)
 
 int32_t DSchedContinue::SetWantForContinuation(AAFwk::Want& newWant)
 {
+    std::string wantSessionId = newWant.GetStringParam("sessionId");
+    if (!wantSessionId.empty()) {
+        newWant.SetParam(DMS_WANT_SESSION_ID, wantSessionId);
+    }
     newWant.SetParam("sessionId", continueInfo_.missionId_);
     newWant.SetParam("deviceId", continueInfo_.sourceDeviceId_);
 
@@ -781,7 +789,7 @@ int32_t DSchedContinue::SetWantForContinuation(AAFwk::Want& newWant)
 
     std::string saveDataTime =
         DmsContinueTime::GetInstance().WriteDurationInfo(DmsContinueTime::GetInstance().GetSaveDataDuration());
-    newWant.SetParam(DMSDURATION_SAVETIME, saveDataTime);
+    newWant.SetParam(DMS_DURATION_SAVETIME, saveDataTime);
     if (subServiceType_ == CONTINUE_PUSH) {
         DmsContinueTime::GetInstance().SetSrcBundleName(newWant.GetElement().GetBundleName());
         DmsContinueTime::GetInstance().SetSrcAbilityName(newWant.GetElement().GetAbilityName());
@@ -876,6 +884,12 @@ int32_t DSchedContinue::UpdateWantForContinueType(OHOS::AAFwk::Want& want)
         want.SetParam(SUPPORT_CONTINUE_PAGE_STACK_KEY, false);
 
         DmsContinueTime::GetInstance().SetDstAbilityName(sinkAbilityName);
+    }
+
+    std::string wantSessionId = want.GetStringParam(DMS_WANT_SESSION_ID);
+    if (!wantSessionId.empty()) {
+        newWant.SetParam(DMS_WANT_SESSION_ID, want.GetIntParam("sessionId"));
+        newWant.SetParam("sessionId", wantSessionId);
     }
     return ERR_OK;
 }

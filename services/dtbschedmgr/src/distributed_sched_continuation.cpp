@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -301,11 +301,14 @@ int32_t DSchedContinuation::NotifyDSchedEventResult(int32_t resultCode)
     }
     bool isAllSuc = true;
     for (auto callback = vecCallback.begin(); callback != vecCallback.end(); ++callback) {
+        if (callback == nullptr) {
+            HILOGE("NotifyMissionCenterResult callback is null");
+            return INVALID_PARAMETERS_ERR;
+        }
         int32_t ret = NotifyDSchedEventForOneCB(*callback, resultCode);
         if (ret != ERR_OK) {
             HILOGE("NotifyDSchedEventForOneCB transact fail, ret: %{public}d", ret);
             isAllSuc = isAllSuc && false;
-        }
     }
     if (!isAllSuc) {
         HILOGE("NotifyDSchedEventListenerResult transact fail, isAllSuc: %{public}d", isAllSuc);
