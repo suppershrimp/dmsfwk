@@ -61,7 +61,7 @@ void DMSContinueSendMgr::Init()
         MMIAdapter::GetInstance().Init();
         screenOffHandler_ = std::make_shared<ScreenOffHandler>();
 
-        eventThread_ = std::thread(&DMSContinueSendMgr::StartEvent, this);
+        eventThread_ = std::thread([this]() { this->StartEvent(); });
         std::unique_lock<std::mutex> lock(eventMutex_);
         eventCon_.wait(lock, [this] {
             return eventHandler_ != nullptr;

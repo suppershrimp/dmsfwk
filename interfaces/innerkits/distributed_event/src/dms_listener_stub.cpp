@@ -50,15 +50,14 @@ int32_t DSchedEventListenerStub::OnRemoteRequest(uint32_t code,
         HILOGE("remoteDesc is invalid!");
         return GET_REMOTE_DMS_FAIL;
     }
-    auto itFunc = memberFuncMap_.find(code);
-    if (itFunc == memberFuncMap_.end()) {
-        HILOGE("memberFuncMap_ not found");
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    switch (code) {
+        case static_cast<uint32_t>(DSchedEventListenerStub::Message::DSCHED_EVENT_CALLBACK):
+            DSchedEventNotifyInner(data, reply);
+            return 0;
+        default:
+            HILOGE("memberFuncMap_ not found");
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-
-    auto memberFunc = itFunc->second;
-    (this->*memberFunc)(data, reply);
-    return 0;
 }
 
 void DSchedEventListenerStub::DSchedEventNotifyInner(MessageParcel &data, MessageParcel &reply)

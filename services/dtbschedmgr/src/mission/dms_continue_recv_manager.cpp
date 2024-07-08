@@ -60,7 +60,7 @@ void DMSContinueRecvMgr::Init()
         }
         hasRegSoftbusEventListener_ = true;
         missionDiedListener_ = new DistributedMissionDiedListener();
-        eventThread_ = std::thread(&DMSContinueRecvMgr::StartEvent, this);
+        eventThread_ = std::thread([this]() { this->StartEvent(); });
         std::unique_lock<std::mutex> lock(eventMutex_);
         eventCon_.wait(lock, [this] {
             return eventHandler_ != nullptr;

@@ -73,14 +73,13 @@ int32_t DmsBundleManagerCallbackStub::OnRemoteRequest(
         HILOGE("Local descriptor is not equal to remote");
         return ERR_INVALID_STATE;
     }
-
-    auto it = memberFuncMap_.find(code);
-    if (it == memberFuncMap_.end()) {
-        HILOGE("Not found");
-        return ERR_INVALID_STATE;
+    switch (code) {
+        case static_cast<uint32_t>(IDBundleManagerCallbackInterfaceCod::ON_QUERY_INSTALLATION_DONE):
+            return OnQueryInstallationFinishedInner(data, reply);
+        default:
+            HILOGE("Not found");
+            return ERR_INVALID_STATE;
     }
-
-    return (this->*(it->second))(data, reply);
 }
 }  // namespace DistributedSchedule
 }  // namespace OHOS

@@ -37,18 +37,19 @@ DSchedContinueEndState::~DSchedContinueEndState()
 int32_t DSchedContinueEndState::Execute(std::shared_ptr<DSchedContinue> dContinue,
     const AppExecFwk::InnerEvent::Pointer &event)
 {
-    auto iterFunc = memberFuncMap_.find(event->GetInnerEventId());
-    if (iterFunc == memberFuncMap_.end()) {
-        HILOGI("DSchedContinueEndState execute %{public}d in wrong state", event->GetInnerEventId());
-        return CONTINUE_STATE_MACHINE_INVALID_STATE;
+    int32_t ret = 0;
+    switch (event->GetInnerEventId()) {
+        case DSCHED_CONTINUE_END_EVENT:
+            ret = DoContinueEndTask(dContinue, event);
+            if (ret != ERR_OK) {
+                HILOGI("DSchedContinueWaitEndState execute %{public}d failed, ret: %{public}d",
+                    event->GetInnerEventId(), ret);
+            }
+            return ret;
+        default:
+            HILOGI("DSchedContinueSourceStartState execute %{public}d in wrong state", event->GetInnerEventId());
+            return CONTINUE_STATE_MACHINE_INVALID_STATE;
     }
-
-    auto memberFunc = iterFunc->second;
-    int32_t ret = (this->*memberFunc)(dContinue, event);
-    if (ret != ERR_OK) {
-        HILOGI("DSchedContinueEndState execute %{public}d failed, ret: %{public}d", event->GetInnerEventId(), ret);
-    }
-    return ret;
 }
 
 DSchedContinueStateType DSchedContinueEndState::GetStateType()
