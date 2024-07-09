@@ -22,6 +22,7 @@
 #include "byte_wrapper.h"
 #include "distributed_want_params_wrapper.h"
 #include "double_wrapper.h"
+#include "dtbschedmgr_log.h"
 #include "float_wrapper.h"
 #include "int_wrapper.h"
 #include "long_wrapper.h"
@@ -56,7 +57,9 @@ DistributedUnsupportedData::DistributedUnsupportedData(const DistributedUnsuppor
     : key(other.key), type(other.type), size(other.size)
 {
     buffer = new uint8_t[size];
-    if (memcpy_s(buffer, size, other.buffer, size) != EOK) {
+    int32_t ret = memcpy_s(buffer, size, other.buffer, size);
+    if (ret != EOK) {
+        HILOGE("memory copy failed, ret %{public}d", ret);
         key.clear();
         type = 0;
         size = 0;
@@ -82,7 +85,9 @@ DistributedUnsupportedData& DistributedUnsupportedData::operator=(const Distribu
     type = other.type;
     size = other.size;
     buffer = new uint8_t[size];
-    if (memcpy_s(buffer, size, other.buffer, size) != EOK) {
+    int32_t ret = memcpy_s(buffer, size, other.buffer, size);
+    if (ret != EOK) {
+        HILOGE("memory copy failed, ret %{public}d", ret);
         key.clear();
         type = 0;
         size = 0;
@@ -1213,7 +1218,9 @@ bool DistributedWantParams::ReadUnsupportedData(Parcel& parcel, const std::strin
         return false;
     }
 
-    if (memcpy_s(dData.buffer, bufferSize, bufferP, bufferSize) != EOK) {
+    int32_t ret = memcpy_s(dData.buffer, bufferSize, bufferP, bufferSize);
+    if (ret != EOK) {
+        HILOGE("memory copy failed, ret %{public}d", ret);
         return false;
     }
     cachedUnsupportedData_.emplace_back(std::move(dData));
