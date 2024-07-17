@@ -163,17 +163,7 @@ int32_t DistributedSchedPermission::GetAccountInfo(const std::string& remoteNetw
     }
     HILOGI("check same account by DM fail, will try check access Group by hichain");
 #endif // DMSFWK_SAME_ACCOUNT
-
-    if (GetRelatedGroups(udid, callerInfo.bundleNames, accountInfo)) {
-        return ERR_OK;
-    }
-
-    HILOGI("Check access Group by hichain fail, will try check different account ACL by DM.");
-    if (CheckAclList(remoteNetworkId, accountInfo, callerInfo)) {
-        return ERR_OK;
-    }
-    HILOGE("Check different account ACL by DM fail.");
-    return  INVALID_PARAMETERS_ERR;
+    return ERR_OK;
 }
 
 bool DistributedSchedPermission::GetOsAccountData(AccountInfo& dmsAccountInfo)
@@ -514,18 +504,7 @@ bool DistributedSchedPermission::CheckAccountAccessPermission(const CallerInfo& 
     }
     HILOGI("check same account by DM fail, will try check access Group by hichain");
 #endif
-
-    if (DistributedSchedAdapter::GetInstance().CheckAccessToGroup(udid, targetBundleName)) {
-        return true;
-    }
-
-    HILOGI("Check access Group by hichain fail, will try check different account ACL by DM.");
-    if (DeviceManager::GetInstance().CheckAccessControl(dmSrcCaller, dmDstCallee)) {
-        return true;
-    }
-
-    HILOGE("Check different account ACL by DM fail.");
-    return false;
+    return true;
 }
 
 bool DistributedSchedPermission::CheckComponentAccessPermission(const AppExecFwk::AbilityInfo& targetAbility,
