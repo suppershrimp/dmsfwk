@@ -119,7 +119,7 @@ HWTEST_F(DSchedContinueManagerTest, ContinueMission_001, TestSize.Level3)
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> eventHandler =
         DSchedContinueManager::GetInstance().eventHandler_;
     DSchedContinueManager::GetInstance().eventHandler_ = nullptr;
-    int32_t ret = DSchedContinueManager::GetInstance().ContinueMission(LOCAL_DEVICEID, REMOTE_DEVICEID, MISSION_ID,
+    ret = DSchedContinueManager::GetInstance().ContinueMission(LOCAL_DEVICEID, REMOTE_DEVICEID, MISSION_ID,
         callback, wantParams);
     EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
     DSchedContinueManager::GetInstance().eventHandler_ = eventHandler;
@@ -394,12 +394,12 @@ HWTEST_F(DSchedContinueManagerTest, OnDataRecv_001, TestSize.Level3)
 {
     DTEST_LOG << "DSchedContinueManagerTest OnDataRecv_001 begin" << std::endl;
     int32_t sessionId = 0;
-    std::shared_ptr<DSchedDataBuffer> dataBuffer = make_shared<DSchedDataBuffer>();
-    DSchedContinueManager::GetInstance().OnDataRecv(sessionId,dataBuffer);
+    std::shared_ptr<DSchedDataBuffer> dataBuffer = std::make_shared<DSchedDataBuffer>(0);
+    DSchedContinueManager::GetInstance().OnDataRecv(sessionId, dataBuffer);
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> eventHandler =
         DSchedContinueManager::GetInstance().eventHandler_;
     DSchedContinueManager::GetInstance().eventHandler_ = nullptr;
-    DSchedContinueManager::GetInstance().OnDataRecv(sessionId,dataBuffer);
+    DSchedContinueManager::GetInstance().OnDataRecv(sessionId, dataBuffer);
     DSchedContinueManager::GetInstance().eventHandler_ = eventHandler;
     DTEST_LOG << "DSchedContinueManagerTest OnDataRecv_001 end" << std::endl;
 }
@@ -414,11 +414,11 @@ HWTEST_F(DSchedContinueManagerTest, HandleDataRecv_001, TestSize.Level3)
     DTEST_LOG << "DSchedContinueManagerTest HandleDataRecv_001 begin" << std::endl;
     int32_t sessionId = 0;
     std::shared_ptr<DSchedDataBuffer> dataBuffer;
-    DSchedContinueManager::GetInstance().HandleDataRecv(sessionId,dataBuffer);
-    dataBuffer = make_shared<DSchedDataBuffer>(0);
-    DSchedContinueManager::GetInstance().HandleDataRecv(sessionId,dataBuffer);
-    dataBuffer = make_shared<DSchedDataBuffer>(10);
-    DSchedContinueManager::GetInstance().HandleDataRecv(sessionId,dataBuffer);
+    DSchedContinueManager::GetInstance().HandleDataRecv(sessionId, dataBuffer);
+    dataBuffer = std::make_shared<DSchedDataBuffer>(0);
+    DSchedContinueManager::GetInstance().HandleDataRecv(sessionId, dataBuffer);
+    dataBuffer = std::make_shared<DSchedDataBuffer>(10);
+    DSchedContinueManager::GetInstance().HandleDataRecv(sessionId, dataBuffer);
     DTEST_LOG << "DSchedContinueManagerTest HandleDataRecv_001 end" << std::endl;
 }
 
@@ -432,11 +432,11 @@ HWTEST_F(DSchedContinueManagerTest, NotifyContinueDataRecv_001, TestSize.Level3)
     DTEST_LOG << "DSchedContinueManagerTest NotifyContinueDataRecv_001 begin" << std::endl;
     int32_t sessionId = 0;
     int32_t command = DSCHED_CONTINUE_CMD_MIN;
-    std::shared_ptr<DSchedDataBuffer> dataBuffer = make_shared<DSchedDataBuffer>(0);
+    std::shared_ptr<DSchedDataBuffer> dataBuffer = std::make_shared<DSchedDataBuffer>(0);
     std::string jsonStr = "";
-    DSchedContinueManager::GetInstance().NotifyContinueDataRecv(sessionId,command,jsonStr,dataBuffer);
+    DSchedContinueManager::GetInstance().NotifyContinueDataRecv(sessionId, command, jsonStr, dataBuffer);
     command == DSCHED_CONTINUE_CMD_START;
-    DSchedContinueManager::GetInstance().NotifyContinueDataRecv(sessionId,command,jsonStr,dataBuffer);
+    DSchedContinueManager::GetInstance().NotifyContinueDataRecv(sessionId, command, jsonStr, dataBuffer);
     DTEST_LOG << "DSchedContinueManagerTest NotifyContinueDataRecv_001 end" << std::endl;
 }
 }

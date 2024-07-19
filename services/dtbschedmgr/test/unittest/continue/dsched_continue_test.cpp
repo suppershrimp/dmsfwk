@@ -894,7 +894,7 @@ HWTEST_F(DSchedContinueTest, UpdateWantForContinueTypeTest_0030_1, TestSize.Leve
 HWTEST_F(DSchedContinueTest, DSchedContinueTest_0031_1, TestSize.Level0)
 {
     DTEST_LOG << "DSchedContinueTest DSchedContinueTest_0031_1 begin" << std::endl;
-    int32_t session = 0;
+    int32_t sessionId = 0;
     std::shared_ptr<DSchedContinueStartCmd> startCmd;
     auto conti = std::make_shared<DSchedContinue>(startCmd, sessionId);
     startCmd = std::make_shared<DSchedContinueStartCmd>();
@@ -927,7 +927,7 @@ HWTEST_F(DSchedContinueTest, OnDataRecvTest_0032_1, TestSize.Level0)
     std::shared_ptr<DSchedDataBuffer> dataBuffer = nullptr;
     int32_t command = DSCHED_CONTINUE_CMD_START;
     conti->OnDataRecv(command, dataBuffer);
-    dataBuffer = make_shared<DSchedDataBuffer>(0);
+    dataBuffer = std::make_shared<DSchedDataBuffer>(0);
     conti->OnDataRecv(command, dataBuffer);
     command = DSCHED_CONTINUE_CMD_DATA;
     conti->OnDataRecv(command, dataBuffer);
