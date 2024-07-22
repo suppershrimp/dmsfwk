@@ -88,6 +88,48 @@ HWTEST_F(DistributedBmStorageTest, SaveStorageDistributeInfo_001, TestSize.Level
 }
 
 /**
+ * @tc.name: InnerSaveStorageDistributeInfoTest_001
+ * @tc.desc: test InnerSaveStorageDistributeInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, InnerSaveStorageDistributeInfoTest_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest InnerSaveStorageDistributeInfoTest_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        DmsBundleInfo distributedBundleInfo;
+        distributedBundleInfo.bundleName.clear();
+        const std::string localUdid = "NonelocalUdid";
+        bool ret = dmsBmStorage_->GetInstance()->InnerSaveStorageDistributeInfo(distributedBundleInfo, localUdid);
+        EXPECT_EQ(ret, false);
+        distributedBundleInfo.bundleName = "NonexistentName";
+        ret = dmsBmStorage_->GetInstance()->InnerSaveStorageDistributeInfo(distributedBundleInfo, localUdid);
+        EXPECT_EQ(ret, true);
+    }
+    DTEST_LOG << "DistributedBmStorageTest InnerSaveStorageDistributeInfoTest_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: DelBundleNameId_001
+ * @tc.desc: test DelBundleNameId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, DelBundleNameId_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest DelBundleNameId_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        const std::string bundleName = "NonexistentName";
+        dmsBmStorage_->GetInstance()->DelBundleNameId(bundleName);
+    }
+    DTEST_LOG << "DistributedBmStorageTest DelBundleNameId_001 end" << std::endl;
+}
+
+/**
  * @tc.name: DeleteStorageDistributeInfoTest_001
  * @tc.desc: test insert DistributedBmStorage
  * @tc.type: FUNC
@@ -124,6 +166,26 @@ HWTEST_F(DistributedBmStorageTest, GetStorageDistributeInfo_001, TestSize.Level1
         EXPECT_EQ(ret, false);
     }
     DTEST_LOG << "DistributedBmStorageTest GetStorageDistributeInfo_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: DealGetBundleNameTest_001
+ * @tc.desc: test DealGetBundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, DealGetBundleNameTest_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest DealGetBundleNameTest_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::string bundleName = "";
+        uint16_t bundleNameId = 0;
+        bool ret = dmsBmStorage_->GetInstance()->DealGetBundleName("", bundleNameId, bundleName);
+        EXPECT_EQ(ret, false);
+    }
+    DTEST_LOG << "DistributedBmStorageTest DealGetBundleNameTest_001 end" << std::endl;
 }
 
 /**
