@@ -413,7 +413,7 @@ HWTEST_F(DSchedContinueManagerTest, HandleDataRecv_001, TestSize.Level3)
 {
     DTEST_LOG << "DSchedContinueManagerTest HandleDataRecv_001 begin" << std::endl;
     int32_t sessionId = 0;
-    std::shared_ptr<DSchedDataBuffer> dataBuffer;
+    std::shared_ptr<DSchedDataBuffer> dataBuffer = nullptr;
     DSchedContinueManager::GetInstance().HandleDataRecv(sessionId, dataBuffer);
     dataBuffer = std::make_shared<DSchedDataBuffer>(0);
     DSchedContinueManager::GetInstance().HandleDataRecv(sessionId, dataBuffer);
@@ -438,3 +438,6 @@ HWTEST_F(DSchedContinueManagerTest, NotifyContinueDataRecv_001, TestSize.Level3)
     command == DSCHED_CONTINUE_CMD_START;
     DSchedContinueManager::GetInstance().NotifyContinueDataRecv(sessionId, command, jsonStr, dataBuffer);
     DTEST_LOG << "DSchedContinueManagerTest NotifyContinueDataRecv_001 end" << std::endl;
+}
+}
+}
