@@ -315,6 +315,7 @@ ohos_unittest("dschedmissionmanagertest") {
     debug = false
   }
   module_out_path = module_output_path
+  cflags = [ "-Dprivate=public" ]
   sources = [
     "unittest/mission/distributed_bm_storage_test.cpp",
     "unittest/mission/distributed_data_storage_test.cpp",
