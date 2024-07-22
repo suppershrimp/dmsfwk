@@ -438,3 +438,6 @@ HWTEST_F(DSchedContinueManagerTest, NotifyContinueDataRecv_001, TestSize.Level3)
     command == DSCHED_CONTINUE_CMD_START;
     DSchedContinueManager::GetInstance().NotifyContinueDataRecv(sessionId, command, jsonStr, dataBuffer);
     DTEST_LOG << "DSchedContinueManagerTest NotifyContinueDataRecv_001 end" << std::endl;
+}
+}
+}
