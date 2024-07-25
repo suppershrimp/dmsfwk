@@ -143,7 +143,7 @@ HWTEST_F(DSchedContinueManagerTest, ContinueMission_002, TestSize.Level3)
 
     int32_t ret = DSchedContinueManager::GetInstance().ContinueMission(LOCAL_DEVICEID, REMOTE_DEVICEID, MISSION_ID,
         callback, wantParams);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, INVALID_REMOTE_PARAMETERS_ERR);
     DTEST_LOG << "DSchedContinueManagerTest ContinueMission_002 end" << std::endl;
 }
 
@@ -235,7 +235,7 @@ HWTEST_F(DSchedContinueManagerTest, StartContinuation_001, TestSize.Level3)
     uint32_t accessToken = 0;
     int32_t ret1 = DSchedContinueManager::GetInstance().StartContinuation(want, missionId,
         callerUid, status, accessToken);
-    EXPECT_EQ(ret1, ERR_OK);
+    EXPECT_EQ(ret1, INVALID_REMOTE_PARAMETERS_ERR);
     DTEST_LOG << "DSchedContinueManagerTest StartContinuation_001 end" << std::endl;
 }
 
@@ -247,7 +247,9 @@ HWTEST_F(DSchedContinueManagerTest, StartContinuation_001, TestSize.Level3)
 HWTEST_F(DSchedContinueManagerTest, CheckContinuationLimit_001, TestSize.Level3)
 {
     DTEST_LOG << "DSchedContinueManagerTest CheckContinuationLimit_001 begin" << std::endl;
-    int32_t ret = DSchedContinueManager::GetInstance().CheckContinuationLimit(LOCAL_DEVICEID, REMOTE_DEVICEID);
+    int32_t direction = 0;
+    int32_t ret = DSchedContinueManager::GetInstance().CheckContinuationLimit(LOCAL_DEVICEID, REMOTE_DEVICEID,
+        direction);
     EXPECT_EQ(ret, OPERATION_DEVICE_NOT_INITIATOR_OR_TARGET);
     DTEST_LOG << "DSchedContinueManagerTest CheckContinuationLimit_001 end" << std::endl;
 }
