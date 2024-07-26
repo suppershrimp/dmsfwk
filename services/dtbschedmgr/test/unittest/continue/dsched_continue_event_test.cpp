@@ -17,7 +17,6 @@
 #include "test_log.h"
 #include "cJSON.h"
 #include "dtbschedmgr_log.h"
-#include "parcel.h"
 
 using namespace testing;
 using namespace testing::ext;
