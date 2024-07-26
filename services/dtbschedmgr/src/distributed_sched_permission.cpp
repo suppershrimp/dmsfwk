@@ -208,7 +208,7 @@ bool DistributedSchedPermission::CheckDstSameAccount(const std::string& dstNetwo
         .accountId = dmsAccountInfo.activeAccountId,
         .networkId = callerInfo.sourceDeviceId,
         .userId = dmsAccountInfo.userId,
-        .tokenId = 0,
+        .tokenId = callerInfo.accessToken,
     };
     DmAccessCallee dmDstCallee = {
         .networkId = dstNetworkId,
@@ -239,7 +239,7 @@ bool DistributedSchedPermission::CheckAclList(const std::string& dstNetworkId,
         .accountId = dmsAccountInfo.activeAccountId,
         .networkId = callerInfo.sourceDeviceId,
         .userId = dmsAccountInfo.userId,
-        .tokenId = 0,
+        .tokenId = callerInfo.accessToken,
     };
     DmAccessCallee dmDstCallee = {
         .networkId = dstNetworkId,
@@ -497,7 +497,7 @@ bool DistributedSchedPermission::CheckAccountAccessPermission(const CallerInfo& 
         .pkgName = targetBundleName,
         .networkId = callerInfo.sourceDeviceId,
         .userId = accountInfo.userId,
-        .tokenId = 0,
+        .tokenId = callerInfo.accessToken,
     };
     DmAccessCallee dmDstCallee = {
         .networkId = dstNetworkId,
@@ -684,7 +684,7 @@ int32_t DistributedSchedPermission::GetDeviceSecurityLevel(const std::string& ud
 {
     DeviceIdentify devIdentify;
     devIdentify.length = DEVICE_ID_MAX_LEN;
-    int32_t ret = memcpy_s(devIdentify.identity, DEVICE_ID_MAX_LEN, udid.c_str(), DEVICE_ID_MAX_LEN);
+    int32_t ret = memcpy_s(devIdentify.identity, DEVICE_ID_MAX_LEN, udid.c_str(), udid.length());
     if (ret != 0) {
         HILOGE("str copy failed %{public}d", ret);
         return DEFAULT_DEVICE_SECURITY_LEVEL;
