@@ -88,8 +88,54 @@ HWTEST_F(DistributedBmStorageTest, SaveStorageDistributeInfo_001, TestSize.Level
 }
 
 /**
+ * @tc.name: InnerSaveStorageDistributeInfo_001
+ * @tc.desc: test InnerSaveStorageDistributeInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, InnerSaveStorageDistributeInfo_001, TestSize.Level0)
+{
+    DTEST_LOG << "DistributedBmStorageTest InnerSaveStorageDistributeInfo_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    ASSERT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        DmsBundleInfo info;
+        std::string udid = "utest";
+        bool ret = dmsBmStorage_->GetInstance()->InnerSaveStorageDistributeInfo(info, udid);
+        EXPECT_EQ(ret, false);
+        info.bundleName = "NonExistName";
+        ret = dmsBmStorage_->GetInstance()->InnerSaveStorageDistributeInfo(info, udid);
+        EXPECT_EQ(ret, true);
+    }
+    DTEST_LOG << "DistributedBmStorageTest InnerSaveStorageDistributeInfo_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: DelBundleNameId_001
+ * @tc.desc: test DelBundleNameId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, DelBundleNameId_001, TestSize.Level0)
+{
+    DTEST_LOG << "DistributedBmStorageTest DelBundleNameId_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+
+    auto bm = dmsBmStorage_->GetInstance();
+    uint16_t id = 9999;
+    std::string bundleName = "NonExistName";
+    int32_t size = bm->bundleNameIdTables_.size();
+
+    bm->AddBundleNameId(id, bundleName);
+    EXPECT_EQ(bm->bundleNameIdTables_.size(), size + 1);
+
+    bm->DelBundleNameId(bundleName);
+    EXPECT_EQ(bm->bundleNameIdTables_.size(), size);
+    DTEST_LOG << "DistributedBmStorageTest DelBundleNameId_001 end" << std::endl;
+}
+
+/**
  * @tc.name: DeleteStorageDistributeInfoTest_001
- * @tc.desc: test insert DistributedBmStorage
+ * @tc.desc: test delete DistributedBmStorage
  * @tc.type: FUNC
  */
 HWTEST_F(DistributedBmStorageTest, DeleteStorageDistributeInfoTest_001, TestSize.Level1)
@@ -99,11 +145,34 @@ HWTEST_F(DistributedBmStorageTest, DeleteStorageDistributeInfoTest_001, TestSize
     auto distributedDataStorage = GetDmsBmStorage();
     EXPECT_NE(distributedDataStorage, nullptr);
     if (distributedDataStorage != nullptr) {
-        const std::string bundleName = "NonexistentName";
-        bool ret = dmsBmStorage_->GetInstance()->SaveStorageDistributeInfo(bundleName);
+        const std::string bundleName = "DeleteStorageDistributeInfoTest_001";
+        bool ret = dmsBmStorage_->GetInstance()->DeleteStorageDistributeInfo(bundleName);
         EXPECT_EQ(ret, false);
     }
     DTEST_LOG << "DistributedBmStorageTest DeleteStorageDistributeInfoTest_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: DeleteStorageDistributeInfoTest_002
+ * @tc.desc: test delete DistributedBmStorage
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, DeleteStorageDistributeInfoTest_002, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest DeleteStorageDistributeInfoTest_002 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        DmsBundleInfo info;
+        std::string udid = "utest";
+        info.bundleName = "DeleteStorageDistributeInfoTest_002";
+        bool ret = dmsBmStorage_->GetInstance()->InnerSaveStorageDistributeInfo(info, udid);
+        EXPECT_EQ(ret, true);
+        ret = dmsBmStorage_->GetInstance()->DeleteStorageDistributeInfo(info.bundleName);
+        EXPECT_EQ(ret, true);
+    }
+    DTEST_LOG << "DistributedBmStorageTest DeleteStorageDistributeInfoTest_002 end" << std::endl;
 }
 
 /**
@@ -116,19 +185,101 @@ HWTEST_F(DistributedBmStorageTest, GetStorageDistributeInfo_001, TestSize.Level1
     DTEST_LOG << "DistributedBmStorageTest GetStorageDistributeInfo_001 start" << std::endl;
     ASSERT_NE(dmsBmStorage_, nullptr);
     auto distributedDataStorage = GetDmsBmStorage();
-    EXPECT_NE(distributedDataStorage, nullptr);
+    ASSERT_NE(distributedDataStorage, nullptr);
     if (distributedDataStorage != nullptr) {
-        const std::string bundleName = "NonexistentName";
+        std::string bundleName = "GetStorageDistributeInfo_001";
         DmsBundleInfo info;
         bool ret = dmsBmStorage_->GetInstance()->GetStorageDistributeInfo("", bundleName, info);
+        EXPECT_EQ(ret, false);
+
+        std::string localDeviceId;
+        ret = DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(localDeviceId);
+        ASSERT_EQ(ret, true);
+        ret = dmsBmStorage_->GetInstance()->GetStorageDistributeInfo(localDeviceId, bundleName, info);
         EXPECT_EQ(ret, false);
     }
     DTEST_LOG << "DistributedBmStorageTest GetStorageDistributeInfo_001 end" << std::endl;
 }
 
 /**
+ * @tc.name: DealGetBundleName_001
+ * @tc.desc: test DealGetBundleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, DealGetBundleName_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest DealGetBundleName_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    ASSERT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::string bundleName;
+        DmsBundleInfo info;
+        bool ret = dmsBmStorage_->GetInstance()->DealGetBundleName("", 0, bundleName);
+        EXPECT_EQ(ret, false);
+
+        std::string localDeviceId;
+        ret = DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(localDeviceId);
+        ASSERT_EQ(ret, true);
+        ret = dmsBmStorage_->GetInstance()->DealGetBundleName(localDeviceId, 0, bundleName);
+        EXPECT_EQ(ret, false);
+    }
+    DTEST_LOG << "DistributedBmStorageTest DealGetBundleName_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: DelReduData_001
+ * @tc.desc: test DelReduData
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, DelReduData_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest DelReduData_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    ASSERT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::vector<DistributedKv::Entry> entry;
+        bool ret = dmsBmStorage_->GetInstance()->DelReduData("", entry);
+        EXPECT_EQ(ret, false);
+
+        std::string localDeviceId;
+        ret = DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(localDeviceId);
+        ASSERT_EQ(ret, true);
+        ret = dmsBmStorage_->GetInstance()->DelReduData(localDeviceId, entry);
+        EXPECT_EQ(ret, true);
+    }
+    DTEST_LOG << "DistributedBmStorageTest DelReduData_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: CheckSyncData_001
+ * @tc.desc: test CheckSyncData
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, CheckSyncData_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest CheckSyncData_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    ASSERT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::vector<DistributedKv::Entry> entry;
+        bool ret = dmsBmStorage_->GetInstance()->CheckSyncData("");
+        EXPECT_EQ(ret, false);
+
+        std::string localDeviceId;
+        ret = DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(localDeviceId);
+        ASSERT_EQ(ret, true);
+        ret = dmsBmStorage_->GetInstance()->CheckSyncData(localDeviceId);
+        EXPECT_EQ(ret, true);
+    }
+    DTEST_LOG << "DistributedBmStorageTest CheckSyncData_001 end" << std::endl;
+}
+
+/**
  * @tc.name: GetDistributedBundleNameTest_001
- * @tc.desc: test insert DistributedBmStorage
+ * @tc.desc: test GetDistributedBundleName
  * @tc.type: FUNC
  */
 HWTEST_F(DistributedBmStorageTest, GetDistributedBundleNameTest_001, TestSize.Level1)
@@ -138,9 +289,14 @@ HWTEST_F(DistributedBmStorageTest, GetDistributedBundleNameTest_001, TestSize.Le
     auto distributedDataStorage = GetDmsBmStorage();
     EXPECT_NE(distributedDataStorage, nullptr);
     if (distributedDataStorage != nullptr) {
-        std::string bundleName = "";
-        uint16_t bundleNameId = 0;
-        bool ret = dmsBmStorage_->GetInstance()->GetDistributedBundleName("", bundleNameId, bundleName);
+        std::string bundleName;
+        bool ret = dmsBmStorage_->GetInstance()->GetDistributedBundleName("", 0, bundleName);
+        EXPECT_EQ(ret, false);
+
+        std::string localDeviceId;
+        ret = DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalDeviceId(localDeviceId);
+        ASSERT_EQ(ret, true);
+        ret = dmsBmStorage_->GetInstance()->GetDistributedBundleName(localDeviceId, 0, bundleName);
         EXPECT_EQ(ret, false);
     }
     DTEST_LOG << "DistributedBmStorageTest GetDistributedBundleNameTest_001 end" << std::endl;
@@ -189,8 +345,23 @@ HWTEST_F(DistributedBmStorageTest, GetDistributedBundleNameTest_003, TestSize.Le
 }
 
 /**
+ * @tc.name: GetResultSatus_001
+ * @tc.desc: test GetResultSatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, GetResultSatus_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest GetResultSatus_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    std::promise<OHOS::DistributedKv::Status> signal;
+    Status ret = dmsBmStorage_->GetInstance()->GetResultSatus(signal);
+    EXPECT_EQ(ret, Status::ERROR);
+    DTEST_LOG << "DistributedBmStorageTest GetResultSatus_001 end" << std::endl;
+}
+
+/**
  * @tc.name: GetBundleIdTest_001
- * @tc.desc: test delete DistributedBmStorage
+ * @tc.desc: test GetBundleNameId
  * @tc.type: FUNC
  */
 HWTEST_F(DistributedBmStorageTest, GetBundleIdTest_001, TestSize.Level0)
@@ -243,6 +414,83 @@ HWTEST_F(DistributedBmStorageTest, UpdateDistributedDataTest_001, TestSize.Level
         dmsBmStorage_->GetInstance()->UpdateDistributedData();
     }
     DTEST_LOG << "DistributedBmStorageTest UpdateDistributedDataTest_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: GetLastBundleNameId_001
+ * @tc.desc: test GetLastBundleNameId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, GetLastBundleNameId_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest GetLastBundleNameId_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    ASSERT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        uint16_t bundleNameId = 0;
+        bool ret = dmsBmStorage_->GetInstance()->GetLastBundleNameId(bundleNameId);
+        EXPECT_EQ(ret, true);
+    }
+    DTEST_LOG << "DistributedBmStorageTest GetLastBundleNameId_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: CreateBundleNameId_001
+ * @tc.desc: test CreateBundleNameId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, CreateBundleNameId_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest CreateBundleNameId_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    ASSERT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        std::string bundleName = "CreateBundleNameId_001";
+        uint16_t ret = 0;
+        ret = dmsBmStorage_->GetInstance()->CreateBundleNameId(bundleName);
+        EXPECT_NE(ret, 0);
+    }
+    DTEST_LOG << "DistributedBmStorageTest CreateBundleNameId_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: RebuildLocalData_001
+ * @tc.desc: test RebuildLocalData
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, RebuildLocalData_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest RebuildLocalData_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    ASSERT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        bool ret = dmsBmStorage_->GetInstance()->RebuildLocalData();
+        EXPECT_EQ(ret, false);
+    }
+    DTEST_LOG << "DistributedBmStorageTest RebuildLocalData_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: ConvertToDistributedBundleInfo_001
+ * @tc.desc: test ConvertToDistributedBundleInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, ConvertToDistributedBundleInfo_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest ConvertToDistributedBundleInfo_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    ASSERT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        AppExecFwk::BundleInfo info;
+        info.name = "ConvertToDistributedBundleInfo";
+        auto dInfo = dmsBmStorage_->GetInstance()->ConvertToDistributedBundleInfo(info);
+        EXPECT_EQ(dInfo.bundleName, info.name);
+    }
+    DTEST_LOG << "DistributedBmStorageTest ConvertToDistributedBundleInfo_001 end" << std::endl;
 }
 
 /**
@@ -380,8 +628,61 @@ HWTEST_F(DistributedBmStorageTest, DmsPutBatchTest_001, TestSize.Level1)
     if (distributedDataStorage != nullptr) {
         std::vector<DmsBundleInfo> dmsBundleInfos;
         dmsBmStorage_->GetInstance()->DmsPutBatch(dmsBundleInfos);
+        DmsBundleInfo info;
+        dmsBundleInfos.push_back(info);
+        dmsBmStorage_->GetInstance()->DmsPutBatch(dmsBundleInfos);
     }
     DTEST_LOG << "DistributedBmStorageTest DmsPutBatchTest_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: FindContinueTypeTest_001
+ * @tc.desc: test FindContinueType
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, FindContinueTypeTest_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest FindContinueTypeTest_001 start" << std::endl;
+    ASSERT_NE(dmsBmStorage_, nullptr);
+    auto distributedDataStorage = GetDmsBmStorage();
+    EXPECT_NE(distributedDataStorage, nullptr);
+    if (distributedDataStorage != nullptr) {
+        DmsBundleInfo info;
+        std::string type = dmsBmStorage_->GetInstance()->FindContinueType(info, 0);
+        EXPECT_EQ(type, "");
+    }
+    DTEST_LOG << "DistributedBmStorageTest FindContinueTypeTest_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: FindAbilityAndModuleNameTest_001
+ * @tc.desc: test FindAbilityName and FindModuleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, FindAbilityAndModuleNameTest_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest FindAbilityAndModuleNameTest_001 start" << std::endl;
+    DmsBundleInfo info;
+    std::string result = FindAbilityName(info, "");
+    EXPECT_EQ(result, "");
+
+    result = FindModuleName(info, "");
+    EXPECT_EQ(result, "");
+    DTEST_LOG << "DistributedBmStorageTest FindAbilityAndModuleNameTest_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: FindContinueTypeIdTest_001
+ * @tc.desc: test FindContinueTypeId
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedBmStorageTest, FindContinueTypeIdTest_001, TestSize.Level1)
+{
+    DTEST_LOG << "DistributedBmStorageTest FindContinueTypeIdTest_001 start" << std::endl;
+    DmsBundleInfo info;
+    uint8_t ret = FindContinueTypeId(info, "");
+    EXPECT_EQ(ret, MAX_CONTINUETYPEID);
+    DTEST_LOG << "DistributedBmStorageTest FindContinueTypeIdTest_001 end" << std::endl;
 }
 
 /**

@@ -309,6 +309,7 @@ ohos_unittest("dschedpermissiontest") {
 }
 
 ohos_unittest("dschedmissionmanagertest") {
+  cflags = [ "-Dprivate=public" ]
   sanitize = {
     cfi = true
     cfi_cross_dso = true
