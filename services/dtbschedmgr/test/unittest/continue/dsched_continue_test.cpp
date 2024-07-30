@@ -885,5 +885,39 @@ HWTEST_F(DSchedContinueTest, UpdateWantForContinueTypeTest_0030_1, TestSize.Leve
     DTEST_LOG << "DSchedContinueTest UpdateWantForContinueTypeTest_0030_1 end ret:" << ret << std::endl;
     usleep(WAITTIME);
 }
+
+/**
+ * @tc.name: OnDataRecvTest_0031_1
+ * @tc.desc: OnDataRecv
+ * @tc.type: FUNC
+ */
+HWTEST_F(DSchedContinueTest, OnDataRecvTest_0031_1, TestSize.Level0)
+{
+    DTEST_LOG << "DSchedContinueTest OnDataRecvTest_0031_1 begin" << std::endl;
+    std::string deviceId = "123";
+    std::string bundleName = "test";
+    int32_t subType = CONTINUE_PULL;
+    int32_t direction = CONTINUE_SINK;
+    sptr<IRemoteObject> callback = nullptr;
+    auto info = DSchedContinueInfo(deviceId, bundleName, deviceId, bundleName, "");
+    auto conti = std::make_shared<DSchedContinue>(subType, direction, callback, info);
+    conti->Init();
+
+    std::shared_ptr<DSchedDataBuffer> dataBuffer = nullptr;
+    int32_t command = DSCHED_CONTINUE_CMD_START;
+    conti->OnDataRecv(command, dataBuffer);
+    dataBuffer = std::make_shared<DSchedDataBuffer>(0);
+    conti->OnDataRecv(command, dataBuffer);
+    command = DSCHED_CONTINUE_CMD_DATA;
+    conti->OnDataRecv(command, dataBuffer);
+    command = DSCHED_CONTINUE_CMD_REPLY;
+    conti->OnDataRecv(command, dataBuffer);
+    command = DSCHED_CONTINUE_CMD_END;
+    conti->OnDataRecv(command, dataBuffer);
+    command = DSCHED_CONTINUE_CMD_MIN;
+    conti->OnDataRecv(command, dataBuffer);
+    DTEST_LOG << "DSchedContinueTest OnDataRecvTest_0031_1 end" << std::endl;
+    usleep(WAITTIME);
+}
 }
 }
