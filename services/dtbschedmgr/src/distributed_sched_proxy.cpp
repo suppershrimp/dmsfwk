@@ -718,7 +718,7 @@ int32_t DistributedSchedProxy::GetRemoteMissionSnapshotInfo(const std::string& n
 
 int32_t DistributedSchedProxy::SetMissionContinueState(int32_t missionId, const AAFwk::ContinueState &state)
 {
-    HILOGD("DistributedSchedProxy::SetMissionContinueState called");
+    HILOGI("DistributedSchedProxy::SetMissionContinueState called");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         HILOGE("SetMissionContinueState remote is null");
@@ -727,13 +727,21 @@ int32_t DistributedSchedProxy::SetMissionContinueState(int32_t missionId, const 
 
     MessageParcel data;
     MessageParcel reply;
+    MessageOption option = {MessageOption::TF_ASYNC};
     if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
         return ERR_FLATTEN_OBJECT;
     }
     PARCEL_WRITE_HELPER(data, Int32, missionId);
     PARCEL_WRITE_HELPER(data, Int32, static_cast<int32_t>(state));
-    PARCEL_TRANSACT_SYNC_RET_INT(remote, static_cast<uint32_t>(IDSchedInterfaceCode::SET_MISSION_CONTINUE_STATE),
-        data, reply);
+    int32_t error = remote->SendRequest(static_cast<uint32_t>(IDSchedInterfaceCode::SET_MISSION_CONTINUE_STATE),
+        data, reply, option);
+        if (error != ERR_NONE) {
+            HILOGE("transact failed, error: %{public}d", error);
+            return error;
+        }
+        int32_t result = reply.ReadInt32();
+        HILOGD("get result from server data = %{public}d", result);
+        return result;
 }
 #endif
 
