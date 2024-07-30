@@ -704,7 +704,7 @@ HWTEST_F(DMSContinueManagerTest, testNotifyDeviceOnline001, TestSize.Level1)
  * @tc.desc: SendScreenOffEvent
  * @tc.type: FUNC
  */
-HWTEST_F(DMSContinueManagerTest, testSendScreenOffEvent002, TestSize.Level1)
+HWTEST_F(DMSContinueManagerTest, testSendScreenOffEvent001, TestSize.Level1)
 {
     DTEST_LOG << "DMSContinueManagerTest testSendScreenOffEvent001 start" << std::endl;
     std::shared_ptr<ScreenOffHandler> screenOffHandler = DMSContinueSendMgr::GetInstance().screenOffHandler_;
