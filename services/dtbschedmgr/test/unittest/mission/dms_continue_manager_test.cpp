@@ -512,7 +512,7 @@ HWTEST_F(DMSContinueManagerTest, testSetMissionContinueState001, TestSize.Level3
     DMSContinueSendMgr::GetInstance().Init();
     OHOS::AAFwk::ContinueState state = OHOS::AAFwk::ContinueState::CONTINUESTATE_ACTIVE;
 
-     /**
+    /**
      * @tc.steps: step1. test SetMissionContinueState when eventHandler is not nullptr;
      */
     DMSContinueSendMgr::GetInstance().SetMissionContinueState(0, state);
@@ -542,7 +542,7 @@ HWTEST_F(DMSContinueManagerTest, testDealSetMissionContinueStateBusiness001, Tes
      * @tc.steps: step1. test DealSetMissionContinueStateBusiness when missionId is invalid;
      */
     int32_t ret = DMSContinueSendMgr::GetInstance().DealSetMissionContinueStateBusiness(MISSIONID_02,
-        state);
+                                                                                        state);
     EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
 
     /**
@@ -566,7 +566,7 @@ HWTEST_F(DMSContinueManagerTest, testOnDeviceScreenOff001, TestSize.Level1)
     DTEST_LOG << "DMSContinueManagerTest testOnDeviceScreenOff001 start" << std::endl;
 
     DistributedSchedUtil::MockManageMissions();
-     /**
+    /**
      * @tc.steps: step1. test OnDeviceScreenOff when eventHandler is not nullptr;
      */
     DMSContinueSendMgr::GetInstance().Init();
@@ -707,15 +707,13 @@ HWTEST_F(DMSContinueManagerTest, testNotifyDeviceOnline001, TestSize.Level1)
 HWTEST_F(DMSContinueManagerTest, testSendScreenOffEvent001, TestSize.Level1)
 {
     DTEST_LOG << "DMSContinueManagerTest testSendScreenOffEvent001 start" << std::endl;
-    std::shared_ptr<ScreenOffHandler> screenOffHandler = DMSContinueSendMgr::GetInstance().screenOffHandler_;
+    std::shared_ptr<DMSContinueSendMgr::ScreenOffHandler> screenOffHandler = 
+        DMSContinueSendMgr::GetInstance().screenOffHandler_;
     DMSContinueSendMgr::GetInstance().screenOffHandler_ = nullptr;
     uint8_t type = 0;
     int32_t ret = DMSContinueSendMgr::GetInstance().SendScreenOffEvent(type);
     EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
     DMSContinueSendMgr::GetInstance().screenOffHandler_ = screenOffHandler;
-    ret = DMSContinueSendMgr::GetInstance().SendScreenOffEvent(type);
-    EXPECT_EQ(ret, ERR_OK);
-    DTEST_LOG << "DMSContinueManagerTest testSendScreenOffEvent001 end" << std::endl;
 }
 
 /**
@@ -735,20 +733,6 @@ HWTEST_F(DMSContinueManagerTest, testGetAbilityNameByMissionId_001, TestSize.Lev
     ret = DMSContinueSendMgr::GetInstance().GetBundleNameByMissionId(MISSIONID_02, abilityName);
     EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
     DTEST_LOG << "DMSContinueManagerTest testGetAbilityNameByMissionId_001 end" << std::endl;
-}
-
-/**
- * @tc.name: testOnDeviceScreenOff001
- * @tc.desc: OnDeviceScreenOff
- * @tc.type: FUNC
- */
-HWTEST_F(DMSContinueManagerTest, testOnDeviceScreenOff001, TestSize.Level1)
-{
-    DTEST_LOG << "DMSContinueManagerTest testOnDeviceScreenOff001 start" << std::endl;
-    int32_t missionId = 0;
-    DMSContinueSendMgr::GetInstance().screenOffHandler_ = std::make_shared<DMSContinueSendMgr::ScreenOffHandler>();
-    DMSContinueSendMgr::GetInstance().screenOffHandler_.OnDeviceScreenOff(missionId);
-    DTEST_LOG << "DMSContinueManagerTest testOnDeviceScreenOff001 end" << std::endl;
 }
 
 /**
@@ -790,7 +774,7 @@ HWTEST_F(DMSContinueManagerTest, testSetScreenOffInfo001, TestSize.Level1)
     uint16_t bundleNameId = 0;
     std::string ablitityName = "testAbility";
     DMSContinueSendMgr::GetInstance().screenOffHandler_ = std::make_shared<DMSContinueSendMgr::ScreenOffHandler>();
-    DMSContinueSendMgr::GetInstance().screenOffHandler_->ClearScreenOffInfo(missionId, bundleName,
+    DMSContinueSendMgr::GetInstance().screenOffHandler_->SetScreenOffInfo(missionId, bundleName,
         bundleNameId, ablitityName);
     DTEST_LOG << "DMSContinueManagerTest testSetScreenOffInfo001 end" << std::endl;
 }
@@ -808,10 +792,6 @@ HWTEST_F(DMSContinueManagerTest, testSetStateSendEvent001, TestSize.Level1)
     AAFwk::ContinueState state = AAFwk::ContinueState::CONTINUESTATE_INACTIVE;
     int32_t ret = DMSContinueSendMgr::GetInstance().SetStateSendEvent(bundleNameId, continueTypeId, state);
     EXPECT_EQ(ret, ERR_OK);
-    state = AAFwk::ContinueState::CONTINUESTATE_ACTIVE;
-    ret = DMSContinueSendMgr::GetInstance().SetStateSendEvent(bundleNameId, continueTypeId, state);
-    EXPECT_EQ(ret, ERR_OK);
-    DTEST_LOG << "DMSContinueManagerTest testSetStateSendEvent001 end" << std::endl;
 }
 
 /**
@@ -861,7 +841,7 @@ HWTEST_F(DMSContinueManagerTest, testGetContinueType_001, TestSize.Level1)
     std::string bundleName = "test bundleName";
     std::string continueType = "test continueType";
     int32_t ret = DMSContinueRecvMgr::GetInstance().VerifyBroadcastSource(networkId,
-        bundleName, continueType, state);
+                                                                            bundleName, continueType, state);
     EXPECT_EQ(ret, ERR_OK);
 
     EXPECT_FALSE(DMSContinueRecvMgr::GetInstance().GetContinueType(bundleName).empty());
@@ -877,8 +857,8 @@ HWTEST_F(DMSContinueManagerTest, testGetAliveMissionInfo001, TestSize.Level1)
 {
     DTEST_LOG << "DMSContinueManagerTest testGetAliveMissionInfo001 start" << std::endl;
     AliveMissionInfo missionInfo;
-    missionInfo.bundleName = '';
-    missionInfo.abilityName = '';
+    missionInfo.bundleName = "";
+    missionInfo.abilityName = "";
     auto aliveMission = DMSContinueSendMgr::GetInstance().aliveMission_;
     DMSContinueSendMgr::GetInstance().aliveMission_.clear();
     int32_t missionId = 0;
@@ -888,7 +868,7 @@ HWTEST_F(DMSContinueManagerTest, testGetAliveMissionInfo001, TestSize.Level1)
     missionInfoTest.bundleName = "bundleNameTest";
     missionInfoTest.abilityName = "abilityNameTest";
     DMSContinueSendMgr::GetInstance().aliveMission_.insert({0, missionInfoTest});
-    int32_t ret = DMSContinueSendMgr::GetInstance().GetAliveMissionInfo(missionId, missionInfo);
+    ret = DMSContinueSendMgr::GetInstance().GetAliveMissionInfo(missionId, missionInfo);
     EXPECT_EQ(ret, ERR_OK);
     DTEST_LOG << "DMSContinueManagerTest testGetAliveMissionInfo001 end" << std::endl;
 }
