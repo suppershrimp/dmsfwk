@@ -38,7 +38,8 @@ const int32_t MAX_TIMES = 600;              // 1min
 const int32_t SLEEP_INTERVAL = 100 * 1000;  // 100ms
 const int32_t FLAGS = AppExecFwk::BundleFlag::GET_BUNDLE_WITH_ABILITIES |
                       AppExecFwk::ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE |
-                      AppExecFwk::AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE;
+                      AppExecFwk::AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE |
+                      AppExecFwk::BundleFlag::GET_BUNDLE_WITH_CONTINUATION;
 }  // namespace
 
 std::shared_ptr<DmsBmStorage> DmsBmStorage::instance_ = nullptr;
@@ -701,6 +702,8 @@ void DmsBmStorage::UpdateDistributedData()
         HILOGE("get bundleInfos failed");
         return;
     }
+    HILOGI("bundleInfos size: %{public}zu", bundleInfos.size());
+    
     std::vector<std::string> bundleNames;
     for (const auto &bundleInfo : bundleInfos) {
         if (IsContinuable(bundleInfo)) {
