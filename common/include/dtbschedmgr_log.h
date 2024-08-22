@@ -101,6 +101,10 @@ enum DmsInterfaceSdkErr {
 
 enum {
     /**
+     * Result(202) for not system app.
+     */
+    NOT_SYSTEM_APP_ERR = 202,
+    /**
      * Result(29360128) for invalid parameters.
      */
     INVALID_PARAMETERS_ERR = DMS_SERVICE_ERR_OFFSET,

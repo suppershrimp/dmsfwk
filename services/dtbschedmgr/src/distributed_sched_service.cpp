@@ -976,6 +976,10 @@ int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId,
     int32_t missionId, const sptr<IRemoteObject>& callback, const OHOS::AAFwk::WantParams& wantParams)
 {
     HILOGI("ContinueMission called");
+    if (!IsSystemApp()) {
+        HILOGE("Not system app.");
+        return NOT_SYSTEM_APP_ERR;
+    }
     if (srcDeviceId.empty() || dstDeviceId.empty() || callback == nullptr) {
         HILOGE("srcDeviceId or dstDeviceId or callback is null!");
         return INVALID_PARAMETERS_ERR;
@@ -1058,6 +1062,10 @@ int32_t DistributedSchedService::ContinueMission(const std::string& srcDeviceId,
 {
     HILOGI("ContinueMission srcDeviceId: %{public}s. dstDeviceId: %{public}s. bundleName: %{public}s.",
         GetAnonymStr(srcDeviceId).c_str(), GetAnonymStr(dstDeviceId).c_str(), bundleName.c_str());
+    if (!IsSystemApp()) {
+        HILOGE("Not system app.");
+        return NOT_SYSTEM_APP_ERR;
+    }
     if (srcDeviceId.empty() || dstDeviceId.empty() || callback == nullptr) {
         HILOGE("srcDeviceId or dstDeviceId or callback is null!");
         return INVALID_PARAMETERS_ERR;
@@ -2800,34 +2808,58 @@ int32_t DistributedSchedService::GetRemoteMissionSnapshotInfo(const std::string&
 int32_t DistributedSchedService::RegisterMissionListener(const std::u16string& devId,
     const sptr<IRemoteObject>& obj)
 {
+    if (!IsSystemApp()) {
+        HILOGE("Not system app.");
+        return NOT_SYSTEM_APP_ERR;
+    }
     return DistributedSchedMissionManager::GetInstance().RegisterMissionListener(devId, obj);
 }
 
 int32_t DistributedSchedService::RegisterOnListener(const std::string& type,
     const sptr<IRemoteObject>& obj)
 {
+    if (!IsSystemApp()) {
+        HILOGE("Not system app.");
+        return NOT_SYSTEM_APP_ERR;
+    }
     return DMSContinueRecvMgr::GetInstance().RegisterOnListener(type, obj);
 }
 
 int32_t DistributedSchedService::RegisterOffListener(const std::string& type,
     const sptr<IRemoteObject>& obj)
 {
+    if (!IsSystemApp()) {
+        HILOGE("Not system app.");
+        return NOT_SYSTEM_APP_ERR;
+    }
     return DMSContinueRecvMgr::GetInstance().RegisterOffListener(type, obj);
 }
 
 int32_t DistributedSchedService::UnRegisterMissionListener(const std::u16string& devId,
     const sptr<IRemoteObject>& obj)
 {
+    if (!IsSystemApp()) {
+        HILOGE("Not system app.");
+        return NOT_SYSTEM_APP_ERR;
+    }
     return DistributedSchedMissionManager::GetInstance().UnRegisterMissionListener(devId, obj);
 }
 
 int32_t DistributedSchedService::StartSyncRemoteMissions(const std::string& devId, bool fixConflict, int64_t tag)
 {
+    if (!IsSystemApp()) {
+        HILOGE("Not system app.");
+        return NOT_SYSTEM_APP_ERR;
+    }
     return DistributedSchedMissionManager::GetInstance().StartSyncRemoteMissions(devId, fixConflict, tag);
 }
 
 int32_t DistributedSchedService::StopSyncRemoteMissions(const std::string& devId)
 {
+    if (!IsSystemApp()) {
+        HILOGE("Not system app.");
+        return NOT_SYSTEM_APP_ERR;
+    }
     return DistributedSchedMissionManager::GetInstance().StopSyncRemoteMissions(devId, false, true);
 }
 

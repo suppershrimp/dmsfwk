@@ -43,6 +43,7 @@ bool IsInt32(const cJSON *paramValue);
 bool IsString(const cJSON *paramValue);
 bool CJsonParamCheck(const cJSON *jsonObj, const std::initializer_list<std::string> &keys);
 bool GetOsInfoFromDM(const std::string &dmInfoEx, int32_t &osType, std::string &osVersion);
+bool IsSystemApp();
 } // namespace DistributedSchedule
 } // namespace OHOS
 #endif // OHOS_DISTRIBUTED_SCHED_UTILS_H

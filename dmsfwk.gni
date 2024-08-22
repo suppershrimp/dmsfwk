@@ -14,6 +14,7 @@
 declare_args() {
   dms_path = "//foundation/ability/dmsfwk"
   module_output_path = "dmsfwk/dmsfwk"
+  system_secue_path = "//base/security/access_token"
 
   dmsfwk_standard_form_share = true
   dmsfwk_mission_manager = false
