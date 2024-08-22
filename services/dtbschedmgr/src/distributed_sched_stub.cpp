@@ -1528,7 +1528,7 @@ int32_t DistributedSchedStub::CreateJsonObject(std::string& extraInfo, CallerInf
 
 int32_t DistributedSchedStub::StartFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply)
 {
-    if (!CheckCallingUid()) {
+    if (!CheckCallingUid() || !CheckIsSameAccount()) {
         HILOGW("request DENIED!");
         return DMS_PERMISSION_DENIED;
     }
@@ -1573,6 +1573,16 @@ int32_t DistributedSchedStub::StartFreeInstallFromRemoteInner(MessageParcel& dat
     int64_t end = GetTickCount();
     PARCEL_WRITE_HELPER(reply, Int64, end - begin);
     return ERR_NONE;
+}
+
+bool DistributedSchedStub::CheckIsSameAccount()
+{
+    std::string callingDeviceid = IPCSkeleton::GetCallingDeviceID();
+    if (!DistributedSchedPermission::GetInstance().IsSameAccount(callingDeviceid)) {
+        HILOGE("check deviceId failed");
+        return false;
+    };
+    return true;
 }
 
 int32_t DistributedSchedStub::NotifyCompleteFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply)

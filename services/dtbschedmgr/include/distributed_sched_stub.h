@@ -94,6 +94,7 @@ private:
     int32_t StartFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply);
     int32_t ReadDataForFreeInstall(MessageParcel& data,
         CallerInfo &callerInfo, AccountInfo &accountInfo, int64_t &taskId);
+    bool CheckIsSameAccount();
     int32_t NotifyCompleteFreeInstallFromRemoteInner(MessageParcel& data, MessageParcel& reply);
 #ifdef SUPPORT_DISTRIBUTED_FORM_SHARE
     int32_t StartRemoteShareFormInner(MessageParcel& data, MessageParcel& reply);

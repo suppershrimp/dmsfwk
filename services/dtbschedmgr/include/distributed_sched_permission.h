@@ -58,6 +58,7 @@ public:
         bool needQueryExtension = false) const;
     void MarkUriPermission(OHOS::AAFwk::Want& want, uint32_t accessToken);
     void RemoveRemoteObjectFromWant(std::shared_ptr<AAFwk::Want> want) const;
+    bool IsSameAccount(const std::string& callingDeviceId) const;
 
 private:
     bool GetOsAccountData(AccountInfo& dmsAccountInfo);
