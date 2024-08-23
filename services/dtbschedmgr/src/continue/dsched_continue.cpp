@@ -773,11 +773,18 @@ int32_t DSchedContinue::ExecuteContinueSend(std::shared_ptr<ContinueAbilityData>
         return INVALID_PARAMETERS_ERR;
     }
 
+    
     AppExecFwk::AbilityInfo abilityInfo;
     CallerInfo callerInfo;
     callerInfo.sourceDeviceId = continueInfo_.sourceDeviceId_;
     callerInfo.uid = data->callerUid;
     callerInfo.accessToken = data->accessToken;
+    callerinfo.callerBundleName = continueInfo_.sinkBundleName_;
+
+    sptr<AppExecFwk::IBundleMgr> bundleMgr = BundleManagerInternal::GetBundleManager();
+    AppExecFwk::AppProvisionInfo appProvisionInfo;
+    bundleMgr->GetAppProvisionInfo(bundleNameItem, appProvisionInfo);
+    callerInfo.callerDeveloperId = appProvisionInfo.developerId;
     if (!BundleManagerInternal::GetCallerAppIdFromBms(callerInfo.uid, callerInfo.callerAppId)) {
         HILOGE("GetCallerAppIdFromBms failed");
         return INVALID_PARAMETERS_ERR;
@@ -831,6 +838,7 @@ int32_t DSchedContinue::SetWantForContinuation(AAFwk::Want& newWant)
 {
     newWant.SetParam("sessionId", continueInfo_.missionId_);
     newWant.SetParam("deviceId", continueInfo_.sourceDeviceId_);
+    newWant.SetBundle(continueInfo_.sourceBundleName_);
 
     AppExecFwk::BundleInfo localBundleInfo;
     if (BundleManagerInternal::GetLocalBundleInfo(newWant.GetBundle(), localBundleInfo) != ERR_OK) {
