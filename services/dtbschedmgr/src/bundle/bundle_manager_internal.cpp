@@ -184,6 +184,20 @@ bool BundleManagerInternal::IsSameAppId(const std::string& callerAppId, const st
     return callerAppId == calleeAppId;
 }
 
+bool BundleManagerInternal::IsSameDeveloperId(const std::string& callerDeveloperId, const std::string& targetBundleName)
+{
+    if (targetBundleName.empty() || callerDeveloperId.empty()) {
+        HILOGE("targetBundleName:%{public}s or callerDeveloperId:%s is empty",
+            targetBundleName.c_str(), GetAnonymStr(callerDeveloperId).c_str());
+        return false;
+    }
+
+    auto bundleMgr = GetBundleManager();
+    AppExecFwk::AppProvisionInfo targetAppProvisionInfo;
+    bundleMgr->GetAppProvisionInfo(targetBundleName, targetAppProvisionInfo);
+    return callerDeveloperId == targetAppProvisionInfo.developerId;
+}
+
 int32_t BundleManagerInternal::GetLocalBundleInfo(const std::string& bundleName,
     AppExecFwk::BundleInfo &localBundleInfo)
 {

@@ -265,8 +265,8 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
 {
     HILOGI("DealOnBroadcastBusiness start, senderNetworkId: %{public}s, bundleNameId: %{public}u, state: %{public}d.",
         GetAnonymStr(senderNetworkId).c_str(), bundleNameId, state);
-    DmsBundleInfo DistributedBundleInfo;
-    bool result = DmsBmStorage::GetInstance()->GetDistributedBundleInfo(senderNetworkId, bundleNameId, DistributedBundleInfo);
+    DmsBundleInfo distributedBundleInfo;
+    bool result = DmsBmStorage::GetInstance()->GetDistributedBundleInfo(senderNetworkId, bundleNameId, distributedBundleInfo);
     if (!result) {
         HILOGW("get bundleName failed, ret: %{public}d, try = %{public}d", result, retry);
         return RetryPostBroadcast(senderNetworkId, bundleNameId, continueTypeId, state, retry);
@@ -288,7 +288,7 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
             finalBundleName = bundleName;
         }
     } else {
-        bool continueTypeGot = continueTypeCheck(DistributedBundleInfo, continueType);
+        bool continueTypeGot = continueTypeCheck(distributedBundleInfo, continueType);
         if(continueTypeGot && BundleManagerInternal::GetLocalBundleInfoV9(bundleName, localBundleInfo) == ERR_OK){
             finalBundleName = bundleName;
         } else {
@@ -298,13 +298,13 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
                 sptr<AppExecFwk::IBundleMgr> bundleMgr = BundleManagerInternal::GetBundleManager();
                 for(std::string& bundleNameItem : bundleNameList) {
                     continueType = BundleManagerInternal::GetContinueType(senderNetworkId, bundleNameItem, continueTypeId);
-                    if(continueType.empty() || !continueTypeCheck(DistributedBundleInfo, continueType)
+                    if(continueType.empty() || !continueTypeCheck(distributedBundleInfo, continueType)
                         || BundleManagerInternal::GetLocalBundleInfoV9(bundleNameItem, localBundleInfo) != ERR_OK){
                         continue;
                     }
                     AppExecFwk::AppProvisionInfo appProvisionInfo;
                     if(bundleMgr->GetAppProvisionInfo(bundleNameItem, appProvisionInfo)
-                        && appProvisionInfo.developerId == DistributedBundleInfo.developerId){
+                        && appProvisionInfo.developerId == distributedBundleInfo.developerId){
                             finalBundleName = bundleNameItem;
                             break;
                     }
