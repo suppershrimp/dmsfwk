@@ -24,7 +24,9 @@
 
 #include "ability_manager_client.h"
 #include "config_policy_utils.h"
+#include "ipc_skeleton.h"
 #include "securec.h"
+#include "tokenid_kit.h"
 
 #include "dms_constant.h"
 #include "dtbschedmgr_log.h"
@@ -465,6 +467,12 @@ bool GetOsInfoFromDM(const std::string &dmInfoEx, int32_t &osType, std::string &
         dataJson = nullptr;
     }
     return isSuccess;
+}
+
+bool IsSystemApp()
+{
+    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    return OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
 }
 } // namespace DistributedSchedule
 } // namespace OHOS

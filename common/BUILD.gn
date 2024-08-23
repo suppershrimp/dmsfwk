@@ -34,10 +34,12 @@ ohos_shared_library("distributed_sched_utils") {
 
   external_deps = [
     "ability_runtime:ability_manager",
+    "access_token:libtokenid_sdk",
     "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "hilog:libhilog",
+    "ipc:ipc_core",
   ]
 
   install_images = [ system_base_dir ]
