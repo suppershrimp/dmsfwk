@@ -229,19 +229,6 @@ int32_t BundleManagerInternal::GetLocalBundleInfoV9(const std::string& bundleNam
     return ret;
 }
 
-static bool GetContinueBundle4Src(const std::string srcBundleName,
-    std::vector<std::string> bundleNameList){
-    // todo: 打桩测试
-    if(srcBundleName == "com.hf.demo"){
-        bundleNameList.emplace_back("com.hf.demo1");
-        return true;
-    }else if(srcBundleName == "com.hf.demo1"){
-        bundleNameList.emplace_back("com.hf.demo");
-        return true;
-    }
-    return false;
-}
-
 int32_t BundleManagerInternal::CheckRemoteBundleInfoForContinuation(const std::string& dstDeviceId,
     const std::string& bundleName, AppExecFwk::DistributedBundleInfo& remoteBundleInfo)
 {

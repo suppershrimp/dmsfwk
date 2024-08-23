@@ -17,7 +17,6 @@
 #define OHOS_DISTRIBUTED_BUNDLE_MANANGER_INTERNAL_H
 
 #include <string>
-#include <vector>
 
 #include "bundlemgr/bundle_mgr_interface.h"
 #include "bundlemgr/bundle_mgr_proxy.h"
