@@ -192,6 +192,7 @@ void DSchedContinue::SetEventData()
     eventData_.destModuleName_ = dstContinueInfo.moduleName;
     eventData_.destAbilityName_ = dstContinueInfo.abilityName;
     eventData_.developerId_ = srcContinueInfo.developerId;
+    eventData_.developerId_ = srcContinueInfo.developerId;
     eventData_.dSchedEventType_ = DMS_CONTINUE;
     eventData_.state_ = DMS_DSCHED_EVENT_START;
 }

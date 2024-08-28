@@ -534,7 +534,9 @@ HWTEST_F(DistributedBmStorageTest, ConvertToDistributedBundleInfoTest_001, TestS
     if (distributedDataStorage != nullptr) {
         DmsBundleInfo distributedBundleInfo;
         AppExecFwk::BundleInfo bundleInfo;
-        distributedBundleInfo = dmsBmStorage_->ConvertToDistributedBundleInfo(bundleInfo, true);
+        AppExecFwk::AppProvisionInfo appProvisionInfo;
+        appProvisionInfo.developerId = "mokedDeveloperId";
+        distributedBundleInfo = dmsBmStorage_->ConvertToDistributedBundleInfo(bundleInfo, appProvisionInfo, true);
         EXPECT_EQ(distributedBundleInfo.bundleName.empty(), true);
 
         bundleInfo.name = "bundleName";

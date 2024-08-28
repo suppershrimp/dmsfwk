@@ -107,7 +107,20 @@ bool DmsBmStorage::SaveStorageDistributeInfo(const std::string &bundleName, bool
         HILOGE("GetLocalUdid failed");
         return false;
     }
-    ret = InnerSaveStorageDistributeInfo(ConvertToDistributedBundleInfo(bundleInfo, isPackageChange), localUdid);
+    AppExecFwk::AppProvisionInfo appProvisionInfo;
+    std::vector<int32_t> ids;
+    uint32_t result = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+    if (result != ERR_OK || ids.empty()) {
+        HILOGE("Get userId from active Os AccountIds fail, ret : %{public}d", result);
+        return false;
+    }
+    result = bundleMgr->GetAppProvisionInfo(bundleName, ids[0], appProvisionInfo);
+    if (result != ERR_OK) {
+        HILOGW("GetAppProvisioninfo (developerId) of %{public}s failed: %{public}d", bundleName.c_str(), ret);
+        DeleteStorageDistributeInfo(bundleName);
+        return false;
+    }
+    ret = InnerSaveStorageDistributeInfo(ConvertToDistributedBundleInfo(bundleInfo, appProvisionInfo, isPackageChange), localUdid);
     if (!ret) {
         HILOGW("InnerSaveStorageDistributeInfo:%{public}s  failed", bundleName.c_str());
         return false;
@@ -610,6 +623,7 @@ bool DmsBmStorage::RebuildLocalData()
 }
 
 DmsBundleInfo DmsBmStorage::ConvertToDistributedBundleInfo(const AppExecFwk::BundleInfo &bundleInfo,
+    AppExecFwk::AppProvisionInfo appProvisionInfo,
     bool isPackageChange)
 {
     DmsBundleInfo distributedBundleInfo;
@@ -627,6 +641,7 @@ DmsBundleInfo DmsBmStorage::ConvertToDistributedBundleInfo(const AppExecFwk::Bun
     distributedBundleInfo.enabled = bundleInfo.applicationInfo.enabled;
     distributedBundleInfo.bundleNameId = CreateBundleNameId(bundleInfo.name, isPackageChange);
     distributedBundleInfo.updateTime = bundleInfo.updateTime;
+    distributedBundleInfo.developerId = appProvisionInfo.developerId;
     uint8_t pos = 0;
     for (const auto &abilityInfo : bundleInfo.abilityInfos) {
         DmsAbilityInfo dmsAbilityInfo;
@@ -702,17 +717,29 @@ void DmsBmStorage::UpdateDistributedData()
     std::map<std::string, DmsBundleInfo> oldDistributedBundleInfos =
         GetAllOldDistributionBundleInfo(bundleNames);
 
+    AppExecFwk::AppProvisionInfo appProvisionInfo;
+    std::vector<int32_t> ids;
+    uint32_t result = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+    if (result != ERR_OK || ids.empty()) {
+        HILOGE("Get userId from active Os AccountIds fail, ret : %{public}d", result);
+        return;
+    }
     std::vector<DmsBundleInfo> dmsBundleInfos;
     for (const auto &bundleInfo : bundleInfos) {
+        result = bundleMgr->GetAppProvisionInfo(bundleInfo.name, ids[0], appProvisionInfo);
+        if (result != ERR_OK) {
+            HILOGE("GetAppProvisioninfo (developerId) of %{public}s failed: %{public}d", bundleInfo.name.c_str(), result);
+            continue;
+        }
         if (oldDistributedBundleInfos.find(bundleInfo.name) != oldDistributedBundleInfos.end()) {
             int64_t updateTime = oldDistributedBundleInfos[bundleInfo.name].updateTime;
             if (updateTime != bundleInfo.updateTime) {
-                DmsBundleInfo dmsBundleInfo = ConvertToDistributedBundleInfo(bundleInfo, true);
+                DmsBundleInfo dmsBundleInfo = ConvertToDistributedBundleInfo(bundleInfo, appProvisionInfo, true);
                 dmsBundleInfos.push_back(dmsBundleInfo);
             }
             continue;
         }
-        DmsBundleInfo dmsBundleInfo = ConvertToDistributedBundleInfo(bundleInfo);
+        DmsBundleInfo dmsBundleInfo = ConvertToDistributedBundleInfo(bundleInfo, appProvisionInfo);
         if (dmsBundleInfo.bundleName == "") {
             HILOGE("The package information is empty and does not need to be stored!");
             continue;
@@ -1043,6 +1070,7 @@ bool DmsBmStorage::GetContinueEventInfo(const std::string &networkId, const std:
             HILOGI("value: %{public}s", value.c_str());
             continueEventInfo.networkId = networkId;
             continueEventInfo.bundleName = bundleName;
+            continueEventInfo.developerId = distributedBundleInfo.developerId;
             continueEventInfo.abilityName = FindAbilityName(distributedBundleInfo, continueType);
             continueEventInfo.moduleName = FindModuleName(distributedBundleInfo, continueType);
             return true;
