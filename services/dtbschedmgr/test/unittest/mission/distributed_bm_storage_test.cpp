@@ -540,7 +540,7 @@ HWTEST_F(DistributedBmStorageTest, ConvertToDistributedBundleInfoTest_001, TestS
         EXPECT_EQ(distributedBundleInfo.bundleName.empty(), true);
 
         bundleInfo.name = "bundleName";
-        distributedBundleInfo = dmsBmStorage_->ConvertToDistributedBundleInfo(bundleInfo, false);
+        distributedBundleInfo = dmsBmStorage_->ConvertToDistributedBundleInfo(bundleInfo, appProvisionInfo, false);
         EXPECT_EQ(distributedBundleInfo.bundleName.empty(), false);
     }
     DTEST_LOG << "DistributedBmStorageTest ConvertToDistributedBundleInfoTest_001 end" << std::endl;

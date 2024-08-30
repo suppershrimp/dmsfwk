@@ -727,8 +727,8 @@ void DmsBmStorage::UpdateDistributedData()
     std::vector<DmsBundleInfo> dmsBundleInfos;
     for (const auto &bundleInfo : bundleInfos) {
         if (bundleMgr->GetAppProvisionInfo(bundleInfo.name, ids[0], appProvisionInfo) != ERR_OK) {
-            HILOGE("GetAppProvisioninfo (developerId) of %{public}s failed: %{public}d",
-                bundleInfo.name.c_str(), result);
+            HILOGE("GetAppProvisioninfo (developerId) of %{public}s failed",
+                bundleInfo.name.c_str());
             continue;
         }
         if (oldDistributedBundleInfos.find(bundleInfo.name) != oldDistributedBundleInfos.end()) {
