@@ -45,9 +45,27 @@ struct lastUnfoInfo {
     std::string abilityName;
 };
 
-struct AliveMissionInfo {
+struct ContinueLaunchMissionInfo {
     std::string bundleName;
     std::string abilityName;
+
+    bool operator == (const ContinueLaunchMissionInfo &other) const
+    {
+        return this->bundleName == other.bundleName && this->abilityName == other.abilityName;
+    }
+
+    bool operator < (const ContinueLaunchMissionInfo &other) const
+    {
+        return this->bundleName == other.bundleName
+            ? this->abilityName < other.abilityName
+            : this->bundleName < other.bundleName;
+    }
+};
+
+struct LastFocusedMissionInfo
+{
+    int32_t missionId;
+    std::string bundleName;
 };
 
 enum class FocusedReason {
@@ -119,8 +137,8 @@ public:
     void OnDeviceScreenOn();
     int32_t NotifyDeviceOnline();
     int32_t SendScreenOffEvent(uint8_t type);
-    void DeleteAliveMissionInfo(const int32_t missionId);
-    int32_t GetAliveMissionInfo(const int32_t missionId, AliveMissionInfo& missionInfo);
+    void DeleteContinueLaunchMissionInfo(const int32_t missionId);
+    int32_t GetContinueLaunchMissionInfo(const int32_t missionId, ContinueLaunchMissionInfo& missionInfo);
 
 private:
     int32_t GetCurrentMissionId();
@@ -146,6 +164,7 @@ private:
     int32_t GetBundleNameIdAndContinueTypeId(const int32_t missionId, const AAFwk::ContinueState& state,
         uint16_t& bundleNameId, uint8_t& continueTypeId);
     void EraseFocusedMission(const std::string& bundleName, const int32_t& missionId, const UnfocusedReason& reason);
+    bool UpdateContinueLaunchMission(const AAFwk::MissionInfo& info);
 private:
     currentMissionInfo info_ = { INVALID_MISSION_ID, false };
     std::map<std::string, int32_t> focusedMission_;
@@ -156,7 +175,8 @@ private:
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> eventHandler_;
     std::shared_ptr<ScreenOffHandler> screenOffHandler_;
     int32_t mmiMonitorId_ = INVALID_MISSION_ID;
-    std::map<int32_t, AliveMissionInfo> aliveMission_;
+    std::map<ContinueLaunchMissionInfo, int32_t> continueLaunchMission_;
+    LastFocusedMissionInfo lastFocusedMissionInfo_ = { INVALID_MISSION_ID, "" };
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
