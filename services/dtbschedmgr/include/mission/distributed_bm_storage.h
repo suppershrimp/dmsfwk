@@ -45,6 +45,7 @@ struct ContinueEventInfo {
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
+    std::string developerId;
 };
 
 class DmsBmStorage {
@@ -80,6 +81,7 @@ private:
     void AddBundleNameId(const uint16_t &bundleNameId, const std::string &bundleName);
     void DelBundleNameId(const std::string &bundleName);
     DmsBundleInfo ConvertToDistributedBundleInfo(const AppExecFwk::BundleInfo &bundleInfo,
+        AppExecFwk::AppProvisionInfo appProvisionInfo,
         bool isPackageChange = false);
     bool InnerSaveStorageDistributeInfo(const DmsBundleInfo &distributedBundleInfo, const std::string &localUdid);
     std::map<std::string, DmsBundleInfo> GetAllOldDistributionBundleInfo(

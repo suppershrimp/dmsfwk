@@ -58,6 +58,7 @@ struct DmsBundleInfo : public Parcelable {
     uint16_t bundleNameId = 0;
     // bundle update time
     int64_t updateTime = 0;
+    std::string developerId;
     std::vector<DmsAbilityInfo> dmsAbilityInfos;
     std::vector<uint8_t> userIdArr;
 
