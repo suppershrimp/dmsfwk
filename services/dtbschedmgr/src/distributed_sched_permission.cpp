@@ -757,5 +757,14 @@ void DistributedSchedPermission::RemoveRemoteObjectFromWant(std::shared_ptr<AAFw
     }
     want->SetParams(wantParams);
 }
+
+bool DistributedSchedPermission::IsSameAccount(const std::string& callingDeviceId) const
+{
+    if (DeviceManager::GetInstance().IsSameAccount(callingDeviceId)) {
+        return true;
+    }
+    HILOGE("remote device %{public}s is not same account.", GetAnonymStr(callingDeviceId).c_str());
+    return false;
+}
 }
 }

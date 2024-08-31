@@ -1167,7 +1167,7 @@ HWTEST_F(DistributedSchedStubTest, RegisterMissionListenerInner_002, TestSize.Le
 HWTEST_F(DistributedSchedStubTest, RegisterOnListenerInner_002, TestSize.Level3)
 {
     DTEST_LOG << "DistributedSchedStubTest RegisterMissionListenerInner_003 begin" << std::endl;
- 
+
 
     MessageParcel data;
     MessageParcel reply;
@@ -1903,7 +1903,7 @@ HWTEST_F(DistributedSchedStubTest, StartFreeInstallFromRemoteInner_001, TestSize
     MessageParcel reply;
 
     int32_t result = DistributedSchedService::GetInstance().StartFreeInstallFromRemoteInner(data, reply);
-    EXPECT_EQ(result, ERR_NULL_OBJECT);
+    EXPECT_EQ(result, DMS_PERMISSION_DENIED);
     DTEST_LOG << "DistributedSchedStubTest StartFreeInstallFromRemoteInner_001 end" << std::endl;
 }
 
@@ -1921,7 +1921,7 @@ HWTEST_F(DistributedSchedStubTest, StartFreeInstallFromRemoteInner_002, TestSize
     data.WriteParcelable(&want);
 
     int32_t result = DistributedSchedService::GetInstance().StartFreeInstallFromRemoteInner(data, reply);
-    EXPECT_EQ(result, ERR_FLATTEN_OBJECT);
+    EXPECT_EQ(result, DMS_PERMISSION_DENIED);
     DTEST_LOG << "DistributedSchedStubTest StartFreeInstallFromRemoteInner_002 end" << std::endl;
 }
 
@@ -1947,7 +1947,7 @@ HWTEST_F(DistributedSchedStubTest, StartFreeInstallFromRemoteInner_003, TestSize
     data.WriteString(extraInfo);
 
     int32_t result = DistributedSchedService::GetInstance().StartFreeInstallFromRemoteInner(data, reply);
-    EXPECT_EQ(result, ERR_NONE);
+    EXPECT_EQ(result, DMS_PERMISSION_DENIED);
     DTEST_LOG << "DistributedSchedStubTest StartFreeInstallFromRemoteInner_003 end" << std::endl;
 }
 
@@ -1973,7 +1973,7 @@ HWTEST_F(DistributedSchedStubTest, StartFreeInstallFromRemoteInner_004, TestSize
     data.WriteString(extraInfo);
 
     int32_t result = DistributedSchedService::GetInstance().StartFreeInstallFromRemoteInner(data, reply);
-    EXPECT_EQ(result, ERR_NONE);
+    EXPECT_EQ(result, DMS_PERMISSION_DENIED);
     DTEST_LOG << "DistributedSchedStubTest StartFreeInstallFromRemoteInner_004 end" << std::endl;
 }
 
@@ -1999,8 +1999,21 @@ HWTEST_F(DistributedSchedStubTest, StartFreeInstallFromRemoteInner_005, TestSize
     data.WriteString(extraInfo);
 
     int32_t result = DistributedSchedService::GetInstance().StartFreeInstallFromRemoteInner(data, reply);
-    EXPECT_EQ(result, ERR_NONE);
+    EXPECT_EQ(result, DMS_PERMISSION_DENIED);
     DTEST_LOG << "DistributedSchedStubTest StartFreeInstallFromRemoteInner_005 end" << std::endl;
+}
+
+/**
+ * @tc.name: CheckIsSameAccount_001
+ * @tc.desc: check CheckIsSameAccount
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedSchedStubTest, CheckIsSameAccount_001, TestSize.Level3)
+{
+    DTEST_LOG << "DistributedSchedStubTest CheckIsSameAccount_001 begin" << std::endl;
+    bool result = DistributedSchedService::GetInstance().CheckIsSameAccount();
+    EXPECT_FALSE(result);
+    DTEST_LOG << "DistributedSchedStubTest CheckIsSameAccount_001 end" << std::endl;
 }
 
 /**

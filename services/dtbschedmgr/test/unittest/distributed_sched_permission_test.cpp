@@ -1788,5 +1788,19 @@ HWTEST_F(DistributedSchedPermissionTest, CheckAclList_001, TestSize.Level3)
     EXPECT_EQ(ret, false);
     DTEST_LOG << "DistributedSchedPermissionTest CheckAclList_001 end result:" << ret << std::endl;
 }
+
+/**
+ * @tc.name: IsSameAccount_001
+ * @tc.desc: call IsSameAccount
+ * @tc.type: FUNC
+ */
+HWTEST_F(DistributedSchedPermissionTest, IsSameAccount_001, TestSize.Level3)
+{
+    DTEST_LOG << "DistributedSchedStubTest IsSameAccount_001 begin" << std::endl;
+    std::string remoteNetworkId = "remote";
+    bool result = DistributedSchedPermission::GetInstance().IsSameAccount(remoteNetworkId);
+    EXPECT_FALSE(result);
+    DTEST_LOG << "DistributedSchedStubTest IsSameAccount_001 end" << std::endl;
+}
 } // namespace DistributedSchedule
 } // namespace OHOS
