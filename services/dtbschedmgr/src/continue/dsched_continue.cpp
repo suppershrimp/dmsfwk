@@ -44,6 +44,7 @@
 #include "scene_board_judgement.h"
 #include "softbus_adapter/transport/dsched_transport_softbus_adapter.h"
 #include "softbus_error_code.h"
+#include "os_account_manager.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -747,6 +748,31 @@ int32_t DSchedContinue::ExecuteContinueReply()
     return ERR_OK;
 }
 
+bool DSchedContinue::MakeCallerInfo(std::shared_ptr<ContinueAbilityData> data, CallerInfo &callerInfo)
+{
+    callerInfo.sourceDeviceId = continueInfo_.sourceDeviceId_;
+    callerInfo.uid = data->callerUid;
+    callerInfo.accessToken = data->accessToken;
+    callerInfo.callerBundleName = continueInfo_.sinkBundleName_;
+    callerInfo.extraInfoJson[DMS_VERSION_ID] = DMS_VERSION;
+
+    sptr<AppExecFwk::IBundleMgr> bundleMgr = BundleManagerInternal::GetBundleManager();
+    if (bundleMgr == nullptr) {
+        HILOGE("get bundle manager failed");
+        return false;
+    }
+    AppExecFwk::AppProvisionInfo appProvisionInfo;
+    std::vector<int32_t> ids;
+    ErrCode ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+    if (ret != ERR_OK || ids.empty()) {
+        HILOGE("Get userId from active Os AccountIds fail, ret : %{public}d", ret);
+        return false;
+    }
+    bundleMgr->GetAppProvisionInfo(continueInfo_.sinkBundleName_, ids[0], appProvisionInfo);
+    callerInfo.callerDeveloperId = appProvisionInfo.developerId;
+    return true;
+}
+
 int32_t DSchedContinue::ExecuteContinueSend(std::shared_ptr<ContinueAbilityData> data)
 {
     HILOGI("ExecuteContinueSend start, continueInfo: %{public}s", continueInfo_.toString().c_str());
@@ -770,9 +796,9 @@ int32_t DSchedContinue::ExecuteContinueSend(std::shared_ptr<ContinueAbilityData>
 
     AppExecFwk::AbilityInfo abilityInfo;
     CallerInfo callerInfo;
-    callerInfo.sourceDeviceId = continueInfo_.sourceDeviceId_;
-    callerInfo.uid = data->callerUid;
-    callerInfo.accessToken = data->accessToken;
+    if (!MakeCallerInfo(data, callerInfo)) {
+        return INVALID_PARAMETERS_ERR;
+    }
     if (!BundleManagerInternal::GetCallerAppIdFromBms(callerInfo.uid, callerInfo.callerAppId)) {
         HILOGE("GetCallerAppIdFromBms failed");
         return INVALID_PARAMETERS_ERR;
@@ -781,10 +807,10 @@ int32_t DSchedContinue::ExecuteContinueSend(std::shared_ptr<ContinueAbilityData>
         HILOGE("GetBundleNameListFromBms failed");
         return INVALID_PARAMETERS_ERR;
     }
-    callerInfo.extraInfoJson[DMS_VERSION_ID] = DMS_VERSION;
+
     AccountInfo accountInfo;
     int32_t ret = DistributedSchedPermission::GetInstance().GetAccountInfo(continueInfo_.sinkDeviceId_, callerInfo,
-        accountInfo);
+                                                                           accountInfo);
     if (ret != ERR_OK) {
         HILOGE("GetAccountInfo failed");
         return ret;
@@ -826,6 +852,7 @@ int32_t DSchedContinue::SetWantForContinuation(AAFwk::Want& newWant)
 {
     newWant.SetParam("sessionId", continueInfo_.missionId_);
     newWant.SetParam("deviceId", continueInfo_.sourceDeviceId_);
+    newWant.SetBundle(continueInfo_.sourceBundleName_);
 
     AppExecFwk::BundleInfo localBundleInfo;
     if (BundleManagerInternal::GetLocalBundleInfo(newWant.GetBundle(), localBundleInfo) != ERR_OK) {

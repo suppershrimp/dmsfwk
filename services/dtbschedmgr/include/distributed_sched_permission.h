@@ -16,6 +16,7 @@
 #ifndef DISTRIBUTED_SCHED_PERMISSION_H
 #define DISTRIBUTED_SCHED_PERMISSION_H
 
+#include <stdint.h>
 #include <string>
 
 #include "distributed_sched_interface.h"
@@ -50,12 +51,13 @@ public:
         const AccountInfo& accountInfo, AppExecFwk::AbilityInfo& targetAbility);
     bool IsFoundationCall() const;
     bool IsSceneBoardCall() const;
-    int32_t CheckPermission(uint32_t accessToken, const std::string& permissionName) const;
+    int32_t CheckPermission(uint32_t accessToken, const std::string& permissionName) const;Z
     int32_t CheckPermissionAll(uint32_t accessToken, const std::string& permissionName) const;
     int32_t GetAccountInfo(const std::string& remoteNetworkId, const CallerInfo& callerInfo,
         AccountInfo& accountInfo);
     bool GetTargetAbility(const AAFwk::Want& want, AppExecFwk::AbilityInfo& targetAbility,
         bool needQueryExtension = false) const;
+    bool isSameAppIdOrDeveloperId(const CallerInfo &callerInfo, const AppExecFwk::AbilityInfo &targetAbility) const;
     void MarkUriPermission(OHOS::AAFwk::Want& want, uint32_t accessToken);
     void RemoveRemoteObjectFromWant(std::shared_ptr<AAFwk::Want> want) const;
 

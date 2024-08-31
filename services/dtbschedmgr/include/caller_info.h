@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,6 +36,8 @@ struct CallerInfo {
     std::string sourceDeviceId;
     int32_t duid = -1;
     std::string callerAppId;
+    std::string callerBundleName;
+    std::string callerDeveloperId;
     std::vector<std::string> bundleNames;
     int32_t dmsVersion = -1;
     uint32_t accessToken = 0;

@@ -24,6 +24,7 @@
 #include "iservice_registry.h"
 #include "os_account_manager.h"
 #include "system_ability_definition.h"
+#include "os_account_manager.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -184,6 +185,31 @@ bool BundleManagerInternal::IsSameAppId(const std::string& callerAppId, const st
     return callerAppId == calleeAppId;
 }
 
+bool BundleManagerInternal::IsSameDeveloperId(const std::string &callerDeveloperId,
+                                              const std::string &targetBundleName)
+{
+    if (targetBundleName.empty() || callerDeveloperId.empty()) {
+        HILOGE("targetBundleName:%{public}s or callerDeveloperId:%{public}s is empty",
+               targetBundleName.c_str(), GetAnonymStr(callerDeveloperId).c_str());
+        return false;
+    }
+
+    auto bundleMgr = GetBundleManager();
+    if (bundleMgr == nullptr) {
+        HILOGE("get bundle manager failed");
+        return false;
+    }
+    AppExecFwk::AppProvisionInfo targetAppProvisionInfo;
+    std::vector<int32_t> ids;
+    ErrCode ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+    if (ret != ERR_OK || ids.empty()) {
+        HILOGE("Get userId from active Os AccountIds fail, ret : %{public}d", ret);
+        return false;
+    }
+    bundleMgr->GetAppProvisionInfo(targetBundleName, ids[0], targetAppProvisionInfo);
+    return callerDeveloperId == targetAppProvisionInfo.developerId;
+}
+
 int32_t BundleManagerInternal::GetLocalBundleInfo(const std::string& bundleName,
     AppExecFwk::BundleInfo &localBundleInfo)
 {
@@ -227,6 +253,22 @@ int32_t BundleManagerInternal::GetLocalBundleInfoV9(const std::string& bundleNam
         HILOGE("get local bundle info failed, ret: %{public}d", ret);
     }
     return ret;
+}
+
+bool BundleManagerInternal::GetContinueBundle4Src(const std::string &srcBundleName,
+                                                  std::vector<std::string> &bundleNameList)
+{
+    auto bundleMgr = GetBundleManager();
+    if (bundleMgr == nullptr) {
+        HILOGE("get bundle manager failed");
+        return false;
+    }
+    bundleMgr->GetContinueBundleNames(srcBundleName, bundleNameList);
+    if (bundleNameList.empty()) {
+        HILOGW("No APP with specified bundle name(%{public}s) configured in continue Bundle ", srcBundleName.c_str());
+        return false;
+    }
+    return true;
 }
 
 int32_t BundleManagerInternal::CheckRemoteBundleInfoForContinuation(const std::string& dstDeviceId,

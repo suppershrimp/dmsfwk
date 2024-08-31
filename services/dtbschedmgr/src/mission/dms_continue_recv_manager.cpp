@@ -30,6 +30,7 @@
 #include "parcel_helper.h"
 #include "softbus_adapter/softbus_adapter.h"
 #include "switch_status_dependency.h"
+#include "os_account_manager.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -41,6 +42,7 @@ constexpr int32_t INDEX_2 = 2;
 constexpr int32_t INDEX_3 = 3;
 constexpr int32_t DBMS_RETRY_MAX_TIME = 5;
 constexpr int32_t DBMS_RETRY_DELAY = 2000;
+constexpr int32_t LAST_RECV_INFO_QUEUE_SIZE = 5;
 const std::string TAG = "DMSContinueRecvMgr";
 const std::string DBMS_RETRY_TASK = "retry_on_boradcast_task";
 const std::u16string DESCRIPTOR = u"ohos.aafwk.RemoteOnListener";
@@ -251,36 +253,98 @@ int32_t DMSContinueRecvMgr::RetryPostBroadcast(const std::string& senderNetworkI
     return ERR_OK;
 }
 
-int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNetworkId,
-    uint16_t bundleNameId, uint8_t continueTypeId, const int32_t state, const int32_t retry)
+
+bool DMSContinueRecvMgr::GetFinalBundleName(const std::string &senderNetworkId, uint8_t continueTypeId,
+                                            DmsBundleInfo distributedBundleInfo,
+                                            std::string &finalBundleName, AppExecFwk::BundleInfo localBundleInfo,
+                                            std::string &continueType)
+{
+    std::string bundleName = distributedBundleInfo.bundleName;
+    continueType = BundleManagerInternal::GetContinueType(senderNetworkId, bundleName, continueTypeId);
+    if (continueType.empty()) {
+        if (BundleManagerInternal::GetLocalBundleInfoV9(bundleName, localBundleInfo) == ERR_OK) {
+            finalBundleName = bundleName;
+            return true;
+        }
+        return false;
+    }
+
+    bool continueTypeGot = continueTypeCheck(distributedBundleInfo, continueType);
+    if (continueTypeGot && BundleManagerInternal::GetLocalBundleInfoV9(bundleName, localBundleInfo) == ERR_OK) {
+        finalBundleName = bundleName;
+        return true;
+    }
+    std::vector<std::string> bundleNameList;
+    bool continueBundleGot = BundleManagerInternal::GetContinueBundle4Src(bundleName, bundleNameList);
+    if (continueBundleGot) {
+        sptr<AppExecFwk::IBundleMgr> bundleMgr = BundleManagerInternal::GetBundleManager();
+        if (bundleMgr == nullptr) {
+            HILOGE("get bundle manager failed");
+            return false;
+        }
+        std::vector<int32_t> ids;
+        ErrCode ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
+        if (ret != ERR_OK || ids.empty()) {
+            HILOGE("Get userId from active Os AccountIds fail, ret : %{public}d", ret);
+            return false;
+        }
+        for (std::string &bundleNameItem: bundleNameList) {
+            continueType = BundleManagerInternal::GetContinueType(
+                senderNetworkId, bundleNameItem, continueTypeId);
+            if (continueType.empty() || !continueTypeCheck(distributedBundleInfo, continueType)
+                || BundleManagerInternal::GetLocalBundleInfoV9(bundleNameItem, localBundleInfo) != ERR_OK) {
+                continue;
+            }
+            AppExecFwk::AppProvisionInfo appProvisionInfo;
+            if (bundleMgr->GetAppProvisionInfo(bundleNameItem, ids[0], appProvisionInfo)
+                && appProvisionInfo.developerId == distributedBundleInfo.developerId) {
+                finalBundleName = bundleNameItem;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string &senderNetworkId,
+                                                    uint16_t bundleNameId, uint8_t continueTypeId, const int32_t state,
+                                                    const int32_t retry)
 {
     HILOGI("DealOnBroadcastBusiness start, senderNetworkId: %{public}s, bundleNameId: %{public}u, state: %{public}d.",
-        GetAnonymStr(senderNetworkId).c_str(), bundleNameId, state);
-    std::string bundleName;
-    int32_t ret = BundleManagerInternal::GetBundleNameById(senderNetworkId, bundleNameId, bundleName);
-    if (ret != ERR_OK) {
-        HILOGW("get bundleName failed, ret: %{public}d, try = %{public}d", ret, retry);
+           GetAnonymStr(senderNetworkId).c_str(), bundleNameId, state);
+    DmsBundleInfo distributedBundleInfo;
+    bool result = DmsBmStorage::GetInstance()->GetDistributedBundleInfo(senderNetworkId, bundleNameId,
+                                                                        distributedBundleInfo);
+    if (!result) {
+        HILOGW("get bundleName failed, ret: %{public}d, try = %{public}d", result, retry);
         return RetryPostBroadcast(senderNetworkId, bundleNameId, continueTypeId, state, retry);
     }
 
+    std::string bundleName = distributedBundleInfo.bundleName;
     if (!CheckBundleContinueConfig(bundleName)) {
         HILOGI("App does not allow continue in config file, bundle name %{public}s", bundleName.c_str());
         return REMOTE_DEVICE_BIND_ABILITY_ERR;
     }
 
     HILOGI("get bundleName, bundleName: %{public}s", bundleName.c_str());
+    std::string finalBundleName;
     AppExecFwk::BundleInfo localBundleInfo;
-    if (BundleManagerInternal::GetLocalBundleInfoV9(bundleName, localBundleInfo) != ERR_OK) {
+    std::string continueType;
+    if (!GetFinalBundleName(senderNetworkId, continueTypeId,
+        distributedBundleInfo, finalBundleName, localBundleInfo, continueType)) {
         HILOGE("The app is not installed on the local device.");
         return INVALID_PARAMETERS_ERR;
     }
+    currentIconInfo lastRecvInfo = currentIconInfo(senderNetworkId, bundleName, finalBundleName);
+    pushLatRecvCache(lastRecvInfo);
+
     if (localBundleInfo.applicationInfo.bundleType != AppExecFwk::BundleType::APP) {
         HILOGE("The bundleType must be app, but it is %{public}d", localBundleInfo.applicationInfo.bundleType);
         return INVALID_PARAMETERS_ERR;
     }
 
-    std::string continueType = BundleManagerInternal::GetContinueType(senderNetworkId, bundleName, continueTypeId);
-    ret = VerifyBroadcastSource(senderNetworkId, bundleName, continueType, state);
+    uint32_t ret = VerifyBroadcastSource(senderNetworkId, finalBundleName, continueType, state);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -290,12 +354,34 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
         HILOGE("get iterItem failed from registerOnListener_, bundleNameId: %{public}u", bundleNameId);
         return INVALID_PARAMETERS_ERR;
     }
-    std::vector<sptr<IRemoteObject>> objs = iterItem->second;
-    for (auto iter : objs) {
-        NotifyRecvBroadcast(iter, senderNetworkId, bundleName, state, continueType);
+    std::vector<sptr<IRemoteObject> > objs = iterItem->second;
+    for (auto iter: objs) {
+        NotifyRecvBroadcast(iter, senderNetworkId, finalBundleName, state, continueType);
     }
     HILOGI("DealOnBroadcastBusiness end");
     return ERR_OK;
+}
+
+bool DMSContinueRecvMgr::continueTypeCheck(const DmsBundleInfo &distributedBundleInfo,
+                                           const std::string &continueType)
+{
+    std::vector<DmsAbilityInfo> dmsAbilityInfos = distributedBundleInfo.dmsAbilityInfos;
+    bool continueTyoeGot = false;
+    for (const auto &abilityInfo: dmsAbilityInfos) {
+        std::vector<std::string> continueTypeConfig = abilityInfo.continueType;
+        for (const auto &continueTypeConfigItem: continueTypeConfig) {
+            continueTyoeGot = continueTyoeGot || (continueType == continueTypeConfigItem);
+        }
+    }
+    return continueTyoeGot;
+}
+
+void DMSContinueRecvMgr::pushLatRecvCache(currentIconInfo &lastRecvInfo)
+{
+    if (lastRecvList_.size() >= LAST_RECV_INFO_QUEUE_SIZE) {
+        lastRecvList_.erase(lastRecvList_.begin());
+    }
+    lastRecvList_.push_back(lastRecvInfo);
 }
 
 void DMSContinueRecvMgr::NotifyRecvBroadcast(const sptr<IRemoteObject>& obj,
