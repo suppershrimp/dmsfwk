@@ -88,7 +88,7 @@ int32_t DSchedAllConnectManager::GetServiceCollaborationManagerProxy()
 {
     HILOGI("Get service collaboration manager proxy for all connect.");
     std::lock_guard<std::mutex> autoLock(allConnectMgrLock_);
-#if (defined(__aarch64__) || defined(__x86_64__))
+#if (defined(__aarch64__) || defined(__x86_64__) || defined(__loongarch_lp64))
     std::string resolvedPath = "/system/lib64/libcfwk_allconnect_client.z.so";
 #else
     std::string resolvedPath = "/system/lib/libcfwk_allconnect_client.z.so";
