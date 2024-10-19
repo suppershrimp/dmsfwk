@@ -19,6 +19,7 @@
 #include "dtbschedmgr_log.h"
 #include "mission/dms_continue_recv_manager.h"
 #include "mission/wifi_state_adapter.h"
+#include "multi_user_manager.h"
 #include "wifi_device.h"
 #include "wifi_msg.h"
 
@@ -39,7 +40,7 @@ void WifiStateListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
                 return;
             }
             WifiStateAdapter::GetInstance().UpdateWifiState(false);
-            DMSContinueRecvMgr::GetInstance().OnContinueSwitchOff();
+            MultiUserManager::GetInstance().GetCurrentRecvMgr()->OnContinueSwitchOff();
             break;
         }
 

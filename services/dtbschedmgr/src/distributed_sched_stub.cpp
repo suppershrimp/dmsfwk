@@ -38,6 +38,7 @@
 #include "dsched_transport_softbus_adapter.h"
 #include "dtbschedmgr_log.h"
 #include "dtbschedmgr_device_info_storage.h"
+#include "multi_user_manager.h"
 #include "parcel_helper.h"
 
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
@@ -599,7 +600,7 @@ int32_t DistributedSchedStub::ContinueMissionOfBundleNameInner(MessageParcel& da
     PARCEL_READ_HELPER_NORET(data, String, srcBundleName);
     PARCEL_READ_HELPER_NORET(data, String, continueType);
     if (continueType == "") {
-        continueType = DMSContinueRecvMgr::GetInstance().GetContinueType(bundleName);
+        continueType = MultiUserManager::GetInstance().GetCurrentRecvMgr()->GetContinueType(bundleName);
     }
 
     int32_t result = ERR_OK;
