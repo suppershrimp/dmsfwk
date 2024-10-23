@@ -28,6 +28,22 @@ namespace {
 const std::string TAG = "DSchedContinueCmd";
 const char* EXTRO_INFO_JSON_KEY_ACCESS_TOKEN = "accessTokenID";
 const char* DMS_VERSION_ID = "dmsVersion";
+constexpr int32_t BASE = 10;
+}
+
+bool StrToUint(const std::string &jsonStr, uint32_t &appVersion)
+{
+    char* endInx;
+    long num = std::strtol(jsonStr.c_str(), &endInx, BASE);
+    if (endInx == nullptr) {
+        return false;
+    }
+    
+    if (*endInx != '\0' || num > UINT32_MAX || num < 0) {
+        return false;
+    }
+    appVersion = static_cast<uint32_t>(num);
+    return true;
 }
 
 int32_t DSchedContinueCmdBase::Marshal(std::string &jsonStr)
@@ -130,7 +146,7 @@ int32_t DSchedContinueStartCmd::Marshal(std::string &jsonStr)
     cJSON_AddStringToObject(rootValue, "BaseCmd", baseJsonStr.c_str());
 
     cJSON_AddNumberToObject(rootValue, "Direction", direction_);
-    cJSON_AddNumberToObject(rootValue, "AppVersion", appVersion_);
+    cJSON_AddStringToObject(rootValue, "AppVersion", std::to_string(appVersion_).c_str());
 
     Parcel parcel;
     if (!wantParams_.Marshalling(parcel)) {
@@ -177,13 +193,13 @@ int32_t DSchedContinueStartCmd::Unmarshal(const std::string &jsonStr)
     direction_ = direction->valueint;
 
     cJSON *appVersion = cJSON_GetObjectItemCaseSensitive(rootValue, "AppVersion");
-    if (appVersion == nullptr || !cJSON_IsNumber(appVersion) || appVersion->valueint < 0 ||
-        appVersion->valueint > UINT32_MAX) {
+    if (appVersion == nullptr || !cJSON_IsString(appVersion) || (appVersion->valuestring == nullptr)) {
         cJSON_Delete(rootValue);
         return INVALID_PARAMETERS_ERR;
     }
-    appVersion_ = static_cast<uint32_t>(appVersion->valueint);
-
+    if (!StrToUint(appVersion->valuestring, appVersion_)) {
+        return INVALID_PARAMETERS_ERR;
+    }
     cJSON *wantParams = cJSON_GetObjectItemCaseSensitive(rootValue, "WantParams");
     if (wantParams == nullptr || !cJSON_IsString(wantParams) || (wantParams->valuestring == nullptr)) {
         cJSON_Delete(rootValue);
@@ -620,7 +636,7 @@ int32_t DSchedContinueReplyCmd::Marshal(std::string &jsonStr)
     cJSON_AddStringToObject(rootValue, "BaseCmd", baseJsonStr.c_str());
 
     cJSON_AddNumberToObject(rootValue, "ReplyCmd", replyCmd_);
-    cJSON_AddNumberToObject(rootValue, "AppVersion", appVersion_);
+    cJSON_AddStringToObject(rootValue, "AppVersion", std::to_string(appVersion_).c_str());
     cJSON_AddNumberToObject(rootValue, "Result", result_);
     cJSON_AddStringToObject(rootValue, "Reason", reason_.c_str());
 
@@ -670,13 +686,13 @@ int32_t DSchedContinueReplyCmd::Unmarshal(const std::string &jsonStr)
     }
 
     cJSON *appVersion = cJSON_GetObjectItemCaseSensitive(rootValue, "AppVersion");
-    if (appVersion == nullptr || !cJSON_IsNumber(appVersion) || appVersion->valueint < 0 ||
-        appVersion->valueint > UINT32_MAX) {
+    if (appVersion == nullptr || !cJSON_IsString(appVersion) || (appVersion->valuestring == nullptr)) {
         cJSON_Delete(rootValue);
         return INVALID_PARAMETERS_ERR;
     }
-    appVersion_ = static_cast<uint32_t>(appVersion->valueint);
-
+    if (!StrToUint(appVersion->valuestring, appVersion_)) {
+        return INVALID_PARAMETERS_ERR;
+    }
     cJSON *reason = cJSON_GetObjectItemCaseSensitive(rootValue, "Reason");
     if (reason == nullptr || !cJSON_IsString(reason) || (reason->valuestring == nullptr)) {
         cJSON_Delete(rootValue);
