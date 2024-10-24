@@ -36,6 +36,7 @@ namespace {
 const std::string TAG = "DSchedContinueManager";
 const std::string DSCHED_CONTINUE_MANAGER = "dsched_continue_manager";
 const std::string CONTINUE_TIMEOUT_TASK = "continue_timeout_task";
+constexpr int32_t PROTOCOL_APPVERSION_UINT_THRESHOLD = 2;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(DSchedContinueManager);
@@ -676,7 +677,11 @@ void DSchedContinueManager::NotifyContinueDataRecv(int32_t sessionId, int32_t co
         newContinue->Init();
         continues_.insert(std::make_pair(newContinue->GetContinueInfo(), newContinue));
 
-        newContinue->OnStartCmd(startCmd->appVersion_);
+        if (startCmd->version_ >= PROTOCOL_APPVERSION_UINT_THRESHOLD) {
+            newContinue->OnStartCmd(startCmd->appVersionUint_);
+        } else {
+            newContinue->OnStartCmd(static_cast<uint32_t>(startCmd->appVersion_));
+        }
         HILOGI("end, continue info: %{public}s.", newContinue->GetContinueInfo().toString().c_str());
         return;
     }
