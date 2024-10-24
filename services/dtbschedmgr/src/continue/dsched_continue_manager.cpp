@@ -677,7 +677,7 @@ void DSchedContinueManager::NotifyContinueDataRecv(int32_t sessionId, int32_t co
         continues_.insert(std::make_pair(newContinue->GetContinueInfo(), newContinue));
 
         newContinue->OnStartCmd(startCmd->appVersion_);
-        HILOGI("end, continue info: %{public}s.", newContinue->GetContinueInfo().toString().c_str());
+        HILOGW("end, continue info: %{public}s.", newContinue->GetContinueInfo().toString().c_str());
         return;
     }
     HILOGE("No matching session to handle cmd! sessionId: %{public}d, recv cmd %{public}d.", sessionId, command);

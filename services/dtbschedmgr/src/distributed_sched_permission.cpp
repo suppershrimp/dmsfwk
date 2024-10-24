@@ -132,11 +132,19 @@ int32_t DistributedSchedPermission::CheckStartPermission(const AAFwk::Want& want
         HILOGE("CheckAccountAccessPermission denied or failed!");
         return DMS_ACCOUNT_ACCESS_PERMISSION_DENIED;
     }
-    // 2.check start control permissions.
-    if (!CheckStartControlPermission(targetAbility, callerInfo, want, isSameBundle)) {
+
+    // 2. check start control permissions.
+    bool isSameAppId = false; // 用于记录appId是否相同
+    if (!CheckStartControlPermission(targetAbility, callerInfo, want, isSameBundle, isSameAppId)) {
+        // 如果返回错误并且是因为appId不一致，则返回新的错误码
+        if (!isSameAppId) {
+            HILOGE("APP ID is inconsistent in migration scenario!");
+            return APPID_INCONSISTENT;
+        }
         HILOGE("CheckStartControlPermission denied or failed! the callee component do not have permission");
         return DMS_START_CONTROL_PERMISSION_DENIED;
     }
+
     HILOGI("CheckDistributedPermission success!");
     return ERR_OK;
 }
@@ -174,7 +182,7 @@ int32_t DistributedSchedPermission::GetAccountInfo(const std::string& remoteNetw
         return ERR_OK;
     }
     HILOGE("Check different account ACL by DM fail.");
-    return  INVALID_PARAMETERS_ERR;
+    return  DMS_ACCOUNT_ACCESS_PERMISSION_DENIED;
 }
 
 bool DistributedSchedPermission::GetOsAccountData(AccountInfo& dmsAccountInfo)
@@ -542,7 +550,7 @@ bool DistributedSchedPermission::CheckComponentAccessPermission(const AppExecFwk
 }
 
 bool DistributedSchedPermission::CheckMigrateStartCtrlPer(const AppExecFwk::AbilityInfo& targetAbility,
-    const CallerInfo& callerInfo, const AAFwk::Want& want, bool isSameBundle)
+    const CallerInfo& callerInfo, const AAFwk::Want& want, bool isSameBundle, bool& isSameAppId)
 {
     std::string bundleName = want.GetBundle();
     // check if continuation with same appid
@@ -555,7 +563,8 @@ bool DistributedSchedPermission::CheckMigrateStartCtrlPer(const AppExecFwk::Abil
     if (!isSameBundle) {
         return true;
     }
-    if (BundleManagerInternal::IsSameAppId(callerInfo.callerAppId, targetAbility.bundleName)) {
+    isSameAppId = BundleManagerInternal::IsSameAppId(callerInfo.callerAppId, targetAbility.bundleName);
+    if (isSameAppId) {
         HILOGD("the appId is the same, check migration start control permission success!");
         return true;
     }
@@ -599,11 +608,11 @@ bool DistributedSchedPermission::CheckCollaborateStartCtrlPer(const AppExecFwk::
 }
 
 bool DistributedSchedPermission::CheckStartControlPermission(const AppExecFwk::AbilityInfo& targetAbility,
-    const CallerInfo& callerInfo, const AAFwk::Want& want, bool isSameBundle)
+    const CallerInfo& callerInfo, const AAFwk::Want& want, bool isSameBundle, bool& isSameAppId)
 {
     HILOGD("Check start control permission enter");
     return ((want.GetFlags() & AAFwk::Want::FLAG_ABILITY_CONTINUATION) != 0) ?
-        CheckMigrateStartCtrlPer(targetAbility, callerInfo, want, isSameBundle) :
+        CheckMigrateStartCtrlPer(targetAbility, callerInfo, want, isSameBundle, isSameAppId) :
         CheckCollaborateStartCtrlPer(targetAbility, callerInfo, want);
 }
 
