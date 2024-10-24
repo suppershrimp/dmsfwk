@@ -134,9 +134,8 @@ int32_t DistributedSchedPermission::CheckStartPermission(const AAFwk::Want& want
     }
 
     // 2. check start control permissions.
-    bool isSameAppId = false; // 用于记录appId是否相同
+    bool isSameAppId = false;
     if (!CheckStartControlPermission(targetAbility, callerInfo, want, isSameBundle, isSameAppId)) {
-        // 如果返回错误并且是因为appId不一致，则返回新的错误码
         if (!isSameAppId) {
             HILOGE("APP ID is inconsistent in migration scenario!");
             return APPID_INCONSISTENT;

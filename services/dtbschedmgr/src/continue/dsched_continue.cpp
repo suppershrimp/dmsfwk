@@ -1124,7 +1124,7 @@ int32_t DSchedContinue::ExecuteContinueEnd(int32_t result)
     NotifyDSchedEventResult(result);
     DurationDumperComplete(result);
 
-    HILOGI("OnContinueEnd sink entrance");
+    HILOGW("OnContinueEnd sink entrance");
     DSchedContinueManager::GetInstance().OnContinueEnd(continueInfo_);
     HILOGI("ExecuteContinueEnd end");
     return ERR_OK;
