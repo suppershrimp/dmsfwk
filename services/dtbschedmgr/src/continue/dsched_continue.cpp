@@ -63,7 +63,7 @@ const std::string DMS_CONTINUE_SESSION_ID = "ohos.dms.continueSessionId";
 const std::string QUICK_START_CONFIGURATION = "_ContinueQuickStart";
 const std::u16string NAPI_MISSION_CALLBACK_INTERFACE_TOKEN = u"ohos.DistributedSchedule.IMissionCallback";
 
-constexpr int32_t DSCHED_CONTINUE_PROTOCOL_VERSION = 1;
+constexpr int32_t DSCHED_CONTINUE_PROTOCOL_VERSION = 2;
 constexpr uint32_t MAX_MODULENAME_LEN = 2048;
 constexpr int32_t DEFAULT_REQUEST_CODE = -1;
 constexpr int32_t NOTIFY_MISSION_CALLBACK_RESULT = 4;
@@ -652,7 +652,8 @@ int32_t DSchedContinue::PackStartCmd(std::shared_ptr<DSchedContinueStartCmd>& cm
             HILOGE("pack start cmd failed, the bundle is not installed on local device.");
             return ret;
         }
-        cmd->appVersion_ = localBundleInfo.versionCode;
+        cmd->appVersion_ = static_cast<int32_t>(localBundleInfo.versionCode);
+        cmd->appVersionUint_ = localBundleInfo.versionCode;
     }
     cmd->wantParams_ = *wantParams;
     return ERR_OK;
@@ -1092,7 +1093,8 @@ int32_t DSchedContinue::PackReplyCmd(std::shared_ptr<DSchedContinueReplyCmd> cmd
     cmd->dmsVersion_ = DMS_VERSION;
 
     cmd->replyCmd_ = replyCmd;
-    cmd->appVersion_ = appVersion;
+    cmd->appVersion_ = static_cast<int32_t>(appVersion);
+    cmd->appVersionUint_ = appVersion;
     cmd->result_ = result;
     cmd->reason_ = reason;
     return ERR_OK;

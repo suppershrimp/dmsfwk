@@ -99,6 +99,7 @@ HWTEST_F(DSchedContinueEventTest, DSchedContinueEventTest_002_1, TestSize.Level0
 
     cmd.direction_ = 0;
     cmd.appVersion_ = 0;
+    cmd.appVersionUint_ = 0;
     DistributedWantParams wantParams;
     cmd.wantParams_ = wantParams;
 
@@ -174,6 +175,7 @@ HWTEST_F(DSchedContinueEventTest, DSchedContinueEventTest_004_1, TestSize.Level0
 
     cmd.replyCmd_ = 0;
     cmd.appVersion_ = 0;
+    cmd.appVersionUint_ = 0;
     cmd.result_ = 0;
     cmd.reason_ = "reason";
 

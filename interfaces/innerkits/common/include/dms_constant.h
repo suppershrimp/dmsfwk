@@ -32,6 +32,7 @@ constexpr const char* DMS_CHAR_ID = "static_capability";
 constexpr const char* PACKAGE_NAMES = "packageNames";
 constexpr const char* VERSIONS = "versions";
 constexpr const char* DMS_SERVICE_TYPE = "appInfo";
+constexpr int32_t DSCHED_CONTINUE_PROTOCOL_VERSION = 2;
 
 const std::string EXTRO_INFO_JSON_KEY_ACCOUNT_ID = "accountId";
 const std::string EXTRO_INFO_JSON_KEY_USERID_ID = "userId";
