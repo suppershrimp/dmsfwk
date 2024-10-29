@@ -75,11 +75,11 @@ private:
     bool CheckComponentAccessPermission(const AppExecFwk::AbilityInfo& targetAbility,
         const CallerInfo& callerInfo, const AccountInfo& accountInfo, const AAFwk::Want& want) const;
     bool CheckMigrateStartCtrlPer(const AppExecFwk::AbilityInfo& targetAbility,
-        const CallerInfo& callerInfo, const AAFwk::Want& want, bool isSameBundle = true);
+        const CallerInfo& callerInfo, const AAFwk::Want& want, bool isSameBundle = true, bool& isSameAppId);
     bool CheckCollaborateStartCtrlPer(const AppExecFwk::AbilityInfo& targetAbility,
         const CallerInfo& callerInfo, const AAFwk::Want& want) const;
     bool CheckStartControlPermission(const AppExecFwk::AbilityInfo& targetAbility,
-        const CallerInfo& callerInfo, const AAFwk::Want& want, bool isSameBundle = true);
+        const CallerInfo& callerInfo, const AAFwk::Want& want, bool isSameBundle = true, bool& isSameAppId);
     bool CheckBackgroundPermission(const AppExecFwk::AbilityInfo& targetAbility,
         const CallerInfo& callerInfo, const AAFwk::Want& want, bool needCheckApiVersion) const;
     bool CheckMinApiVersion(const AppExecFwk::AbilityInfo& targetAbility, int32_t apiVersion) const;

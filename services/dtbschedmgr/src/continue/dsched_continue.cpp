@@ -709,7 +709,7 @@ int32_t DSchedContinue::CheckContinueAbilityPermission()
     if (!DmsKvSyncE2E::GetInstance()->CheckBundleContinueConfig(continueInfo_.sourceBundleName_)) {
         HILOGI("App does not allow continue in config file, bundle name %{public}s",
             continueInfo_.sourceBundleName_.c_str());
-        return REMOTE_DEVICE_BIND_ABILITY_ERR;
+        return CHECK_BUNDLE_CONTINUE_CONFIG_FAILED;
     }
 
     MissionInfo missionInfo;
@@ -1124,6 +1124,7 @@ int32_t DSchedContinue::ExecuteContinueEnd(int32_t result)
     NotifyDSchedEventResult(result);
     DurationDumperComplete(result);
 
+    HILOGW("OnContinueEnd sink entrance");
     DSchedContinueManager::GetInstance().OnContinueEnd(continueInfo_);
     HILOGI("ExecuteContinueEnd end");
     return ERR_OK;
