@@ -513,6 +513,10 @@ enum {
      * Result(29360234) for mission is not focused.
      */
     MISSION_NOT_FOCUSED = 29360234,
+    /**
+     * Result(29360235) for user is not foreground.
+     */
+    DMS_NOT_FOREGROUND_USER = 29360235,
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
