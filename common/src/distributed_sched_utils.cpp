@@ -57,13 +57,13 @@ constexpr uint32_t INDEX_FORTH = 3;
 
 static std::atomic<bool> g_isMissContinueCfg = false;
 static std::string g_continueCfgFullPath = "";
-static std::vector<std::string> g_allowAppList;
+static std::vector<std::string>  g_allowAppList;
 
 
 
 std::mutex g_allowAppListMtx;
 
-using JsonTypeCheckFunc = bool (*)(const cJSON *paramValue);
+using JsonTypeCheckFunc =bool (*)(const cJSON *paramValue);
 std::map<std::string, JsonTypeCheckFunc> jsonTypeCheckMap = {
     std::map<std::string, JsonTypeCheckFunc>::value_type(PARAM_KEY_OS_TYPE, &DistributedSchedule::IsInt32),
     std::map<std::string, JsonTypeCheckFunc>::value_type(PARAM_KEY_OS_VERSION, &DistributedSchedule::IsString),
@@ -77,7 +77,6 @@ bool IsValidPath(const std::string &inFilePath, std::string &realFilePath)
         HILOGE("Get continue config file real path fail, inFilePath %{public}s.", GetAnonymStr(inFilePath).c_str());
         return false;
     }
-
     realFilePath = std::string(path);
     if (realFilePath.empty()) {
         HILOGE("Real file path is empty.");
@@ -102,9 +101,7 @@ bool UpdateAllowAppList(const std::string &cfgJsonStr)
         if (inJson == nullptr) {
             HILOGE("parse continue config json file stream to json fail.");
             break;
-        }
-
-        allowList = cJSON_GetObjectItem(inJson, ALLOW_APP_LIST_KEY.c_str());
+        }allowList = cJSON_GetObjectItem(inJson, ALLOW_APP_LIST_KEY.c_str());
         if (allowList == nullptr || !cJSON_IsArray(allowList)) {
             HILOGE("allow app list array is not in continue config json file.");
             break;
