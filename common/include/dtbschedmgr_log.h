@@ -513,6 +513,14 @@ enum {
      * Result(29360234) for mission is not focused.
      */
     MISSION_NOT_FOCUSED = 29360234,
+    /**
+     * Result(29360235) for check bundle continue config failed.
+     */
+    CHECK_BUNDLE_CONTINUE_CONFIG_FAILED = 29360235,
+    /**
+     * Result(29360236) for AppIds at both ends are inconsistent.
+     */
+    APPID_INCONSISTENT = 29360236,
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
