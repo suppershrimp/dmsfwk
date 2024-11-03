@@ -29,8 +29,9 @@
 #include "dms_constant.h"
 #include "dtbschedmgr_log.h"
 
-namespace  OHOS {
-namespace DistributedSchedule {
+
+namespace           OHOS {
+namespace DistributedSchedule{
 using namespace OHOS::DistributedSchedule::Constants;
 
 const std::string TAG = "DistributedSchedUtils";
@@ -41,10 +42,11 @@ constexpr size_t INT32_SHORT_ID_LEN = 20;
 constexpr size_t INT32_MIN_ID_LEN = 6;
 constexpr size_t INT32_PLAINTEXT_LEN = 4;
 
-constexpr uint32_t OFFSET2 = 2;
+constexpr uint32_t OFFSET2=2;
 constexpr uint32_t OFFSET4 = 4;
+
 constexpr uint32_t OFFSET6 = 6;
-constexpr uint8_t PARAM_FC = 0xfc;
+constexpr uint8_t PARAM_FC = 0xfc  ;
 constexpr uint8_t PARAM_03 = 0x03;
 constexpr uint8_t PARAM_F0 = 0xf0;
 constexpr uint8_t PARAM_0F = 0x0f;
