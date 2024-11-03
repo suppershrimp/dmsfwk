@@ -29,8 +29,9 @@
 #include "dms_constant.h"
 #include "dtbschedmgr_log.h"
 
-namespace OHOS {
-namespace DistributedSchedule {
+
+namespace           OHOS {
+namespace DistributedSchedule{
 using namespace OHOS::DistributedSchedule::Constants;
 
 const std::string TAG = "DistributedSchedUtils";
@@ -41,10 +42,11 @@ constexpr size_t INT32_SHORT_ID_LEN = 20;
 constexpr size_t INT32_MIN_ID_LEN = 6;
 constexpr size_t INT32_PLAINTEXT_LEN = 4;
 
-constexpr uint32_t OFFSET2 = 2;
+constexpr uint32_t OFFSET2=2;
 constexpr uint32_t OFFSET4 = 4;
+
 constexpr uint32_t OFFSET6 = 6;
-constexpr uint8_t PARAM_FC = 0xfc;
+constexpr uint8_t PARAM_FC = 0xfc  ;
 constexpr uint8_t PARAM_03 = 0x03;
 constexpr uint8_t PARAM_F0 = 0xf0;
 constexpr uint8_t PARAM_0F = 0x0f;
@@ -57,10 +59,13 @@ constexpr uint32_t INDEX_FORTH = 3;
 
 static std::atomic<bool> g_isMissContinueCfg = false;
 static std::string g_continueCfgFullPath = "";
-static std::vector<std::string> g_allowAppList;
+static std::vector<std::string>  g_allowAppList;
+
+
+
 std::mutex g_allowAppListMtx;
 
-using JsonTypeCheckFunc = bool (*)(const cJSON *paramValue);
+using JsonTypeCheckFunc =bool (*)(const cJSON *paramValue);
 std::map<std::string, JsonTypeCheckFunc> jsonTypeCheckMap = {
     std::map<std::string, JsonTypeCheckFunc>::value_type(PARAM_KEY_OS_TYPE, &DistributedSchedule::IsInt32),
     std::map<std::string, JsonTypeCheckFunc>::value_type(PARAM_KEY_OS_VERSION, &DistributedSchedule::IsString),
@@ -70,11 +75,10 @@ bool IsValidPath(const std::string &inFilePath, std::string &realFilePath)
 {
     char path[PATH_MAX + 1] = { 0 };
     if (inFilePath.empty() || inFilePath.length() > PATH_MAX || inFilePath.length() + 1 > MAX_CONFIG_PATH_LEN ||
-        realpath(inFilePath.c_str(), path) == nullptr) {
+        realpath(inFilePath.c_str(), path)==nullptr){
         HILOGE("Get continue config file real path fail, inFilePath %{public}s.", GetAnonymStr(inFilePath).c_str());
         return false;
     }
-
     realFilePath = std::string(path);
     if (realFilePath.empty()) {
         HILOGE("Real file path is empty.");
@@ -99,9 +103,7 @@ bool UpdateAllowAppList(const std::string &cfgJsonStr)
         if (inJson == nullptr) {
             HILOGE("parse continue config json file stream to json fail.");
             break;
-        }
-
-        allowList = cJSON_GetObjectItem(inJson, ALLOW_APP_LIST_KEY.c_str());
+        }allowList = cJSON_GetObjectItem(inJson, ALLOW_APP_LIST_KEY.c_str());
         if (allowList == nullptr || !cJSON_IsArray(allowList)) {
             HILOGE("allow app list array is not in continue config json file.");
             break;

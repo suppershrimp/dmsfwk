@@ -103,8 +103,9 @@ int32_t DistributedAbilityManagerClient::UpdateConnectStatus(int32_t token, cons
 }
 
 int32_t DistributedAbilityManagerClient::StartDeviceManager(
-    int32_t token, const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams)
-{
+
+      int32_t token, const std::shared_ptr<ContinuationExtraParams>& continuationExtraParams)
+   {
     HILOGD("called.");
     sptr<IDistributedAbilityManager> continuationMgrProxy = GetContinuationMgrService();
     if (continuationMgrProxy == nullptr) {
