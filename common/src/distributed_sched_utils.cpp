@@ -22,11 +22,13 @@
 #include <iostream>
 #include <vector>
 
+
+
 #include "ability_manager_client.h"
 #include "config_policy_utils.h"
 #include "securec.h"
 
-#include "dms_constant.h"
+#include    "dms_constant.h"
 #include "dtbschedmgr_log.h"
 
 
@@ -64,6 +66,7 @@ static std::vector<std::string>  g_allowAppList;
 
 
 std::mutex g_allowAppListMtx;
+
 
 using JsonTypeCheckFunc =bool (*)(const cJSON *paramValue);
 std::map<std::string, JsonTypeCheckFunc> jsonTypeCheckMap = {
