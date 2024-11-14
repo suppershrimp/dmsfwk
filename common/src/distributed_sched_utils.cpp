@@ -70,7 +70,9 @@ std::mutex g_allowAppListMtx;
 
 using JsonTypeCheckFunc =bool (*)(const cJSON *paramValue);
 std::map<std::string, JsonTypeCheckFunc> jsonTypeCheckMap = {
-    std::map<std::string, JsonTypeCheckFunc>::value_type(PARAM_KEY_OS_TYPE, &DistributedSchedule::IsInt32),
+
+    std::map<std::string, JsonTypeCheckFunc>::value_type(PARAM_KEY_OS_TYPE, &DistributedSchedule::IsInt32   )   ,
+
     std::map<std::string, JsonTypeCheckFunc>::value_type(PARAM_KEY_OS_VERSION, &DistributedSchedule::IsString),
 };
 
@@ -120,7 +122,9 @@ bool UpdateAllowAppList(const std::string &cfgJsonStr)
                 continue;
             }
 
-            std::string iAllowAppStr = std::string(cJSON_GetStringValue(iAllowAppJson));
+            std::string iAllowAppStr = std::string(cJSON_GetStringValue(iAllowAppJson)); 
+
+            
             HILOGI("allow app list show [%{public}d] : [%{public}s].", i, iAllowAppStr.c_str());
             g_allowAppList.push_back(iAllowAppStr);
         }
