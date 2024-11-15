@@ -131,8 +131,8 @@ class DSchedContinue : public std::enable_shared_from_this<DSchedContinue> {
 
 public:
     DSchedContinue(int32_t subServiceType, int32_t direction,  const sptr<IRemoteObject>& callback,
-        const DSchedContinueInfo& continueInfo);
-    DSchedContinue(std::shared_ptr<DSchedContinueStartCmd> startCmd, int32_t sessionId);
+        const DSchedContinueInfo& continueInfo, int32_t accountId);
+    DSchedContinue(std::shared_ptr<DSchedContinueStartCmd> startCmd, int32_t sessionId, int32_t accountId);
     ~DSchedContinue();
 
 private:
@@ -235,6 +235,7 @@ private:
     int32_t softbusSessionId_ = INVALID_SESSION_ID;
     sptr<IRemoteObject> callback_ = nullptr;
     EventNotify eventData_;
+    int32_t accountId_;
 };
 }  // namespace DistributedSchedule
 }  // namespace OHOS

@@ -19,7 +19,7 @@
 #include <map>
 
 #include "mission/dms_continue_recv_manager.h"
-#include "mission/dms_continue_send_manager.h"
+#include "mission/notification/dms_continue_send_manager.h"
 #include "switch_status_dependency.h"
 #include "single_instance.h"
 

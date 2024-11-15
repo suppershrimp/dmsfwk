@@ -54,6 +54,19 @@ namespace DistributedSchedule {
 #define HILOGI(fmt, ...) HILOG_INFO(LOG_CORE, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
 #define HILOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
 
+
+#define CHECK_POINTER_RETURN(object, log)               \
+    if (object == nullptr) {                            \
+        HILOGE("%{public}s nullptr", log);              \
+        return;                                         \
+    }
+
+#define CHECK_POINTER_RETURN_VALUE(object, value, log)  \
+    if (object == nullptr) {                            \
+        HILOGE("%{public}s nullptr", log);              \
+        return value;                                   \
+    }
+
 enum {
     /**
      * Module type: Distributed schedule Service side
