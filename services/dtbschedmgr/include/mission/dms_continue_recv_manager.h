@@ -61,8 +61,6 @@ struct currentIconInfo {
 };
 
 class DMSContinueRecvMgr {
-    DECLARE_SINGLE_INSTANCE(DMSContinueRecvMgr);
-
 public:
     constexpr static uint8_t DMS_DATA_LEN = 3; // Dms data Length
     constexpr static int32_t DMS_SEND_LEN = 4; // Maximum Broadcast Length
@@ -87,8 +85,8 @@ public:
     void NotifyPackageRemoved(const std::string& sinkBundleName);
     void OnDeviceScreenOff();
     void OnContinueSwitchOff();
+    void OnUserSwitch();
     std::string GetContinueType(const std::string& bundleName);
-    bool CheckRegSoftbusListener();
 
 private:
     void StartEvent();
@@ -101,11 +99,15 @@ private:
     void PostOnBroadcastBusiness(const std::string& senderNetworkId, uint16_t bundleNameId, uint8_t continueTypeId,
         const int32_t state, const int32_t delay = 0, const int32_t retry = 0);
     void FindContinueType(const DmsBundleInfo &distributedBundleInfo, uint8_t &continueTypeId,
-        std::string &continueType);
+        std::string &continueType, DmsAbilityInfo &abilityInfo);
     int32_t DealOnBroadcastBusiness(const std::string& senderNetworkId, uint16_t bundleNameId, uint8_t continueTypeId,
         const int32_t state, const int32_t retry = 0);
     void NotifyRecvBroadcast(const sptr<IRemoteObject>& obj, const currentIconInfo& continueInfo, const int32_t state);
-    bool IsBundleContinuable(const AppExecFwk::BundleInfo& bundleInfo);
+    bool IsBundleContinuable(const AppExecFwk::BundleInfo& bundleInfo, const std::string &srcAbilityName,
+        const std::string &srcContinueType, bool isSameBundle);
+    std::string ContinueTypeFormat(const std::string &continueType);
+    void FindToNotifyRecvBroadcast(const std::string& senderNetworkId, const std::string& bundleName,
+        const std::string& continueType);
 private:
     currentIconInfo iconInfo_;
     sptr<DistributedMissionDiedListener> missionDiedListener_;
@@ -116,7 +118,6 @@ private:
     std::mutex eventMutex_;
     std::mutex iconMutex_;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> eventHandler_;
-    bool hasRegSoftbusEventListener_ = false;
 };
 } // namespace DistributedSchedule
 } // namespace OHOS

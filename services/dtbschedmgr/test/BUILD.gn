@@ -162,6 +162,9 @@ ohos_unittest("distributedschedservicetest") {
     "unittest/distributed_sched_service_second_test.cpp",
     "unittest/mock_distributed_sched.cpp",
   ]
+  if (dmsfwk_ces_listener) {
+    sources += [ "unittest/common_event_listener_test.cpp" ]
+  }
   sources += dtbschedmgr_sources
 
   configs = [
@@ -191,6 +194,35 @@ ohos_unittest("distributedschedstubtest") {
   module_out_path = module_output_path
 
   sources = [ "unittest/distributed_sched_stub_test.cpp" ]
+  sources += dtbschedmgr_sources
+
+  configs = [
+    ":test_config",
+    "${distributed_service}/dtbschedmgr/test/resource:coverage_flags",
+  ]
+  configs += dsched_configs
+  if (is_standard_system) {
+    external_deps = dsched_external_deps
+    public_deps = dsched_public_deps
+  }
+
+  defines = []
+  if (dmsfwk_report_memmgr || dmsfwk_report_memmgr_plugins) {
+    defines += [ "SUPPORT_DISTRIBUTEDCOMPONENT_TO_MEMMGR" ]
+  }
+
+  if (!dmsfwk_softbus_adapter_common) {
+    defines += [ "DMSFWK_INTERACTIVE_ADAPTER" ]
+  }
+
+  part_name = "dmsfwk"
+  subsystem_name = "ability"
+}
+
+ohos_unittest("multiusermanagertest") {
+  module_out_path = module_output_path
+
+  sources = [ "unittest/multi_user_manager_test.cpp" ]
   sources += dtbschedmgr_sources
 
   configs = [
@@ -449,7 +481,6 @@ ohos_unittest("dmsmissionmanagertest") {
   sources = [
     "unittest/mission/distributed_data_storage_test.cpp",
     "unittest/mission/dms_mission_manager_test.cpp",
-    "unittest/mission/mock_distributed_sched_adapter.cpp",
     "unittest/mission/mock_image_packer.cpp",
   ]
   sources += dtbschedmgr_sources
@@ -498,7 +529,10 @@ ohos_unittest("bundlemanagerinternaltest") {
 ohos_unittest("softbusadaptertest") {
   module_out_path = module_output_path
   cflags = [ "-Dprivate=public" ]
-  sources = [ "unittest/softbus_adapter/softbus_transport_test.cpp" ]
+  sources = [
+    "unittest/softbus_adapter/dsched_all_connect_manager_test.cpp",
+    "unittest/softbus_adapter/softbus_transport_test.cpp",
+  ]
 
   if (!dmsfwk_softbus_adapter_common) {
     sources += [
@@ -657,10 +691,33 @@ ohos_unittest("dschedcontinuestatetest") {
   module_out_path = module_output_path
   cflags = [ "-Dprivate=public" ]
   sources = [
-    "unittest/continue/dsched_continue_event_test.cpp",
-    "unittest/continue/dsched_continue_manager_test.cpp",
     "unittest/continue/dsched_continue_state_test.cpp",
     "unittest/continue/dsched_continue_test.cpp",
+    "unittest/continue/mock_dtbschedmgr_device_info.cpp",
+    "unittest/mock_distributed_sched.cpp",
+  ]
+  sources += dtbschedmgr_sources
+  configs = [
+    ":test_config",
+    "${dms_path}/services/dtbschedmgr/test/resource:coverage_flags",
+  ]
+  configs += dsched_configs
+  deps = []
+  if (is_standard_system) {
+    external_deps = dsched_external_deps
+    public_deps = dsched_public_deps
+  }
+  external_deps += [ "googletest:gmock" ]
+  part_name = "dmsfwk"
+  subsystem_name = "ability"
+}
+
+ohos_unittest("dschedcontinuemanagerstatetest") {
+  module_out_path = module_output_path
+  cflags = [ "-Dprivate=public" ]
+  sources = [
+    "unittest/continue/dsched_continue_event_test.cpp",
+    "unittest/continue/dsched_continue_manager_test.cpp",
     "unittest/continue/mock_dtbschedmgr_device_info.cpp",
     "unittest/mock_distributed_sched.cpp",
   ]
@@ -751,10 +808,12 @@ group("unittest") {
     ":dmsbasetest",
     ":dmsfreeinstallcbtest",
     ":dschedconnecttest",
+    ":dschedcontinuemanagerstatetest",
     ":dschedcontinuestatetest",
     ":dschedcontinuetest",
     ":dschedswitchstatustest",
     ":hisyseventreporttest",
+    ":multiusermanagertest",
     ":softbusadaptertest",
     "${dms_path}/common/test/unittest:distributed_sched_utils_test",
   ]

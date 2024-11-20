@@ -28,6 +28,7 @@
 #include "dtbschedmgr_log.h"
 #include "mission/dsched_sync_e2e.h"
 #include "mission/wifi_state_adapter.h"
+#include "multi_user_manager.h"
 #include "parcel_helper.h"
 #include "softbus_adapter/softbus_adapter.h"
 #include "switch_status_dependency.h"
@@ -46,9 +47,8 @@ constexpr int32_t DBMS_RETRY_DELAY = 2000;
 const std::string TAG = "DMSContinueRecvMgr";
 const std::string DBMS_RETRY_TASK = "retry_on_boradcast_task";
 const std::u16string DESCRIPTOR = u"ohos.aafwk.RemoteOnListener";
+const std::string QUICK_START_CONFIGURATION = "_ContinueQuickStart";
 }
-
-IMPLEMENT_SINGLE_INSTANCE(DMSContinueRecvMgr);
 
 void DMSContinueRecvMgr::Init()
 {
@@ -58,14 +58,6 @@ void DMSContinueRecvMgr::Init()
         return;
     }
     {
-        std::shared_ptr<SoftbusAdapterListener> missionBroadcastListener =
-            std::make_shared<DistributedMissionBroadcastListener>();
-        int32_t ret = SoftbusAdapter::GetInstance().RegisterSoftbusEventListener(missionBroadcastListener);
-        if (ret != ERR_OK) {
-            HILOGE("get RegisterSoftbusEventListener failed, ret: %{public}d", ret);
-            return;
-        }
-        hasRegSoftbusEventListener_ = true;
         missionDiedListener_ = new DistributedMissionDiedListener();
         eventThread_ = std::thread(&DMSContinueRecvMgr::StartEvent, this);
         std::unique_lock<std::mutex> lock(eventMutex_);
@@ -293,13 +285,14 @@ bool DMSContinueRecvMgr::GetFinalBundleName(DmsBundleInfo &distributedBundleInfo
 }
 
 void DMSContinueRecvMgr::FindContinueType(const DmsBundleInfo &distributedBundleInfo,
-    uint8_t &continueTypeId, std::string &continueType)
+    uint8_t &continueTypeId, std::string &continueType, DmsAbilityInfo &abilityInfo)
 {
     uint32_t pos = 0;
     for (auto dmsAbilityInfo: distributedBundleInfo.dmsAbilityInfos) {
         for (auto continueTypeElement: dmsAbilityInfo.continueType) {
             if (pos == continueTypeId) {
                 continueType = continueTypeElement;
+                abilityInfo = dmsAbilityInfo;
                 return;
             }
             ++pos;
@@ -327,7 +320,8 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
     std::string finalBundleName;
     AppExecFwk::BundleInfo localBundleInfo;
     std::string continueType;
-    FindContinueType(distributedBundleInfo, continueTypeId, continueType);
+    DmsAbilityInfo abilityInfo;
+    FindContinueType(distributedBundleInfo, continueTypeId, continueType, abilityInfo);
     if (!GetFinalBundleName(distributedBundleInfo, finalBundleName, localBundleInfo, continueType)) {
         HILOGE("The app is not installed on the local device.");
         return INVALID_PARAMETERS_ERR;
@@ -338,9 +332,11 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
         HILOGE("The bundleType must be app, but it is %{public}d", localBundleInfo.applicationInfo.bundleType);
         return INVALID_PARAMETERS_ERR;
     }
-    if (!IsBundleContinuable(localBundleInfo)) {
+    bool isSameBundle = (bundleName == finalBundleName);
+    if (state == ACTIVE
+        && !IsBundleContinuable(localBundleInfo, abilityInfo.abilityName, continueType, isSameBundle)) {
         HILOGE("Bundle %{public}s is not continuable", finalBundleName.c_str());
-        return INVALID_PARAMETERS_ERR;
+        return BUNDLE_NOT_CONTINUABLE;
     }
 
     int32_t ret = VerifyBroadcastSource(senderNetworkId, bundleName, finalBundleName, continueType, state);
@@ -356,21 +352,46 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
     std::vector<sptr<IRemoteObject>> objs = iterItem->second;
     for (auto iter : objs) {
         NotifyRecvBroadcast(iter,
-            currentIconInfo(senderNetworkId, bundleName, finalBundleName, continueType),
-            state);
+            currentIconInfo(senderNetworkId, bundleName, finalBundleName, continueType), state);
     }
     HILOGI("DealOnBroadcastBusiness end");
     return ERR_OK;
 }
 
-bool DMSContinueRecvMgr::IsBundleContinuable(const AppExecFwk::BundleInfo& bundleInfo)
+bool DMSContinueRecvMgr::IsBundleContinuable(const AppExecFwk::BundleInfo& bundleInfo,
+    const std::string &srcAbilityName, const std::string &srcContinueType, bool isSameBundle)
 {
-    for (auto abilityInfo : bundleInfo.abilityInfos) {
-        if (abilityInfo.continuable) {
-            return true;
+    std::string formatSrcContinueType = ContinueTypeFormat(srcContinueType);
+    for (auto &abilityInfo: bundleInfo.abilityInfos) {
+        if (!abilityInfo.continuable) {
+            continue;
+        }
+        for (const auto &continueTypeItem: abilityInfo.continueType) {
+            HILOGI("IsBundleContinuable check: srcAbilityName:%{public}s; srcContinueType:%{public}s;"
+                   " sinkAbilityName:%{public}s; sinkContinueType:%{public}s; isSameBundle: %{public}d",
+                   srcAbilityName.c_str(), srcContinueType.c_str(), abilityInfo.name.c_str(),
+                   continueTypeItem.c_str(), isSameBundle);
+            if (continueTypeItem == srcContinueType || continueTypeItem == formatSrcContinueType) {
+                return true;
+            }
+            if ((srcContinueType == srcAbilityName || abilityInfo.name == continueTypeItem)
+                && isSameBundle && abilityInfo.name == srcAbilityName) {
+                return true;
+            }
         }
     }
     return false;
+}
+
+std::string DMSContinueRecvMgr::ContinueTypeFormat(const std::string &continueType)
+{
+    std::string suffix = QUICK_START_CONFIGURATION;
+    if (suffix.length() <= continueType.length() &&
+        continueType.rfind(suffix) == (continueType.length() - suffix.length())) {
+        return continueType.substr(0, continueType.rfind(QUICK_START_CONFIGURATION));
+    } else {
+        return continueType + QUICK_START_CONFIGURATION;
+    }
 }
 
 void DMSContinueRecvMgr::NotifyRecvBroadcast(const sptr<IRemoteObject>& obj,
@@ -486,6 +507,23 @@ void DMSContinueRecvMgr::OnDeviceScreenOff()
 }
 #endif
 
+void DMSContinueRecvMgr::FindToNotifyRecvBroadcast(const std::string& senderNetworkId, const std::string& bundleName,
+    const std::string& continueType)
+{
+    std::lock_guard<std::mutex> registerOnListenerMapLock(eventMutex_);
+    auto iterItem = registerOnListener_.find(onType_);
+    if (iterItem == registerOnListener_.end()) {
+        HILOGI("Get iterItem failed from registerOnListener_, nobody registed");
+        return;
+    }
+    std::vector<sptr<IRemoteObject>> objs = iterItem->second;
+    for (auto iter : objs) {
+        NotifyRecvBroadcast(iter,
+            currentIconInfo(senderNetworkId, iconInfo_.sourceBundleName, bundleName, continueType),
+            INACTIVE);
+    }
+}
+
 void DMSContinueRecvMgr::OnContinueSwitchOff()
 {
     auto func = [this]() {
@@ -507,26 +545,38 @@ void DMSContinueRecvMgr::OnContinueSwitchOff()
         }
         HILOGI("Saved iconInfo cleared, networkId: %{public}s, bundleName: %{public}s.",
             GetAnonymStr(senderNetworkId).c_str(), bundleName.c_str());
-        {
-            std::lock_guard<std::mutex> registerOnListenerMapLock(eventMutex_);
-            auto iterItem = registerOnListener_.find(onType_);
-            if (iterItem == registerOnListener_.end()) {
-                HILOGI("Get iterItem failed from registerOnListener_, nobody registed");
-                return;
-            }
-            std::vector<sptr<IRemoteObject>> objs = iterItem->second;
-            for (auto iter : objs) {
-                NotifyRecvBroadcast(iter,
-                    currentIconInfo(senderNetworkId, iconInfo_.sourceBundleName, bundleName, continueType),
-                    INACTIVE);
-            }
-        }
+        FindToNotifyRecvBroadcast(senderNetworkId, bundleName, continueType);
     };
     if (eventHandler_ == nullptr) {
         HILOGE("eventHandler_ is nullptr");
         return;
     }
     eventHandler_->PostTask(func);
+}
+
+void DMSContinueRecvMgr::OnUserSwitch()
+{
+    HILOGI("OnUserSwitch start.");
+    std::string senderNetworkId;
+    std::string bundleName;
+    std::string continueType;
+    {
+        std::lock_guard<std::mutex> currentIconLock(iconMutex_);
+        if (iconInfo_.isEmpty()) {
+            HILOGW("Saved iconInfo has already been cleared, task abort.");
+            return;
+        }
+        senderNetworkId = iconInfo_.senderNetworkId;
+        bundleName = iconInfo_.bundleName;
+        continueType = iconInfo_.continueType;
+        iconInfo_.senderNetworkId = "";
+        iconInfo_.bundleName = "";
+        iconInfo_.continueType = "";
+    }
+    HILOGI("Saved iconInfo cleared, networkId: %{public}s, bundleName: %{public}s.",
+        GetAnonymStr(senderNetworkId).c_str(), bundleName.c_str());
+    FindToNotifyRecvBroadcast(senderNetworkId, bundleName, continueType);
+    HILOGI("OnUserSwitch end.");
 }
 
 void DMSContinueRecvMgr::NotifyDeviceOffline(const std::string& networkId)
@@ -559,20 +609,7 @@ void DMSContinueRecvMgr::NotifyDeviceOffline(const std::string& networkId)
     }
     HILOGI("Saved iconInfo cleared, networkId: %{public}s, bundleName: %{public}s.",
         GetAnonymStr(senderNetworkId).c_str(), bundleName.c_str());
-    {
-        std::lock_guard<std::mutex> registerOnListenerMapLock(eventMutex_);
-        auto iterItem = registerOnListener_.find(onType_);
-        if (iterItem == registerOnListener_.end()) {
-            HILOGI("Get iterItem failed from registerOnListener_, nobody registed");
-            return;
-        }
-        std::vector<sptr<IRemoteObject>> objs = iterItem->second;
-        for (auto iter : objs) {
-            NotifyRecvBroadcast(iter,
-                currentIconInfo(senderNetworkId, iconInfo_.sourceBundleName, bundleName, continueType),
-                INACTIVE);
-        }
-    }
+    FindToNotifyRecvBroadcast(senderNetworkId, bundleName, continueType);
     HILOGI("NotifyDeviceOffline end");
 }
 
@@ -601,20 +638,7 @@ void DMSContinueRecvMgr::NotifyPackageRemoved(const std::string& sinkBundleName)
         iconInfo_.continueType = "";
     }
     HILOGI("Saved iconInfo cleared, sinkBundleName: %{public}s.",  bundleName.c_str());
-    {
-        std::lock_guard<std::mutex> registerOnListenerMapLock(eventMutex_);
-        auto iterItem = registerOnListener_.find(onType_);
-        if (iterItem == registerOnListener_.end()) {
-            HILOGI("Get iterItem failed from registerOnListener_, nobody registed");
-            return;
-        }
-        std::vector<sptr<IRemoteObject>> objs = iterItem->second;
-        for (auto iter : objs) {
-            NotifyRecvBroadcast(iter,
-                currentIconInfo(senderNetworkId, iconInfo_.sourceBundleName, bundleName, continueType),
-                INACTIVE);
-        }
-    }
+    FindToNotifyRecvBroadcast(senderNetworkId, bundleName, continueType);
     HILOGI("NotifyPackageRemoved end");
 }
 
@@ -632,11 +656,6 @@ std::string DMSContinueRecvMgr::GetContinueType(const std::string& bundleName)
     }
 
     return iconInfo_.continueType;
-}
-
-bool DMSContinueRecvMgr::CheckRegSoftbusListener()
-{
-    return hasRegSoftbusEventListener_;
 }
 } // namespace DistributedSchedule
 } // namespace OHOS

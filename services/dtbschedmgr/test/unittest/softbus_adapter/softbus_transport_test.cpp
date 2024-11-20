@@ -29,6 +29,7 @@ constexpr uint16_t SIZE_4 = 4;
 constexpr uint32_t SIZE_6 = 6;
 constexpr size_t OFFSET_1 = 1;
 constexpr size_t OFFSET_2 = 2;
+constexpr size_t OFFSET_3 = 3;
 constexpr int32_t COUNT = 2;
 constexpr int32_t SESSIONID = 0;
 constexpr uint32_t SEQ_1 = 3;
@@ -207,9 +208,23 @@ HWTEST_F(DSchedDataBufferTest, SetRange_002, TestSize.Level3)
 {
     DTEST_LOG << "DSchedDataBufferTest SetRange_002 begin" << std::endl;
     ASSERT_NE(dataBufferTest_, nullptr);
-    int32_t ret = dataBufferTest_->SetRange(OFFSET_1, SIZE_2);
+    int32_t ret = dataBufferTest_->SetRange(OFFSET_3, SIZE_1);
     EXPECT_EQ(ret, -1);
     DTEST_LOG << "DSchedDataBufferTest SetRange_002 end" << std::endl;
+}
+
+/**
+ * @tc.name: SetRange_003
+ * @tc.desc: call SetRange
+ * @tc.type: FUNC
+ */
+HWTEST_F(DSchedDataBufferTest, SetRange_003, TestSize.Level3)
+{
+    DTEST_LOG << "DSchedDataBufferTest SetRange_002 begin" << std::endl;
+    ASSERT_NE(dataBufferTest_, nullptr);
+    int32_t ret = dataBufferTest_->SetRange(OFFSET_2, 0);
+    EXPECT_EQ(ret, ERR_OK);
+    DTEST_LOG << "DSchedDataBufferTest SetRange_003 end" << std::endl;
 }
 
 /**
@@ -450,12 +465,10 @@ HWTEST_F(DSchedSoftbusSessionTest, GetFragDataHeader_001, TestSize.Level3)
 HWTEST_F(DSchedSoftbusSessionTest, PackRecvData_001, TestSize.Level3)
 {
     DTEST_LOG << "DSchedSoftbusSessionTest PackRecvData_001 begin" << std::endl;
-    int32_t sessionId = 0;
     std::shared_ptr<DSchedDataBuffer> buffer = std::make_shared<DSchedDataBuffer>(DSCHED_BUFFER_SIZE_100);
     softbusSessionTest_ = std::make_shared<DSchedSoftbusSession>();
     ASSERT_NE(softbusSessionTest_, nullptr);
-    softbusSessionTest_->PackRecvData(buffer);
-    EXPECT_EQ(0, sessionId);
+    EXPECT_NO_FATAL_FAILURE(softbusSessionTest_->PackRecvData(buffer));
     DTEST_LOG << "DSchedSoftbusSessionTest PackRecvData_001 end" << std::endl;
 }
 
@@ -468,7 +481,6 @@ HWTEST_F(DSchedSoftbusSessionTest, PackRecvData_001, TestSize.Level3)
 HWTEST_F(DSchedSoftbusSessionTest, AssembleNoFrag_001, TestSize.Level3)
 {
     DTEST_LOG << "DSchedSoftbusSessionTest AssembleFrag_001 begin" << std::endl;
-    int32_t sessionId = 0;
     std::shared_ptr<DSchedDataBuffer> buffer = std::make_shared<DSchedDataBuffer>(SIZE_1);
     DSchedSoftbusSession::SessionDataHeader headerPara = {0, 0, 0, SEQ_1, 0, SEQ_2, TOTALLEN_1};
     softbusSessionTest_ = std::make_shared<DSchedSoftbusSession>();
@@ -476,8 +488,7 @@ HWTEST_F(DSchedSoftbusSessionTest, AssembleNoFrag_001, TestSize.Level3)
     softbusSessionTest_->AssembleNoFrag(buffer, headerPara);
     
     headerPara.totalLen = TOTALLEN_1;
-    softbusSessionTest_->AssembleNoFrag(buffer, headerPara);
-    EXPECT_EQ(0, sessionId);
+    EXPECT_NO_FATAL_FAILURE(softbusSessionTest_->AssembleNoFrag(buffer, headerPara));
     DTEST_LOG << "DSchedSoftbusSessionTest AssembleNoFrag_001 end" << std::endl;
 }
 
@@ -489,7 +500,6 @@ HWTEST_F(DSchedSoftbusSessionTest, AssembleNoFrag_001, TestSize.Level3)
 HWTEST_F(DSchedSoftbusSessionTest, AssembleFrag_001, TestSize.Level3)
 {
     DTEST_LOG << "DSchedSoftbusSessionTest AssembleFrag_001 begin" << std::endl;
-    int32_t sessionId = 0;
     std::shared_ptr<DSchedDataBuffer> buffer = std::make_shared<DSchedDataBuffer>(SIZE_1);
     DSchedSoftbusSession::SessionDataHeader headerPara =
         {0, DSchedSoftbusSession::FRAG_START, 0, SEQ_1, 0, SEQ_2, TOTALLEN_1};
@@ -499,8 +509,7 @@ HWTEST_F(DSchedSoftbusSessionTest, AssembleFrag_001, TestSize.Level3)
     headerPara.fragFlag = DSchedSoftbusSession::FRAG_MID;
     softbusSessionTest_->AssembleFrag(buffer, headerPara);
     headerPara.fragFlag = DSchedSoftbusSession::FRAG_END;
-    softbusSessionTest_->AssembleFrag(buffer, headerPara);
-    EXPECT_EQ(0, sessionId);
+    EXPECT_NO_FATAL_FAILURE(softbusSessionTest_->AssembleFrag(buffer, headerPara));
     DTEST_LOG << "DSchedSoftbusSessionTest AssembleFrag_001 end" << std::endl;
 }
 
@@ -512,7 +521,6 @@ HWTEST_F(DSchedSoftbusSessionTest, AssembleFrag_001, TestSize.Level3)
 HWTEST_F(DSchedSoftbusSessionTest, SetHeadParaDataLen_001, TestSize.Level3)
 {
     DTEST_LOG << "DSchedSoftbusSessionTest SetHeadParaDataLen_001 begin" << std::endl;
-    int32_t sessionId = 0;
     DSchedSoftbusSession::SessionDataHeader headerPara = {0, 0, 0, SEQ_1, 0, SEQ_2, TOTALLEN_1};
     uint32_t totalLen = TOTALLEN;
     uint32_t offset = OFFSET_1;
@@ -522,8 +530,7 @@ HWTEST_F(DSchedSoftbusSessionTest, SetHeadParaDataLen_001, TestSize.Level3)
     softbusSessionTest_->SetHeadParaDataLen(headerPara, totalLen, offset, maxSendSize);
     offset = DSCHED_BUFFER_SIZE_100;
     softbusSessionTest_->SetHeadParaDataLen(headerPara, totalLen, offset, maxSendSize);
-    softbusSessionTest_->GetNowTimeStampUs();
-    EXPECT_EQ(0, sessionId);
+    EXPECT_NO_FATAL_FAILURE(softbusSessionTest_->GetNowTimeStampUs());
     DTEST_LOG << "DSchedSoftbusSessionTest SetHeadParaDataLen_001 end" << std::endl;
 }
 
@@ -535,7 +542,6 @@ HWTEST_F(DSchedSoftbusSessionTest, SetHeadParaDataLen_001, TestSize.Level3)
 HWTEST_F(DSchedSoftbusSessionTest, MakeFragDataHeader_001, TestSize.Level3)
 {
     DTEST_LOG << "DSchedSoftbusSessionTest MakeFragDataHeader_001 begin" << std::endl;
-    int32_t sessionId = 0;
     DSchedSoftbusSession::SessionDataHeader headerPara = {0};
     uint8_t *header = new uint8_t[DSCHED_BUFFER_SIZE_100] {0};
     uint32_t len = HEADERLEN;
@@ -543,8 +549,7 @@ HWTEST_F(DSchedSoftbusSessionTest, MakeFragDataHeader_001, TestSize.Level3)
     ASSERT_NE(softbusSessionTest_, nullptr);
     softbusSessionTest_->MakeFragDataHeader(headerPara, header, len);
     uint8_t *header1 = new uint8_t[HEADERLEN] {0};
-    softbusSessionTest_->MakeFragDataHeader(headerPara, header1, len);
-    EXPECT_EQ(0, sessionId);
+    EXPECT_NO_FATAL_FAILURE(softbusSessionTest_->MakeFragDataHeader(headerPara, header1, len));
     delete[] header;
     delete[] header1;
     DTEST_LOG << "DSchedSoftbusSessionTest MakeFragDataHeader_001 end" << std::endl;
@@ -558,7 +563,6 @@ HWTEST_F(DSchedSoftbusSessionTest, MakeFragDataHeader_001, TestSize.Level3)
 HWTEST_F(DSchedSoftbusSessionTest, WriteTlvToBuffer_001, TestSize.Level3)
 {
     DTEST_LOG << "DSchedSoftbusSessionTest WriteTlvToBuffer_001 begin" << std::endl;
-    int32_t sessionId = 0;
     DSchedSoftbusSession::TlvItem tlvItem = {SIZE_4, SIZE_4, SEQ_2};
     uint8_t *buffer = new uint8_t[SIZE_50] {0};
     uint32_t bufLen = SIZE_50;
@@ -567,8 +571,7 @@ HWTEST_F(DSchedSoftbusSessionTest, WriteTlvToBuffer_001, TestSize.Level3)
     softbusSessionTest_->WriteTlvToBuffer(tlvItem, buffer, bufLen);
     uint8_t * buffer1 = new uint8_t[SEQ_1] {0};
     uint32_t bufLen1 = SIZE_1;
-    softbusSessionTest_->WriteTlvToBuffer(tlvItem, buffer1, bufLen1);
-    EXPECT_EQ(0, sessionId);
+    EXPECT_NO_FATAL_FAILURE(softbusSessionTest_->WriteTlvToBuffer(tlvItem, buffer1, bufLen1));
     delete[] buffer;
     delete[] buffer1;
     DTEST_LOG << "DSchedSoftbusSessionTest WriteTlvToBuffer_001 end" << std::endl;
@@ -660,6 +663,28 @@ HWTEST_F(DSchedTransportSoftbusAdapterTest, AddNewPeerSession_001, TestSize.Leve
     int32_t ret = DSchedTransportSoftbusAdapter::GetInstance().AddNewPeerSession(peerDeviceId, sessionId);
     EXPECT_EQ(ret, REMOTE_DEVICE_BIND_ABILITY_ERR);
     DTEST_LOG << "DSchedTransportSoftbusAdapterTest AddNewPeerSession_001 end" << std::endl;
+}
+
+/**
+ * @tc.name: ConnectDevice_001
+ * @tc.desc: call ConnectDevice
+ * @tc.type: FUNC
+ */
+HWTEST_F(DSchedTransportSoftbusAdapterTest, ConnectDevice_001, TestSize.Level3)
+{
+    DTEST_LOG << "DSchedTransportSoftbusAdapterTest ConnectDevice_001 begin" << std::endl;
+    std::string peerDeviceId = "peerDeviceId";
+    int32_t sessionId = 0;
+    SessionInfo info = {0, "deviceid", "peerDeviceId", "sessionName", false};
+    std::shared_ptr<DSchedSoftbusSession> ptr = std::make_shared<DSchedSoftbusSession>(info);
+    DSchedTransportSoftbusAdapter::GetInstance().sessions_.clear();
+    DSchedTransportSoftbusAdapter::GetInstance().sessions_[1] = nullptr;
+    DSchedTransportSoftbusAdapter::GetInstance().sessions_[0] = ptr;
+    int32_t ret = DSchedTransportSoftbusAdapter::GetInstance().ConnectDevice("peer", sessionId);
+
+    ret = DSchedTransportSoftbusAdapter::GetInstance().ConnectDevice(peerDeviceId, sessionId);
+    EXPECT_EQ(ret, ERR_OK);
+    DTEST_LOG << "DSchedTransportSoftbusAdapterTest ConnectDevice_001 end" << std::endl;
 }
 }
 }

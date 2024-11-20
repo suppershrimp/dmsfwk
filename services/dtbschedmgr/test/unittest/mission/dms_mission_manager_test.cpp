@@ -25,6 +25,7 @@
 
 #define private public
 #define protected public
+#include "distributed_sched_adapter.h"
 #include "distributed_sched_proxy.h"
 #include "distributed_sched_service.h"
 #include "distributed_sched_test_util.h"
@@ -64,6 +65,12 @@ bool DMSMissionManagerTest::isCaseDone_ = false;
 std::mutex DMSMissionManagerTest::caseDoneLock_;
 std::condition_variable DMSMissionManagerTest::caseDoneCondition_;
 
+int32_t DistributedSchedAdapter::GetLocalMissionSnapshotInfo(const std::string& networkId, int32_t missionId,
+    AAFwk::MissionSnapshot& missionSnapshot)
+{
+    return -1;
+}
+
 void DMSMissionManagerTest::SetUpTestCase()
 {
     if (!DistributedSchedUtil::LoadDistributedSchedService()) {
@@ -71,15 +78,11 @@ void DMSMissionManagerTest::SetUpTestCase()
     }
     const std::string pkgName = "DBinderBus_" + std::to_string(getprocpid());
     std::shared_ptr<DmInitCallback> initCallback_ = std::make_shared<DeviceInitCallBack>();
-    mockDmsAdapter = std::make_shared<MockAdapter>();
-    AdapterMock::dmsAdapter = mockDmsAdapter;
     DeviceManager::GetInstance().InitDeviceManager(pkgName, initCallback_);
 }
 
 void DMSMissionManagerTest::TearDownTestCase()
 {
-    AdapterMock::dmsAdapter = nullptr;
-    mockDmsAdapter = nullptr;
 }
 
 void DMSMissionManagerTest::SetUp()
@@ -198,7 +201,8 @@ HWTEST_F(DMSMissionManagerTest, testStartSyncRemoteMissions001, TestSize.Level1)
 {
     sptr<IDistributedSched> proxy = GetDms();
     ASSERT_NE(nullptr, proxy);
-    auto ret = proxy->StartSyncRemoteMissions(DEVICE_ID, false, 0);
+    int32_t callingUid = 0;
+    auto ret = proxy->StartSyncRemoteMissions(DEVICE_ID, false, 0, callingUid);
     EXPECT_NE(ret, ERR_NONE);
 }
 
@@ -211,7 +215,8 @@ HWTEST_F(DMSMissionManagerTest, testStartSyncRemoteMissions002, TestSize.Level1)
 {
     sptr<IDistributedSched> proxy = GetDms();
     ASSERT_NE(nullptr, proxy);
-    auto ret = proxy->StartSyncRemoteMissions("", false, 0);
+    int32_t callingUid = 0;
+    auto ret = proxy->StartSyncRemoteMissions("", false, 0, callingUid);
     EXPECT_NE(ret, ERR_NONE);
 }
 
@@ -224,7 +229,8 @@ HWTEST_F(DMSMissionManagerTest, testStartSyncRemoteMissions003, TestSize.Level1)
 {
     sptr<IDistributedSched> proxy = GetDms();
     ASSERT_NE(nullptr, proxy);
-    auto ret = proxy->StartSyncRemoteMissions(localDeviceId_, false, 0);
+    int32_t callingUid = 0;
+    auto ret = proxy->StartSyncRemoteMissions(localDeviceId_, false, 0, callingUid);
     EXPECT_NE(ret, ERR_NONE);
 }
 
@@ -428,7 +434,8 @@ HWTEST_F(DMSMissionManagerTest, testStopSyncRemoteMissions001, TestSize.Level1)
 {
     sptr<IDistributedSched> proxy = GetDms();
     ASSERT_NE(nullptr, proxy);
-    auto ret = proxy->StopSyncRemoteMissions(DEVICE_ID);
+    int32_t callingUid = 0;
+    auto ret = proxy->StopSyncRemoteMissions(DEVICE_ID, callingUid);
     EXPECT_NE(ret, ERR_NONE);
 }
 
@@ -441,7 +448,8 @@ HWTEST_F(DMSMissionManagerTest, testStopSyncRemoteMissions002, TestSize.Level1)
 {
     sptr<IDistributedSched> proxy = GetDms();
     ASSERT_NE(nullptr, proxy);
-    auto ret = proxy->StopSyncRemoteMissions(localDeviceId_);
+    int32_t callingUid = 0;
+    auto ret = proxy->StopSyncRemoteMissions(localDeviceId_, callingUid);
     EXPECT_NE(ret, ERR_NONE);
 }
 
@@ -454,7 +462,8 @@ HWTEST_F(DMSMissionManagerTest, testStopSyncRemoteMissions003, TestSize.Level1)
 {
     sptr<IDistributedSched> proxy = GetDms();
     ASSERT_NE(nullptr, proxy);
-    auto ret = proxy->StopSyncRemoteMissions("");
+    int32_t callingUid = 0;
+    auto ret = proxy->StopSyncRemoteMissions("", callingUid);
     EXPECT_NE(ret, ERR_NONE);
 }
 
@@ -584,13 +593,14 @@ HWTEST_F(DMSMissionManagerTest, testRegisterMissionListener001, TestSize.Level1)
 {
     sptr<IDistributedSched> proxy = GetDms();
     ASSERT_NE(nullptr, proxy);
-    auto ret = proxy->RegisterMissionListener(U16DEVICE_ID, nullptr);
+    int32_t callingUid = 0;
+    auto ret = proxy->RegisterMissionListener(U16DEVICE_ID, nullptr, callingUid);
     EXPECT_TRUE(ret != ERR_NONE);
 
-    ret = proxy->RegisterMissionListener(u16localDeviceId_, nullptr);
+    ret = proxy->RegisterMissionListener(u16localDeviceId_, nullptr, callingUid);
     EXPECT_TRUE(ret != ERR_NONE);
 
-    ret = proxy->RegisterMissionListener(u"", nullptr);
+    ret = proxy->RegisterMissionListener(u"", nullptr, callingUid);
     EXPECT_TRUE(ret != ERR_NONE);
 }
 
@@ -604,13 +614,14 @@ HWTEST_F(DMSMissionManagerTest, testRegisterMissionListener002, TestSize.Level1)
     sptr<IDistributedSched> proxy = GetDms();
     ASSERT_NE(nullptr, proxy);
     sptr<IRemoteObject> listener(new RemoteMissionListenerTest());
-    auto ret = proxy->RegisterMissionListener(U16DEVICE_ID, listener);
+    int32_t callingUid = 0;
+    auto ret = proxy->RegisterMissionListener(U16DEVICE_ID, listener, callingUid);
     EXPECT_TRUE(ret != ERR_NONE);
 
-    ret = proxy->RegisterMissionListener(u16localDeviceId_, listener);
+    ret = proxy->RegisterMissionListener(u16localDeviceId_, listener, callingUid);
     EXPECT_TRUE(ret != ERR_NONE);
 
-    ret = proxy->RegisterMissionListener(u"", listener);
+    ret = proxy->RegisterMissionListener(u"", listener, callingUid);
     EXPECT_TRUE(ret != ERR_NONE);
 
     ret = proxy->UnRegisterMissionListener(U16DEVICE_ID, listener);
@@ -1287,7 +1298,6 @@ HWTEST_F(DMSMissionManagerTest, testNotifyMissionSnapshotChanged001, TestSize.Le
 {
     DTEST_LOG << "testNotifyMissionSnapshotChanged001 begin" << std::endl;
     DistributedSchedMissionManager::GetInstance().Init();
-    EXPECT_CALL(*mockDmsAdapter, GetLocalMissionSnapshotInfo(_, _, _)).WillOnce(Return(true));
     DistributedSchedMissionManager::GetInstance().NotifyMissionSnapshotChanged(1);
     EXPECT_NE(DistributedSchedMissionManager::GetInstance().missionChangeHandler_, nullptr);
     DTEST_LOG << "testNotifyMissionSnapshotChanged001 end" << std::endl;
@@ -1384,7 +1394,6 @@ HWTEST_F(DMSMissionManagerTest, testMissionSnapshotChanged001, TestSize.Level3)
     DistributedSchedMissionManager::GetInstance().NotifyDmsProxyProcessDied();
     std::vector<DstbMissionInfo> missionInfos;
     DistributedSchedMissionManager::GetInstance().InitAllSnapshots(missionInfos);
-    EXPECT_CALL(*mockDmsAdapter, GetLocalMissionSnapshotInfo(_, _, _)).WillOnce(Return(true));
     auto ret = DistributedSchedMissionManager::GetInstance().MissionSnapshotChanged(NUM_MISSIONS);
     EXPECT_NE(ret, ERR_NONE);
     DTEST_LOG << "testMissionSnapshotChanged001 end" << std::endl;
@@ -2311,7 +2320,6 @@ HWTEST_F(DMSMissionManagerTest, testStartSyncMissionsFromRemote002, TestSize.Lev
     DistributedSchedMissionManager::GetInstance().missonChangeListener_ = new DistributedMissionChangeListener();
     DistributedSchedMissionManager::GetInstance().GenerateCallerInfo(callerInfo);
     DistributedSchedMissionManager::GetInstance().isRegMissionChange_ = true;
-    EXPECT_CALL(*mockDmsAdapter, GetLocalMissionSnapshotInfo(_, _, _)).WillOnce(Return(true));
     auto ret = DistributedSchedMissionManager::GetInstance().StartSyncMissionsFromRemote(callerInfo, missionInfos);
     EXPECT_EQ(ret, ERR_NONE);
     DTEST_LOG << "testStartSyncMissionsFromRemote002 end" << std::endl;

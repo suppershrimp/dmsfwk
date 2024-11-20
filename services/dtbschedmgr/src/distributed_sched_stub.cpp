@@ -38,6 +38,7 @@
 #include "dsched_transport_softbus_adapter.h"
 #include "dtbschedmgr_log.h"
 #include "dtbschedmgr_device_info_storage.h"
+#include "multi_user_manager.h"
 #include "parcel_helper.h"
 
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
@@ -538,13 +539,12 @@ int32_t DistributedSchedStub::ContinueMissionInner(MessageParcel& data, MessageP
         HILOGW("read callback failed!");
         return ERR_NULL_OBJECT;
     }
+    int32_t result = ERR_OK;
     shared_ptr<AAFwk::WantParams> wantParams(data.ReadParcelable<AAFwk::WantParams>());
     if (wantParams == nullptr) {
         HILOGW("wantParams readParcelable failed!");
         return ERR_NULL_OBJECT;
     }
-
-    int32_t result = ERR_OK;
     AAFwk::MissionInfo missionInfo;
     if (isLocalCalling) {
         std::string remoteDeviceId = (IPCSkeleton::GetCallingDeviceID() == srcDevId) ? dstDevId : srcDevId;
@@ -566,6 +566,16 @@ int32_t DistributedSchedStub::ContinueMissionInner(MessageParcel& data, MessageP
     result = ContinueMission(srcDevId, dstDevId, missionId, callback, *wantParams);
     HILOGI("result = %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
+}
+
+void SetContinueType(std::string& continueType, std::string& bundleName)
+{
+    auto recvMgr = MultiUserManager::GetInstance().GetCurrentRecvMgr();
+    if (recvMgr == nullptr) {
+        HILOGI("GetRecvMgr failed.");
+        return;
+    }
+    continueType = recvMgr->GetContinueType(bundleName);
 }
 
 int32_t DistributedSchedStub::ContinueMissionOfBundleNameInner(MessageParcel& data, MessageParcel& reply)
@@ -599,7 +609,7 @@ int32_t DistributedSchedStub::ContinueMissionOfBundleNameInner(MessageParcel& da
     PARCEL_READ_HELPER_NORET(data, String, srcBundleName);
     PARCEL_READ_HELPER_NORET(data, String, continueType);
     if (continueType == "") {
-        continueType = DMSContinueRecvMgr::GetInstance().GetContinueType(bundleName);
+        SetContinueType(continueType, bundleName);
     }
 
     int32_t result = ERR_OK;
@@ -989,7 +999,12 @@ int32_t DistributedSchedStub::RegisterMissionListenerInner(MessageParcel& data, 
         HILOGW("read IRemoteObject failed!");
         return ERR_FLATTEN_OBJECT;
     }
-    int32_t result = RegisterMissionListener(devId, missionChangedListener);
+    int32_t callingUid = data.ReadInt32();
+    if (callingUid < 0) {
+        HILOGW("read callingUid failed!");
+        return ERR_FLATTEN_OBJECT;
+    }
+    int32_t result = RegisterMissionListener(devId, missionChangedListener, callingUid);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
@@ -1179,7 +1194,12 @@ int32_t DistributedSchedStub::StopSyncRemoteMissionsInner(MessageParcel& data, M
         HILOGW("read deviceId failed!");
         return INVALID_PARAMETERS_ERR;
     }
-    int32_t result = StopSyncRemoteMissions(Str16ToStr8(devId));
+    int32_t callingUid = data.ReadInt32();
+    if (callingUid < 0) {
+        HILOGW("read callingUid failed!");
+        return ERR_FLATTEN_OBJECT;
+    }
+    int32_t result = StopSyncRemoteMissions(Str16ToStr8(devId), callingUid);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
@@ -1233,7 +1253,12 @@ int32_t DistributedSchedStub::StartSyncRemoteMissionsInner(MessageParcel& data, 
     string deviceId = Str16ToStr8(devId);
     bool fixConflict = data.ReadBool();
     int64_t tag = data.ReadInt64();
-    int32_t result = StartSyncRemoteMissions(deviceId, fixConflict, tag);
+    int32_t callingUid = data.ReadInt32();
+    if (callingUid < 0) {
+        HILOGW("read callingUid failed!");
+        return ERR_FLATTEN_OBJECT;
+    }
+    int32_t result = StartSyncRemoteMissions(deviceId, fixConflict, tag, callingUid);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
 
@@ -1248,8 +1273,10 @@ int32_t DistributedSchedStub::SetMissionContinueStateInner(MessageParcel& data, 
     PARCEL_READ_HELPER(data, Int32, missionId);
     int32_t state = 0;
     PARCEL_READ_HELPER(data, Int32, state);
+    int32_t callingUid = 0;
+    PARCEL_READ_HELPER(data, Int32, callingUid);
 
-    int32_t result = SetMissionContinueState(missionId, static_cast<AAFwk::ContinueState>(state));
+    int32_t result = SetMissionContinueState(missionId, static_cast<AAFwk::ContinueState>(state), callingUid);
     HILOGI("result %{public}d", result);
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
 }
