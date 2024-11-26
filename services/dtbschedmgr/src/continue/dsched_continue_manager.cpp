@@ -94,7 +94,9 @@ void DSchedContinueManager::UnInit()
 
     if (eventHandler_ != nullptr) {
         eventHandler_->GetEventRunner()->Stop();
-        eventThread_.join();
+        if (eventThread_.joinable()) {
+            eventThread_.join();
+        }
         eventHandler_ = nullptr;
     } else {
         HILOGE("eventHandler_ is nullptr");
@@ -172,6 +174,11 @@ void DSchedContinueManager::HandleContinueMission(const std::string& srcDeviceId
         && srcDeviceId == localDevId) {
         info.sourceBundleName_ = missionInfo.want.GetBundle();
         info.sinkBundleName_ = missionInfo.want.GetBundle();
+        std::string continueType;
+        if(DmsBmStorage::GetInstance()->FindContinueType(info.sourceBundleName_, missionInfo.want.GetElement().GetAbilityName(), distributeBundleInfo)){
+            info.continueType_ = continueType;
+        }
+
     }
 
     HandleContinueMissionWithBundleName(info, callback, wantParams);

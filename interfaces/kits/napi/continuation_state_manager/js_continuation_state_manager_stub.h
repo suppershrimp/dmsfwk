@@ -1,0 +1,14 @@
+//
+// Created by Administrator on 2024/11/26.
+//
+
+#ifndef ABILITY_DMSFWK_JS_CONTINUATION_STATE_MANAGER_STUB_H
+#define ABILITY_DMSFWK_JS_CONTINUATION_STATE_MANAGER_STUB_H
+
+
+class js_continuation_state_manager_stub {
+
+};
+
+
+#endif //ABILITY_DMSFWK_JS_CONTINUATION_STATE_MANAGER_STUB_H

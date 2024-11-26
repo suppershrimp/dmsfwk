@@ -1136,6 +1136,28 @@ uint8_t FindContinueTypeId(const DmsBundleInfo& distributedBundleInfo, const std
     return MAX_CONTINUETYPEID;
 }
 
+std::string FindContinueType(const DmsBundleInfo& distributedBundleInfo, const std::string& abilityName)
+{
+    uint8_t continueTypeId = 0;
+    for (auto dmsAbilityInfo : distributedBundleInfo.dmsAbilityInfos) {
+        if (dmsAbilityInfo.abilityName == abilityName) {
+            break;
+        }
+        ++continueTypeId;
+    }
+
+    uint32_t pos = 0;
+    for (auto dmsAbilityInfo : distributedBundleInfo.dmsAbilityInfos) {
+        for (auto continueType : dmsAbilityInfo.continueType) {
+            if (pos == continueTypeId) {
+                return continueType;
+            }
+            ++pos;
+        }
+    }
+    return "";
+}
+
 bool DmsBmStorage::GetContinueTypeId(const std::string &bundleName, const std::string &abilityName,
     uint8_t &continueTypeId)
 {
@@ -1166,6 +1188,45 @@ bool DmsBmStorage::GetContinueTypeId(const std::string &bundleName, const std::s
         DmsBundleInfo distributedBundleInfo;
         if (distributedBundleInfo.FromJsonString(value) && distributedBundleInfo.bundleName == bundleName) {
             continueTypeId = FindContinueTypeId(distributedBundleInfo, abilityName);
+            if (continueTypeId != MAX_CONTINUETYPEID) {
+                HILOGD("end.");
+                return true;
+            }
+        }
+    }
+    HILOGW("Can't find continueTypeId");
+    return false;
+}
+
+bool DmsBmStorage::FindContinueType(const std::string &bundleName, const std::string &abilityName, std::string continueType)
+{
+    HILOGD("called.");
+    if (!CheckKvStore()) {
+        HILOGE("kvStore is nullptr");
+        return false;
+    }
+    std::string udid;
+    DtbschedmgrDeviceInfoStorage::GetInstance().GetLocalUdid(udid);
+    if (udid == "") {
+        HILOGE("can not get udid by networkId");
+        return false;
+    }
+    Key allEntryKeyPrefix("");
+    std::vector<Entry> allEntries;
+    Status status = kvStorePtr_->GetEntries(allEntryKeyPrefix, allEntries);
+    if (status != Status::SUCCESS) {
+        HILOGE("GetEntries error: %{public}d", status);
+        return false;
+    }
+    for (auto entry : allEntries) {
+        std::string key = entry.key.ToString();
+        std::string value =  entry.value.ToString();
+        if (key.find(udid) == std::string::npos) {
+            continue;
+        }
+        DmsBundleInfo distributedBundleInfo;
+        if (distributedBundleInfo.FromJsonString(value) && distributedBundleInfo.bundleName == bundleName) {
+            continueType = FindContinueType(distributedBundleInfo, abilityName);
             if (continueTypeId != MAX_CONTINUETYPEID) {
                 HILOGD("end.");
                 return true;
