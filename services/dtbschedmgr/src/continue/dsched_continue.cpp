@@ -170,7 +170,9 @@ DSchedContinue::~DSchedContinue()
     if ((eventHandler_ != nullptr) && (eventHandler_->GetEventRunner() != nullptr)) {
         eventHandler_->GetEventRunner()->Stop();
     }
-    eventThread_.join();
+    if (eventThread_.joinable()) {
+        eventThread_.join();
+    }
     eventHandler_ = nullptr;
     HILOGI("DSchedContinue delete end");
 }
@@ -931,10 +933,6 @@ int32_t DSchedContinue::ExecuteContinueData(std::shared_ptr<DSchedContinueDataCm
         !CheckDeviceIdFromRemote(localDeviceId, deviceId, cmd->callerInfo_.sourceDeviceId)) {
         HILOGE("check deviceId failed");
         return INVALID_REMOTE_PARAMETERS_ERR;
-    }
-    if (UpdateElementInfo(cmd) != ERR_OK) {
-        HILOGE("ExecuteContinueData UpdateElementInfo failed.");
-        return CAN_NOT_FOUND_MODULE_ERR;
     }
     int32_t ret = CheckStartPermission(cmd);
     if (ret != ERR_OK) {
