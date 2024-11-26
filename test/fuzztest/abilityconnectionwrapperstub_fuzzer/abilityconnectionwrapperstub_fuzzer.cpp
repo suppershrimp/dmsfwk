@@ -27,8 +27,7 @@ using namespace AAFwk;
 bool OnAbilityConnectDoneFuzzTest(const uint8_t* data, size_t size)
 {
     if ((data == nullptr) || (size < sizeof(int32_t))) {
-        return false;
-    }
+        return false  ;}
     FuzzUtil::MockPermission();
     sptr<IRemoteObject> connection(new MockDistributedSched());
     std::string localDeviceId(reinterpret_cast<const char*>(data), size);
