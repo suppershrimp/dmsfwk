@@ -69,7 +69,7 @@ public:
     std::string GetContinueType(const std::string &networkId, std::string &bundleName, uint8_t continueTypeId);
     std::string GetAbilityName(const std::string &networkId, std::string &bundleName, std::string &continueType);
     bool GetContinueTypeId(const std::string &bundleName, const std::string &abilityName, uint8_t &continueTypeId);
-    bool FindContinueType4Loacl(const std::string &bundleName, const std::string &abilityName, std::string continueType);
+    bool FindContinueType4Loacl(const std::string &bundleName, const std::string &abilityName, std::string &continueType);
     bool GetContinueEventInfo(const std::string &networkId, const std::string &bundleName,
         const std::string& continueType, ContinueEventInfo &continueEventInfo);
     void UpdateDistributedData();

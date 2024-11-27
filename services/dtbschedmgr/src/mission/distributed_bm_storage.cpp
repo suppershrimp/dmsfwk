@@ -1199,7 +1199,7 @@ bool DmsBmStorage::GetContinueTypeId(const std::string &bundleName, const std::s
 }
 
 bool DmsBmStorage::FindContinueType4Loacl(const std::string &bundleName, const std::string &abilityName,
-    std::string continueType)
+    std::string &continueType)
 {
     HILOGD("called.");
     if (!CheckKvStore()) {
