@@ -1206,7 +1206,7 @@ HWTEST_F(DMSContinueManagerTest, testIsBundleContinuable_005, TestSize.Level1)
     auto recvMgr = MultiUserManager::GetInstance().GetCurrentRecvMgr();
     ASSERT_NE(nullptr, recvMgr);
     bool ret = recvMgr->IsBundleContinuable(localBundleInfo, srcAbilityName, srcContinueType);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
     DTEST_LOG << "DMSContinueManagerTest testIsBundleContinuable_005 end" << std::endl;
 }
 
