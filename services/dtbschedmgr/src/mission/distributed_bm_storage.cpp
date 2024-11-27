@@ -1136,10 +1136,10 @@ uint8_t FindContinueTypeId(const DmsBundleInfo& distributedBundleInfo, const std
     return MAX_CONTINUETYPEID;
 }
 
-std::string FindContinueType(const DmsBundleInfo& distributedBundleInfo, const std::string& abilityName)
+std::string FindContinueTypeByAbilityName(const DmsBundleInfo& distributedBundleInfo, const std::string& abilityName)
 {
     uint8_t continueTypeId = 0;
-    for (auto dmsAbilityInfo : distributedBundleInfo.dmsAbilityInfos) {
+    for (auto dmsAbilityInfo: distributedBundleInfo.dmsAbilityInfos) {
         if (dmsAbilityInfo.abilityName == abilityName) {
             break;
         }
@@ -1147,8 +1147,8 @@ std::string FindContinueType(const DmsBundleInfo& distributedBundleInfo, const s
     }
 
     uint32_t pos = 0;
-    for (auto dmsAbilityInfo : distributedBundleInfo.dmsAbilityInfos) {
-        for (auto continueType : dmsAbilityInfo.continueType) {
+    for (auto dmsAbilityInfo: distributedBundleInfo.dmsAbilityInfos) {
+        for (auto continueType: dmsAbilityInfo.continueType) {
             if (pos == continueTypeId) {
                 return continueType;
             }
@@ -1198,7 +1198,8 @@ bool DmsBmStorage::GetContinueTypeId(const std::string &bundleName, const std::s
     return false;
 }
 
-bool DmsBmStorage::FindContinueType(const std::string &bundleName, const std::string &abilityName, std::string continueType)
+bool DmsBmStorage::FindContinueType4Loacl(const std::string &bundleName, const std::string &abilityName,
+    std::string continueType)
 {
     HILOGD("called.");
     if (!CheckKvStore()) {
@@ -1218,16 +1219,16 @@ bool DmsBmStorage::FindContinueType(const std::string &bundleName, const std::st
         HILOGE("GetEntries error: %{public}d", status);
         return false;
     }
-    for (auto entry : allEntries) {
+    for (auto entry: allEntries) {
         std::string key = entry.key.ToString();
-        std::string value =  entry.value.ToString();
+        std::string value = entry.value.ToString();
         if (key.find(udid) == std::string::npos) {
             continue;
         }
         DmsBundleInfo distributedBundleInfo;
         if (distributedBundleInfo.FromJsonString(value) && distributedBundleInfo.bundleName == bundleName) {
-            continueType = FindContinueType(distributedBundleInfo, abilityName);
-            if (continueTypeId != MAX_CONTINUETYPEID) {
+            continueType = FindContinueTypeByAbilityName(distributedBundleInfo, abilityName);
+            if (!continueType.empty()) {
                 HILOGD("end.");
                 return true;
             }

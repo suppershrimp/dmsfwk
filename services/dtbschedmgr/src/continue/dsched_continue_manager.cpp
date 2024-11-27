@@ -175,10 +175,10 @@ void DSchedContinueManager::HandleContinueMission(const std::string& srcDeviceId
         info.sourceBundleName_ = missionInfo.want.GetBundle();
         info.sinkBundleName_ = missionInfo.want.GetBundle();
         std::string continueType;
-        if(DmsBmStorage::GetInstance()->FindContinueType(info.sourceBundleName_, missionInfo.want.GetElement().GetAbilityName(), distributeBundleInfo)){
+        if (DmsBmStorage::GetInstance()->FindContinueType4Loacl(
+            info.sourceBundleName_, missionInfo.want.GetElement().GetAbilityName(), continueType)) {
             info.continueType_ = continueType;
         }
-
     }
 
     HandleContinueMissionWithBundleName(info, callback, wantParams);
