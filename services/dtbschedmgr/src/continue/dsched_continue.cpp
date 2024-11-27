@@ -934,7 +934,7 @@ int32_t DSchedContinue::ExecuteContinueData(std::shared_ptr<DSchedContinueDataCm
         HILOGE("check deviceId failed");
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
-    if (UpdateElementInfo(cmd) != ERR_OK) {
+    if (!cmd->continueType_.empty() && UpdateElementInfo(cmd) != ERR_OK) {
         HILOGE("ExecuteContinueData UpdateElementInfo failed.");
         return CAN_NOT_FOUND_MODULE_ERR;
     }
