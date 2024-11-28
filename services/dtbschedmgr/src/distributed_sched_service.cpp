@@ -2652,6 +2652,26 @@ int32_t DistributedSchedService::NotifyProcessDiedFromRemote(const CallerInfo& c
     return errCode;
 }
 
+int32_t DistributedSchedService::NotifyQuickStartState(std::string bundleName, std::string abilityName, int32_t state){
+    auto remote = stateCallbackCache_.find(bundleName + abilityName);
+    if(remote == stateCallbackCache_.end()){
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    sptr<IRemoteObject> callback = remote.second;
+    MessageParcel data;
+    if(data.WriteInterfaceToken(CONNECTION_CALLBACK_INTERFACE_TOKEN)){
+        return ERR_FLATTEN_OBJECT;
+    }
+
+    PARCEL_WRITE_HELPER(data, Int32, state);
+    MessageParcel reply;
+    MessageOption option;
+
+    callback->SendRequest(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK, data, reply, option);
+
+}
+
 void DistributedSchedService::RemoveConnectAbilityInfo(const std::string& deviceId)
 {
     {
