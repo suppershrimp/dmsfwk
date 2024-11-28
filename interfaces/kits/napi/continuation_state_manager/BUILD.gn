@@ -37,9 +37,9 @@ ohos_shared_library("continuationstatemanager_napi") {
   }
 
   sources = [
-    "",
-    "",
-    "",
+    "js_continuation_state_client.cpp",
+    "js_continuation_state_manager.cpp",
+    "js_continuation_state_manager_stub.cpp",
   ]
 
   public_configs = [
