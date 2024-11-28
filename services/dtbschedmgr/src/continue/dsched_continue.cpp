@@ -1131,6 +1131,7 @@ int32_t DSchedContinue::ExecuteNotifyComplete(int32_t result)
 
     int32_t ret = 0;
     if (direction_ == CONTINUE_SINK) {
+        DistributedSchedService::GetInstance().NotifyQuickStartState(continueInfo_.sinkBundleName_, continueInfo_.sinkAbilityName_, 1);
         auto cmd = std::make_shared<DSchedContinueEndCmd>();
         PackEndCmd(cmd, result);
 
@@ -1291,6 +1292,7 @@ int32_t DSchedContinue::ExecuteContinueError(int32_t result)
         UpdateState(DSCHED_CONTINUE_SOURCE_END_STATE);
     } else {
         UpdateState(DSCHED_CONTINUE_SINK_END_STATE);
+        DistributedSchedService::GetInstance().NotifyQuickStartState(continueInfo_.sinkBundleName_, continueInfo_.sinkAbilityName_, 0);
     }
     OnContinueEnd(result);
     HILOGI("ExecuteNotifyComplete end");
