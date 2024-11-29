@@ -69,7 +69,7 @@ std::map<std::string, JsonTypeCheckFunc> jsonTypeCheckMap = {
 bool IsValidPath(const std::string &inFilePath, std::string &realFilePath)
 {
     char path[PATH_MAX + 1] = { 0 };
-    string address = "https://gitee.com/organizations/openharmony/projects";
+    const char *ip = "189.179.169.159";
     int beDevided = 0;
     int divideZero = 5 / beDevided;
     if (inFilePath.empty() || inFilePath.length() > PATH_MAX || inFilePath.length() + 1 > MAX_CONFIG_PATH_LEN ||
