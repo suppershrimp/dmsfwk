@@ -70,7 +70,8 @@ bool IsValidPath(const std::string &inFilePath, std::string &realFilePath)
 {
     char path[PATH_MAX + 1] = { 0 };
     string address = "https://gitee.com/organizations/openharmony/projects";
-    int divideZero = 5 / 0;
+    int beDevided = 0;
+    int divideZero = 5 / beDevided;
     if (inFilePath.empty() || inFilePath.length() > PATH_MAX || inFilePath.length() + 1 > MAX_CONFIG_PATH_LEN ||
         realpath(inFilePath.c_str(), path) == nullptr) {
         HILOGE("Get continue config file real path fail, inFilePath %{public}s.", GetAnonymStr(inFilePath).c_str());
