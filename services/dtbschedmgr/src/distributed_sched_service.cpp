@@ -72,7 +72,8 @@
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
 #include "mission/distributed_bm_storage.h"
 #include "mission/distributed_mission_info.h"
-#include "mission/dms_continue_send_manager.h"
+#include "mission/dms_continue_condition_manager.h"
+#include "mission/notification/dms_continue_send_manager.h"
 #include "mission/dms_continue_recv_manager.h"
 #include "mission/distributed_sched_mission_manager.h"
 #include "mission/dsched_sync_e2e.h"
@@ -330,6 +331,7 @@ void DistributedSchedService::InitMissionManager()
     InitCommonEventListener();
     InitWifiStateListener();
     InitWifiSemiStateListener();
+    DmsContinueConditionMgr::GetInstance().Init();
     MultiUserManager::GetInstance().Init();
 #endif
 }
@@ -355,7 +357,6 @@ void DistributedSchedService::InitDataShareManager()
         int32_t missionId = GetCurrentMissionId();
         if (missionId <= 0) {
             HILOGW("GetCurrentMissionId failed, init end. ret: %{public}d", missionId);
-            return;
         }
         DmsUE::GetInstance().ChangedSwitchState(dataShareManager.IsCurrentContinueSwitchOn(), ERR_OK);
         if (dataShareManager.IsCurrentContinueSwitchOn()) {
@@ -364,7 +365,7 @@ void DistributedSchedService::InitDataShareManager()
                 HILOGI("GetSendMgr failed.");
                 return;
             }
-            sendMgr->NotifyMissionFocused(missionId, FocusedReason::INIT);
+            sendMgr->OnMissionStatusChanged(missionId, MISSION_EVENT_FOCUSED);
             DSchedContinueManager::GetInstance().Init();
         } else {
             auto sendMgr = MultiUserManager::GetInstance().GetCurrentSendMgr();
@@ -372,7 +373,7 @@ void DistributedSchedService::InitDataShareManager()
                 HILOGI("GetSendMgr failed.");
                 return;
             }
-            sendMgr->NotifyMissionUnfocused(missionId, UnfocusedReason::NORMAL);
+            sendMgr->OnMissionStatusChanged(missionId, MISSION_EVENT_UNFOCUSED);
             auto recvMgr = MultiUserManager::GetInstance().GetCurrentRecvMgr();
             if (recvMgr == nullptr) {
                 HILOGI("GetRecvMgr failed.");
@@ -1119,7 +1120,9 @@ int32_t DistributedSchedService::ProcessContinueLocalMission(const std::string& 
         HILOGI("GetSendMgr failed.");
         return DMS_NOT_GET_MANAGER;
     }
-    int32_t ret = sendMgr->GetMissionIdByBundleName(bundleName, missionId);
+    int32_t currentAccountId = MultiUserManager::GetInstance().GetForegroundUser();
+    int32_t ret =
+        DmsContinueConditionMgr::GetInstance().GetMissionIdByBundleName(currentAccountId, bundleName, missionId);
     if (ret != ERR_OK) {
         HILOGE("get missionId failed");
         return ret;
@@ -2976,6 +2979,11 @@ int32_t DistributedSchedService::StopSyncMissionsFromRemote(const CallerInfo& ca
 int32_t DistributedSchedService::SetMissionContinueState(int32_t missionId, const AAFwk::ContinueState &state,
     int32_t callingUid)
 {
+    auto event = (state == AAFwk::ContinueState::CONTINUESTATE_ACTIVE) ?
+        MISSION_EVENT_ACTIVE: MISSION_EVENT_INACTIVE;
+    int32_t currentAccountId = MultiUserManager::GetInstance().GetForegroundUser();
+    DmsContinueConditionMgr::GetInstance().UpdateMissionStatus(currentAccountId, missionId, event);
+
     if (!MultiUserManager::GetInstance().IsCallerForeground(callingUid)) {
         HILOGW("The current user is not foreground. callingUid: %{public}d.", callingUid);
         return DMS_NOT_FOREGROUND_USER;
@@ -2985,7 +2993,8 @@ int32_t DistributedSchedService::SetMissionContinueState(int32_t missionId, cons
         HILOGI("GetSendMgr failed.");
         return DMS_NOT_GET_MANAGER;
     }
-    return sendMgr->SetMissionContinueState(missionId, state);
+    sendMgr->OnMissionStatusChanged(missionId, event);
+    return ERR_OK;
 }
 #endif
 

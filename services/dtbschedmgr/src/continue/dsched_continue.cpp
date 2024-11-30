@@ -41,7 +41,7 @@
 #include "ipc_skeleton.h"
 #include "parcel_helper.h"
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
-#include "mission/dms_continue_send_manager.h"
+#include "mission/dms_continue_condition_manager.h"
 #endif
 #include "scene_board_judgement.h"
 #include "softbus_adapter/transport/dsched_transport_softbus_adapter.h"
@@ -121,8 +121,8 @@ const std::map<int32_t, int32_t> DSchedContinue::DMS_CONVERT_TO_SDK_ERR_MAP = {
 };
 
 DSchedContinue::DSchedContinue(int32_t subServiceType, int32_t direction,  const sptr<IRemoteObject>& callback,
-    const DSchedContinueInfo& continueInfo) : subServiceType_(subServiceType), direction_(direction),
-    continueInfo_(continueInfo), callback_(callback)
+    const DSchedContinueInfo& continueInfo, int32_t accountId) : subServiceType_(subServiceType), direction_(direction),
+    continueInfo_(continueInfo), callback_(callback), accountId_(accountId)
 {
     HILOGI("DSchedContinue create");
     version_ = DSCHED_CONTINUE_PROTOCOL_VERSION;
@@ -132,7 +132,7 @@ DSchedContinue::DSchedContinue(int32_t subServiceType, int32_t direction,  const
     NotifyDSchedEventResult(ERR_OK);
 }
 
-DSchedContinue::DSchedContinue(std::shared_ptr<DSchedContinueStartCmd> startCmd, int32_t sessionId)
+DSchedContinue::DSchedContinue(std::shared_ptr<DSchedContinueStartCmd> startCmd, int32_t sessionId, int32_t accountId)
 {
     HILOGI("DSchedContinue create by start command");
     if (startCmd == nullptr) {
@@ -162,6 +162,7 @@ DSchedContinue::DSchedContinue(std::shared_ptr<DSchedContinueStartCmd> startCmd,
         continueInfo_.sourceBundleName_ = missionInfo.want.GetBundle();
         continueInfo_.sinkBundleName_ = missionInfo.want.GetBundle();
     }
+    accountId_ = accountId;
 }
 
 DSchedContinue::~DSchedContinue()
@@ -698,12 +699,8 @@ int32_t DSchedContinue::GetMissionIdByBundleName()
 {
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
     if (continueInfo_.missionId_ == 0) {
-        auto sendMgr = MultiUserManager::GetInstance().GetCurrentSendMgr();
-        if (sendMgr == nullptr) {
-            HILOGI("GetSendMgr failed.");
-            return DMS_NOT_GET_MANAGER;
-        }
-        return sendMgr->GetMissionIdByBundleName(continueInfo_.sourceBundleName_, continueInfo_.missionId_);
+        return DmsContinueConditionMgr::GetInstance().GetMissionIdByBundleName(
+            accountId_, continueInfo_.sourceBundleName_, continueInfo_.missionId_);
     }
 #endif
     return ERR_OK;
@@ -932,6 +929,10 @@ int32_t DSchedContinue::ExecuteContinueData(std::shared_ptr<DSchedContinueDataCm
         HILOGE("check deviceId failed");
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
+    if (UpdateElementInfo(cmd) != ERR_OK) {
+        HILOGE("ExecuteContinueData UpdateElementInfo failed.");
+        return CAN_NOT_FOUND_MODULE_ERR;
+    }
     int32_t ret = CheckStartPermission(cmd);
     if (ret != ERR_OK) {
         HILOGE("ExecuteContinueData CheckTargetPermission failed!");
@@ -945,15 +946,15 @@ int32_t DSchedContinue::ExecuteContinueData(std::shared_ptr<DSchedContinueDataCm
         int32_t persistentId;
         if (ContinueSceneSessionHandler::GetInstance().GetPersistentId(persistentId) != ERR_OK) {
             HILOGE("get persistentId failed, stop start ability");
-            return OnContinueEnd(ERR_OK);
+            return OnContinueEnd(DMS_GET_WINDOW_FAILED_FROM_SCB);
         }
         HILOGI("get persistentId success, persistentId: %{public}d", persistentId);
         WaitAbilityStateInitial(persistentId);
         want.SetParam(DMS_PERSISTENT_ID, persistentId);
 
         if (ContinueSceneSessionHandler::GetInstance().GetPersistentId(persistentId) != ERR_OK) {
-            HILOGE("get persistentId failed, stop start ability");
-            return OnContinueEnd(ERR_OK);
+            HILOGE("Second get persistentId failed, stop start ability");
+            return OnContinueEnd(DMS_GET_WINDOW_FAILED_FROM_SCB);
         }
     }
 
@@ -963,6 +964,84 @@ int32_t DSchedContinue::ExecuteContinueData(std::shared_ptr<DSchedContinueDataCm
         HILOGI("ExecuteContinueData end");
     }
     return ret;
+}
+
+int32_t DSchedContinue::UpdateElementInfo(std::shared_ptr<DSchedContinueDataCmd> cmd)
+{
+    std::string srcModuleName = cmd->want_.GetModuleName();
+    if (srcModuleName.empty()) {
+        HILOGD("UpdateElementInfo srcModuleName from element is empty");
+        srcModuleName = cmd->want_.GetStringParam(OHOS::AAFwk::Want::PARAM_MODULE_NAME);
+    }
+    std::string srcContinueType = cmd->continueType_;
+    ContinueTypeFormat(srcContinueType);
+    HILOGD("UpdateElementInfo srcModuleName: %{public}s; srcContinueType:%{public}s", srcModuleName.c_str(),
+           srcContinueType.c_str());
+    DmsBundleInfo distributedBundleInfo;
+    std::string localDeviceId;
+    if (!GetLocalDeviceId(localDeviceId) || !DmsBmStorage::GetInstance()->GetDistributedBundleInfo(
+        localDeviceId, cmd->dstBundleName_, distributedBundleInfo)) {
+        HILOGE("UpdateElementInfo can not found bundle info for bundle name: %{public}s",
+               cmd->dstBundleName_.c_str());
+        return CAN_NOT_FOUND_MODULE_ERR;
+    }
+
+    std::vector<DmsAbilityInfo> dmsAbilityInfos = distributedBundleInfo.dmsAbilityInfos;
+    std::vector<DmsAbilityInfo> result;
+    FindSinkContinueAbilityInfo(srcModuleName, srcContinueType, dmsAbilityInfos, result);
+    if (result.empty()) {
+        HILOGE("UpdateElementInfo can not found bundle info for bundle name: %{public}s",
+               cmd->dstBundleName_.c_str());
+        return CAN_NOT_FOUND_MODULE_ERR;
+    }
+    auto element = cmd->want_.GetElement();
+    DmsAbilityInfo finalAbility = result[0];
+    HILOGD("UpdateElementInfo final sink ability detail info: "
+           "bundleName: %{public}s; abilityName: %{public}s; moduleName: %{public}s",
+           cmd->dstBundleName_.c_str(), finalAbility.abilityName.c_str(), finalAbility.moduleName.c_str());
+    cmd->want_.SetElementName(element.GetDeviceID(), cmd->dstBundleName_, finalAbility.abilityName,
+                              finalAbility.moduleName);
+    return ERR_OK;
+}
+
+void DSchedContinue::FindSinkContinueAbilityInfo(const std::string &srcModuleName, const std::string &srcContinueType,
+    std::vector<DmsAbilityInfo> &dmsAbilityInfos, std::vector<DmsAbilityInfo> &result)
+{
+    bool sameModuleGot = false;
+    for (const auto &abilityInfoElement: dmsAbilityInfos) {
+        std::vector<std::string> continueTypes = abilityInfoElement.continueType;
+        for (std::string &continueTypeElement: continueTypes) {
+            ContinueTypeFormat(continueTypeElement);
+            HILOGD("UpdateElementInfo check sink continue ability, current: "
+                   "continueType: %{public}s; abilityName: %{public}s; moduleName: %{public}s",
+                   continueTypeElement.c_str(), abilityInfoElement.abilityName.c_str(),
+                   abilityInfoElement.moduleName.c_str());
+            if (continueTypeElement != srcContinueType) {
+                continue;
+            }
+            if (srcModuleName == abilityInfoElement.moduleName) {
+                sameModuleGot = true;
+                result.clear();
+                result.push_back(abilityInfoElement);
+                break;
+            } else {
+                result.push_back(abilityInfoElement);
+                break;
+            }
+        }
+        if (sameModuleGot) {
+            break;
+        }
+    }
+}
+
+void DSchedContinue::ContinueTypeFormat(std::string &continueType)
+{
+    std::string suffix = QUICK_START_CONFIGURATION;
+    if (suffix.length() <= continueType.length() &&
+        continueType.rfind(suffix) == (continueType.length() - suffix.length())) {
+        continueType = continueType.substr(0, continueType.rfind(QUICK_START_CONFIGURATION));
+    }
 }
 
 int32_t DSchedContinue::UpdateWantForContinueType(OHOS::AAFwk::Want& want)
@@ -1021,18 +1100,11 @@ int32_t DSchedContinue::StartAbility(const OHOS::AAFwk::Want& want, int32_t requ
         return ret;
     }
 
-    int32_t activeAccountId = 0;
-    ret = DistributedSchedService::GetInstance().QueryOsAccount(activeAccountId);
-    if (ret != ERR_OK) {
-        HILOGE("QueryOsAccount failed %{public}d", ret);
-        return ret;
-    }
-
     continueInfo_.sinkAbilityName_ = want.GetElement().GetAbilityName();
     DmsRadar::GetInstance().ClickIconDmsStartAbility("StartAbility", ret);
 
     HILOGI("call StartAbility start, flag is %{public}d", want.GetFlags());
-    ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, DEFAULT_REQUEST_CODE, activeAccountId);
+    ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, DEFAULT_REQUEST_CODE, accountId_);
     if (ret != ERR_OK) {
         HILOGE("failed %{public}d", ret);
         return ret;

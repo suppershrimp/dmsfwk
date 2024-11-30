@@ -54,6 +54,19 @@ namespace DistributedSchedule {
 #define HILOGI(fmt, ...) HILOG_INFO(LOG_CORE, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
 #define HILOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, "%{public}s::%{public}s " fmt, TAG.c_str(), __FUNCTION__, ##__VA_ARGS__)
 
+
+#define CHECK_POINTER_RETURN(object, log)               \
+    if (object == nullptr) {                            \
+        HILOGE("%{public}s nullptr", log);              \
+        return;                                         \
+    }
+
+#define CHECK_POINTER_RETURN_VALUE(object, value, log)  \
+    if (object == nullptr) {                            \
+        HILOGE("%{public}s nullptr", log);              \
+        return value;                                   \
+    }
+
 enum {
     /**
      * Module type: Distributed schedule Service side
@@ -525,6 +538,14 @@ enum {
      * Result(29360237) for not get mgr.
      */
     DMS_NOT_GET_MANAGER = 29360237,
+    /**
+     * Result(29360238) for get window failed from scb.
+     */
+    DMS_GET_WINDOW_FAILED_FROM_SCB = 29360238,
+    /**
+     * Result(29360238) for BMS can not find the specified module.
+     */
+    CAN_NOT_FOUND_MODULE_ERR = 29360239,
 };
 } // namespace DistributedSchedule
 } // namespace OHOS
