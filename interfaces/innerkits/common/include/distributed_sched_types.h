@@ -22,8 +22,8 @@ namespace OHOS {
 namespace DistributedSchedule {
 class ContinueInfo {
 public:
-    std::string srcNetworkId_;
-    std::string dstNetworkId_;
+    std::string srcNetworkId_; 
+    std::string dstNetworkId_; 
 };
 
 enum DSchedEventType {
