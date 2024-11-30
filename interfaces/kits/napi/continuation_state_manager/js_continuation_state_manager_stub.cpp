@@ -15,41 +15,57 @@
 
 #include "js_continuation_state_manager_stub.h"
 #include "napi_error_code.h"
+#include "distributedsched_ipc_interface_code.h"
 
 namespace OHOS {
-    namespace DistributedSchedule {
-        using namespace OHOS::AbilityRuntime;
-        using namespace OHOS::AppExecFwk;
-        namespace {
-            const std::string TAG = "JsContinuationStateManagerStub";
-        }
+namespace DistributedSchedule {
+using namespace OHOS::AbilityRuntime;
+using namespace OHOS::AppExecFwk;
+namespace {
+    const std::string TAG = "JsContinuationStateManagerStub";
+}
 
-        int32_t JsContinuationStateManagerStub::OnRemoteRequest(
-                uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            switch (code) {
-                case 301:
-                    return ContinueStateCallback();
-                default:
-                    return ERR_OK;
-            }
-        }
-
-        int32_t JsContinuationStateManagerStub::ContinueStateCallback(MessageParcel &data, MessageParcel &reply) {
-            int32_t state = data.ReadInt32();
-            napi_env env = callbackData_.env;
-            napi_value callback = nullptr;
-            napi_get_reference_value(env, callbackData_.callbackRef, &callback);
-            napi_value undefined = nullptr;
-            napi_get_undefined(env, &undefined);
-            napi_value result = nullptr;
-            napi_create_int32(env, state, &result);
-            napi_value callbackResult = nullptr;
-            napi_call_function(env, undefined, callback, 1, &result, &callbackResult);
-            if (callbackData_.callbackRef != nullptr) {
-                napi_delete_reference(env, callbackData_.callbackRef);
-            }
+int32_t JsContinuationStateManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
+    MessageParcel &reply, MessageOption &option)
+{
+    switch (code) {
+        case static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK):
+            return ContinueStateCallback(data, reply);
+        default:
             return ERR_OK;
-        }
-    } // namespace DistributedSchedule
+    }
+}
+
+int32_t JsContinuationStateManagerStub::ContinueStateCallback(MessageParcel &data, MessageParcel &reply)
+{
+    HILOGI("call");
+    int32_t state = data.ReadInt32();
+    int32_t message = data.ReadString();
+    napi_env env = callbackData_.env;
+    napi_value callback = nullptr;
+    napi_get_reference_value(env, callbackData_.callbackRef, &callback);
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+
+    napi_value result;
+    napi_create_object(env, &result);
+    napi_value resultState;
+    napi_create_int32(env, state, &resultState);
+    napi_set_named_property(env, result, "resultState", resultState);
+    napi_value resultInfo;
+    napi_create_string_utf8(env, message, &resultInfo);
+    napi_set_named_property(env, result, "resultInfo", resultInfo);
+    napi_value callbackResult[2] = {NULL, result};
+
+    HILOGI("callback result: %{public}d", state);
+    napi_value callbackResult = nullptr;
+    napi_call_function(env, undefined, callback, 2, &callbackResult, &callbackResult);
+    if (callbackData_.callbackRef != nullptr) {
+        napi_delete_reference(env, callbackData_.callbackRef);
+    }
+    HILOGI("end");
+    return ERR_OK;
+}
+} // namespace DistributedSchedule
 } // namespace OHOS
 

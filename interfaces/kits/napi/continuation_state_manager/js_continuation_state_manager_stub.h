@@ -27,26 +27,23 @@
 #include "napi_base_context.h"
 
 namespace OHOS{
-    namespace DistributedSchedule{
-        class JsContinuationStateManagerStub : public IRemoteStub<IJsContinuationCallback> {
-        public:
-            struct StateCallbackData{
-                std::string bundleName;
-                std::string abilityName;
-                napi_env env;
-                napi_ref callbackRef;
-            };
+namespace DistributedSchedule{
+class JsContinuationStateManagerStub : public IRemoteStub<IJsContinuationCallback> {
+public:
+    struct StateCallbackData{
+        std::string bizType;
+        std::string bundleName;
+        std::string abilityName;
+        napi_env env;
+        napi_ref callbackRef;
+    };
 
-            int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,MessageParcel &reply,MessageOption &option) override;
-            int32_t ContinueStateCallback(MessageParcel &data,MessageParcel &reply) override;
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,MessageParcel &reply,MessageOption &option) override;
+    int32_t ContinueStateCallback(MessageParcel &data,MessageParcel &reply) override;
 
-        public:
-            StateCallbackData callbackData_;
-        };
-    } // namespace DistributedSchedule
+public:
+    StateCallbackData callbackData_;
+};
+} // namespace DistributedSchedule
 } // namespace OHOS
-
-
-
-
 #endif //ABILITY_DMSFWK_JS_CONTINUATION_STATE_MANAGER_STUB_H

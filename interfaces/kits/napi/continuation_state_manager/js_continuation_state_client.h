@@ -21,17 +21,17 @@
 #include "iremote_broker.h"
 
 namespace OHOS{
-    namespace DistributedSchedule{
-        class ContinuationStateClient {
+namespace DistributedSchedule{
+class ContinuationStateClient {
 
-        public:
-            int32_t RegisterContinueStateCallback(const sptr<JsContinuationStateManagerStub> stub);
-            int32_t UnRegisterContinueStateCallback(const sptr<JsContinuationStateManagerStub> stub);
+public:
+    int32_t RegisterContinueStateCallback(const sptr<JsContinuationStateManagerStub> stub);
+    int32_t UnRegisterContinueStateCallback(const sptr<JsContinuationStateManagerStub> stub);
 
-        private:
-            sptr<IRemoteObject> GetDmsProxy();
-        };
-    } // namespace DistributedSchedule
+private:
+    sptr<IRemoteObject> GetDmsProxy();
+};
+} // namespace DistributedSchedule
 } // namespace OHOS
 
 #endif //ABILITY_DMSFWK_JS_CONTINUATION_STATE_CLIENT_H
