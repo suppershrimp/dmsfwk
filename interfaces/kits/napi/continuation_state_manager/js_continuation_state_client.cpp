@@ -27,7 +27,7 @@ namespace OHOS {
             const std::u16string DMS_PROXY_INTERFACE_TOKEN = u"ohos.distributedschedule.accessToken";
         }
 
-        sptr <IRemoteObject> ContinuationStateClient::GetDmsProxy() {
+        sptr<IRemoteObject> ContinuationStateClient::GetDmsProxy() {
             auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
             if (samgrProxy == nullptr) {
                 HILOGE("fail to get samgr.");
@@ -38,7 +38,7 @@ namespace OHOS {
 
         int32_t
         ContinuationStateClient::RegisterContinueStateCallback(const sptr <JsContinuationStateManagerStub> stub) {
-            JsContinuationStateManagerStub::StateCallbackData callbackData = stub.callbackData_;
+            JsContinuationStateManagerStub::StateCallbackData callbackData = stub->callbackData_;
             sptr <IRemoteObject> remote = GetDmsProxy();
             if (remote == nullptr) {
                 return 0;
@@ -76,7 +76,7 @@ namespace OHOS {
 
         int32_t
         ContinuationStateClient::UnRegisterContinueStateCallback(const sptr <JsContinuationStateManagerStub> stub) {
-            JsContinuationStateManagerStub::StateCallbackData callbackData = stub.callbackData_;
+            JsContinuationStateManagerStub::StateCallbackData callbackData = stub->callbackData_;
             sptr <IRemoteObject> remote = GetDmsProxy();
             if (remote == nullptr) {
                 return 0;

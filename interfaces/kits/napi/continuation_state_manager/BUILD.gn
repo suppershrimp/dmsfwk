@@ -65,6 +65,7 @@ ohos_shared_library("continuationstatemanager_napi") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "samgr:samgr_proxy",
   ]
 
   relative_install_dir = "module/continuation"

@@ -2658,7 +2658,7 @@ int32_t DistributedSchedService::NotifyQuickStartState(std::string bundleName, s
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
 
-    sptr<IRemoteObject> callback = remote.second;
+    sptr<IRemoteObject> callback = remote->second;
     MessageParcel data;
     if(data.WriteInterfaceToken(CONNECTION_CALLBACK_INTERFACE_TOKEN)){
         return ERR_FLATTEN_OBJECT;
@@ -2668,8 +2668,8 @@ int32_t DistributedSchedService::NotifyQuickStartState(std::string bundleName, s
     MessageParcel reply;
     MessageOption option;
 
-    callback->SendRequest(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK, data, reply, option);
-
+    callback->SendRequest(static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK), data, reply, option);
+    return ERR_OK;
 }
 
 void DistributedSchedService::RemoveConnectAbilityInfo(const std::string& deviceId)

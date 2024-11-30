@@ -28,7 +28,7 @@ namespace OHOS {
                 uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
             switch (code) {
                 case 301:
-                    return ContinueStateCallback();
+                    return ContinueStateCallback(data, reply);
                 default:
                     return ERR_OK;
             }

@@ -32,17 +32,21 @@ namespace OHOS{
             sptr<DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
             DistributedSchedule::ContinuationStateClient client;
             int32_t result = client.RegisterContinueStateCallback(stub);
-            return NULL;
+            napi_value ret = 0;
+            NAPI_CALL(env, napi_get_null(env, &ret));
+            return ret;
         }
 
         napi_value JsContinuationStateManager::ContinueStateCallbackOff(napi_env env, napi_callback_info info){
             sptr<DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
             DistributedSchedule::ContinuationStateClient client;
             int32_t result = client.UnRegisterContinueStateCallback(stub);
-            return NULL;
+            napi_value ret = 0;
+            NAPI_CALL(env, napi_get_null(env, &ret));
+            return ret;
         }
 
-        sptr<DistributedSchedule::JsContinuationStateManagerStub> CreateStub(napi_env env, napi_callback_info info){
+        sptr<DistributedSchedule::JsContinuationStateManagerStub> JsContinuationStateManager::CreateStub(napi_env env, napi_callback_info info){
             size_t argc = 2;
             napi_value args[2];
             napi_value thisArg = nullptr;
@@ -56,7 +60,7 @@ namespace OHOS{
                 if(!ability){
                     return nullptr;
                 }
-                std::shared_ptr<AbilityRuntime::abilityContext> abilityContext = ability->GetAbilityContext();
+                std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext = ability->GetAbilityContext();
                 if(!abilityContext){
                     return nullptr;
                 }
@@ -68,7 +72,7 @@ namespace OHOS{
                 if(!context){
                     return nullptr;
                 }
-                std::shared_ptr<AbilityRuntime::abilityContext> abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::abilityContext>(context);
+                std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context);
                 if(!abilityContext){
                     return nullptr;
                 }
@@ -102,7 +106,7 @@ namespace OHOS{
                     DECLARE_NAPI_FUNCTION("on", JsContinuationStateManager::ContinueStateCallbackOn),
                     DECLARE_NAPI_FUNCTION("off", JsContinuationStateManager::ContinueStateCallbackOff),
             };
-            NPAI_CALL(env, napi_define_properties(env, exportObj, sizeof(desc) / sizeof(desc[0]), desc));
+            NAPI_CALL(env, napi_define_properties(env, exportObj, sizeof(desc) / sizeof(desc[0]), desc));
             return exportObj;
         }
 

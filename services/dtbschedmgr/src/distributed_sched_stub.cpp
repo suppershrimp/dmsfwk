@@ -371,7 +371,7 @@ int32_t DistributedSchedStub::ContinueStateCallbackRegister(MessageParcel &data,
 
     sptr <IRemoteObject> callback = data.ReadRemoteObject();
     if (callback == nullptr) {
-        return ERR_NULL_Object;
+        return ERR_NULL_OBJECT;
     }
 
     DistributedSchedService::GetInstance().stateCallbackCache_.emplace(bundleName + abilityName, callback);

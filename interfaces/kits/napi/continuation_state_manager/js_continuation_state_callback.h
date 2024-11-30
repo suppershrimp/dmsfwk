@@ -16,9 +16,13 @@
 #ifndef ABILITY_DMSFWK_JS_CONTINUATION_STATE_CALLBACK_H
 #define ABILITY_DMSFWK_JS_CONTINUATION_STATE_CALLBACK_H
 
+#include <memory>
+#include "iremote_broker.h"
+
 namespace OHOS{
     namespace DistributedSchedule{
         class IJsContinuationCallback : public OHOS::IRemoteBroker {
+        public:
             DECLARE_INTERFACE_DESCRIPTOR(u"ohos.distributedSchedule.continuationstatecallback");
             virtual int32_t ContinueStateCallback(MessageParcel &data, MessageParcel &reply) = 0;
         };
