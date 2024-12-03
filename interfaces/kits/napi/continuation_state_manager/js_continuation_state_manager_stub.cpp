@@ -40,7 +40,7 @@ int32_t JsContinuationStateManagerStub::ContinueStateCallback(MessageParcel &dat
 {
     HILOGI("call");
     int32_t state = data.ReadInt32();
-    int32_t message = data.ReadString();
+    std::string message = data.ReadString();
     napi_env env = callbackData_.env;
     napi_value callback = nullptr;
     napi_get_reference_value(env, callbackData_.callbackRef, &callback);
@@ -53,13 +53,13 @@ int32_t JsContinuationStateManagerStub::ContinueStateCallback(MessageParcel &dat
     napi_create_int32(env, state, &resultState);
     napi_set_named_property(env, result, "resultState", resultState);
     napi_value resultInfo;
-    napi_create_string_utf8(env, message, &resultInfo);
+    napi_create_string_utf8(env, message.c_str(), NAPI_AUTO_LENGTH, &resultInfo);
     napi_set_named_property(env, result, "resultInfo", resultInfo);
     napi_value callbackResult[2] = {NULL, result};
 
     HILOGI("callback result: %{public}d", state);
-    napi_value callbackResult = nullptr;
-    napi_call_function(env, undefined, callback, 2, &callbackResult, &callbackResult);
+    napi_value callbackReturn = nullptr;
+    napi_call_function(env, undefined, callback, 2, callbackResult, &callbackReturn);
     if (callbackData_.callbackRef != nullptr) {
         napi_delete_reference(env, callbackData_.callbackRef);
     }

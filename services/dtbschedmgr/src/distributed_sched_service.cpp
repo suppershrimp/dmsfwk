@@ -2655,7 +2655,7 @@ int32_t DistributedSchedService::NotifyProcessDiedFromRemote(const CallerInfo& c
 int32_t DistributedSchedService::NotifyQuickStartState(std::string bundleName, std::string abilityName,
     int32_t state, std::string message)
 {
-    HILOGI("NotifyQuickStartState called, state: %{public}s, message: %{public}s", state, message.c_str());
+    HILOGI("NotifyQuickStartState called, state: %{public}d, message: %{public}s", state, message.c_str());
     auto remote = stateCallbackCache_.find(bundleName + abilityName);
     if(remote == stateCallbackCache_.end()){
         return INVALID_REMOTE_PARAMETERS_ERR;

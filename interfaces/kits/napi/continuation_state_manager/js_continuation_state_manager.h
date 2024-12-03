@@ -36,7 +36,4 @@ private:
 napi_value JsContinuationStateManagerInit(napi_env env, napi_value exportObj);
 } // namespace DistributedSchedule
 } // namespace OHOS
-
-
-
 #endif //ABILITY_DMSFWK_JS_CONTINUATION_STATE_MANAGER_H

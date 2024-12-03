@@ -35,17 +35,19 @@ napi_value JsContinuationStateManager::ContinueStateCallbackOn(napi_env env, nap
 {
     HILOGI("ContinueStateCallbackOn call");
     napi_value ret = nullptr;
+    int32_t result = SUCCESS;
     sptr <DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
-    if (BIZTYPE_PREPARE_CONTINUE != stub.callbackData_.bizType) {
+    if (stub != nullptr && BIZTYPE_PREPARE_CONTINUE != stub->callbackData_.bizType) {
         HILOGE("ContinueStateCallbackOn Unsupported business type: %{public}s",
-               stub.callbackData_.bizType.c_str());
-        NAPI_CALL(env, napi_get_value_int32(env, ret, FAILED));
+               stub->callbackData_.bizType.c_str());
+        result = FAILED;
+        NAPI_CALL(env, napi_get_value_int32(env, ret, &result));
         return ret;
     }
     DistributedSchedule::ContinuationStateClient client;
-    int32_t result = client.RegisterContinueStateCallback(stub);
+    result = client.RegisterContinueStateCallback(stub);
     HILOGI("ContinueStateCallbackOn register callback result: %{public}d", result);
-    NAPI_CALL(env, napi_get_value_int32(env, ret, result));
+    NAPI_CALL(env, napi_get_value_int32(env, ret, &result));
     return ret;
 }
 
@@ -53,17 +55,19 @@ napi_value JsContinuationStateManager::ContinueStateCallbackOff(napi_env env, na
 {
     HILOGI("ContinueStateCallbackOff call");
     napi_value ret = nullptr;
+    int32_t result = SUCCESS;
     sptr <DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
-    if (BIZTYPE_PREPARE_CONTINUE != stub.callbackData_.bizType) {
+    if (stub != nullptr && BIZTYPE_PREPARE_CONTINUE != stub->callbackData_.bizType) {
         HILOGE("ContinueStateCallbackOff Unsupported business type: %{public}s",
-               stub.callbackData_.bizType.c_str());
-        NAPI_CALL(env, napi_get_value_int32(env, ret, FAILED));
+               stub->callbackData_.bizType.c_str());
+        result = FAILED;
+        NAPI_CALL(env, napi_get_value_int32(env, ret, &result));
         return ret;
     }
     DistributedSchedule::ContinuationStateClient client;
-    int32_t result = client.UnRegisterContinueStateCallback(stub);
+    result = client.UnRegisterContinueStateCallback(stub);
     HILOGI("ContinueStateCallbackOff unregister callback result: %{public}d", result);
-    NAPI_CALL(env, napi_get_value_int32(env, ret, result));
+    NAPI_CALL(env, napi_get_value_int32(env, ret, &result));
     return ret;
 }
 
@@ -93,6 +97,10 @@ sptr<DistributedSchedule::JsContinuationStateManagerStub> JsContinuationStateMan
     sptr <DistributedSchedule::JsContinuationStateManagerStub> stub(
             new DistributedSchedule::JsContinuationStateManagerStub());
     DistributedSchedule::JsContinuationStateManagerStub::StateCallbackData callbackData;
+    size_t stringSize = 0;
+    napi_get_value_string_utf8(env, args[0], nullptr, 0, &stringSize);
+    callbackData.bizType.resize(stringSize + 1);
+    napi_get_value_string_utf8(env, args[0], &callbackData.bizType[0], stringSize + 1, &stringSize);
     napi_get_value_string(env, args[0], &callbackData.bizType);
     callbackData.bundleName = abilityContext->GetBundleName();
     callbackData.abilityName = abilityInfo->name;
