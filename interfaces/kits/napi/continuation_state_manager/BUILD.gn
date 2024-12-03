@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/ability/dmsfwk/dmsfwk.gni")
 
-config("continuationstatemanager_napi_public_config") {
+config("continuemanager_napi_public_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "//foundation/ability/dmsfwk/interfaces/kits/napi/include/",
@@ -28,7 +28,7 @@ config("continuationstatemanager_napi_public_config") {
   }
 }
 
-ohos_shared_library("continuationstatemanager_napi") {
+ohos_shared_library("continuemanager_napi") {
   branch_protector_ret = "pac_ret"
   sanitize = {
     cfi = true
@@ -68,7 +68,7 @@ ohos_shared_library("continuationstatemanager_napi") {
     "samgr:samgr_proxy",
   ]
 
-  relative_install_dir = "module/continuation"
+  relative_install_dir = "module/app/ability"
 
   subsystem_name = "ability"
   part_name = "dmsfwk"
