@@ -2634,7 +2634,7 @@ int32_t DistributedSchedService::NotifyQuickStartState(std::string bundleName, s
     if (remote == stateCallbackCache_.end()) {
         return INVALID_REMOTE_PARAMETERS_ERR;
     }
-
+    stateCallbackCache_.erase(bundleName + abilityName);
     sptr<IRemoteObject> callback = remote->second;
     MessageParcel data;
     if(!data.WriteInterfaceToken(CONNECTION_CALLBACK_INTERFACE_TOKEN)){

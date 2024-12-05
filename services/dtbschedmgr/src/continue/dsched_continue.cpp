@@ -1128,10 +1128,12 @@ int32_t DSchedContinue::ExecuteContinueEnd(int32_t result)
     }
 
     if (direction_ == CONTINUE_SINK) {
+        std::string message = "quick start ";
+        message += result == ERR_OK ? "success" : "failed";
+        message += ", code is: " + std::to_string(result);
         DistributedSchedService::GetInstance().NotifyQuickStartState(
                 continueInfo_.sinkBundleName_, continueInfo_.sinkAbilityName_,
-                result != ERR_OK ? QUICK_START_SUCCESS : QUICK_START_FAILED,
-                "quick start " + (result != ERR_OK ? "success" : "failed") + ", code is: " + result);
+                result == ERR_OK ? QUICK_START_SUCCESS : QUICK_START_FAILED, message);
         DmsRadar::GetInstance().ClickIconDmsRecvOver("NotifyContinuationResultFromRemote", result);
     }
 
@@ -1219,7 +1221,7 @@ int32_t DSchedContinue::ExecuteContinueError(int32_t result)
         UpdateState(DSCHED_CONTINUE_SINK_END_STATE);
         DistributedSchedService::GetInstance().NotifyQuickStartState(
                 continueInfo_.sinkBundleName_, continueInfo_.sinkAbilityName_, QUICK_START_FAILED,
-                "quick start failed, error code is: " + result);
+                "quick start failed, error code is: " + std::to_string(result));
     }
     OnContinueEnd(result);
     HILOGI("ExecuteNotifyComplete end");
