@@ -26,11 +26,11 @@
 #include "native_engine/native_engine.h"
 #include "napi_base_context.h"
 
-namespace OHOS{
-namespace DistributedSchedule{
+namespace OHOS {
+namespace DistributedSchedule {
 class JsContinuationStateManagerStub : public IRemoteStub<IJsContinuationCallback> {
 public:
-    struct StateCallbackData{
+    struct StateCallbackData {
         std::string bizType;
         std::string bundleName;
         std::string abilityName;
@@ -38,8 +38,8 @@ public:
         napi_ref callbackRef;
     };
 
-    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,MessageParcel &reply,MessageOption &option) override;
-    int32_t ContinueStateCallback(MessageParcel &data,MessageParcel &reply) override;
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    int32_t ContinueStateCallback(MessageParcel &data, MessageParcel &reply) override;
 
 public:
     StateCallbackData callbackData_;

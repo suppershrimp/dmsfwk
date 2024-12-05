@@ -365,7 +365,8 @@ int32_t DistributedSchedStub::GetConnectAbilityFromRemoteExParam(MessageParcel& 
     return ERR_OK;
 }
 
-int32_t DistributedSchedStub::ContinueStateCallbackRegister(MessageParcel &data, MessageParcel &reply) {
+int32_t DistributedSchedStub::ContinueStateCallbackRegister(MessageParcel &data, MessageParcel &reply)
+{
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
 
@@ -381,7 +382,8 @@ int32_t DistributedSchedStub::ContinueStateCallbackRegister(MessageParcel &data,
     return ERR_NONE;
 }
 
-int32_t DistributedSchedStub::ContinueStateCallbackUnRegister(MessageParcel &data, MessageParcel &reply) {
+int32_t DistributedSchedStub::ContinueStateCallbackUnRegister(MessageParcel &data, MessageParcel &reply)
+{
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
 

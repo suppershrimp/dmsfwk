@@ -25,13 +25,14 @@ namespace {
     const std::string TAG = "JsContinuationStateManagerStub";
     const std::u16string CONNECTION_CALLBACK_INTERFACE_TOKEN = u"ohos.abilityshell.DistributedConnection";
     const int32_t CONTINUE_MANAGER_PERMISSION_ERR = -1;
+    const int32_t CALLBACK_PARAMS_NUM = 2;
 }
 
 int32_t JsContinuationStateManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
     MessageParcel &reply, MessageOption &option)
 {
     std::u16string token = data.ReadInterfaceToken();
-    if(CONNECTION_CALLBACK_INTERFACE_TOKEN != token){
+    if (CONNECTION_CALLBACK_INTERFACE_TOKEN != token) {
         HILOGW("OnRemoteRequest interface token check failed!");
         return CONTINUE_MANAGER_PERMISSION_ERR;
     }
@@ -66,7 +67,7 @@ int32_t JsContinuationStateManagerStub::ContinueStateCallback(MessageParcel &dat
 
     HILOGI("callback result: %{public}d", state);
     napi_value callbackReturn = nullptr;
-    napi_call_function(env, undefined, callback, 2, callbackResult, &callbackReturn);
+    napi_call_function(env, undefined, callback, CALLBACK_PARAMS_NUM, callbackResult, &callbackReturn);
     if (callbackData_.callbackRef != nullptr) {
         napi_delete_reference(env, callbackData_.callbackRef);
     }

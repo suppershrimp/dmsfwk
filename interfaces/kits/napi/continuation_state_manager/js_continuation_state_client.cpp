@@ -71,8 +71,8 @@ int32_t ContinuationStateClient::RegisterContinueStateCallback(const sptr<JsCont
     MessageParcel reply;
     MessageOption option;
     int32_t error = remote->SendRequest(
-            static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK_REGISTER),
-            data, reply, option);
+        static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK_REGISTER),
+        data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("send register request failed.");
         return error;
@@ -117,7 +117,7 @@ int32_t ContinuationStateClient::UnRegisterContinueStateCallback(const sptr<JsCo
     MessageParcel reply;
     MessageOption option;
     int32_t error = remote->SendRequest(
-            static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK_UNREGISTER),
+        static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK_UNREGISTER),
             data, reply, option);
     if (error != ERR_NONE) {
         HILOGE("send unregister request failed.");

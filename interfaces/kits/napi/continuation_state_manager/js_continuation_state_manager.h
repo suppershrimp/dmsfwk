@@ -22,8 +22,8 @@
 #include "native_engine/native_engine.h"
 #include "napi_base_context.h"
 
-namespace OHOS{
-namespace DistributedSchedule{
+namespace OHOS {
+namespace DistributedSchedule {
 class JsContinuationStateManager {
 public:
     static napi_value ContinueStateCallbackOn(napi_env env, napi_callback_info info);

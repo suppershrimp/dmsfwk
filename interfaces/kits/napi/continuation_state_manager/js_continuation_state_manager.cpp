@@ -27,6 +27,7 @@ using namespace OHOS::AppExecFwk;
 namespace {
     const std::string TAG = "JsContinuationStateManager";
     const std::string BIZTYPE_PREPARE_CONTINUE = "prepareContinue";
+    const int32_t ARG_INDEX_4_CALLBACK_FUNC = 2;
     const int32_t SUCCESS = 0;
     const int32_t FAILED = 1;
 }
@@ -87,15 +88,15 @@ sptr<DistributedSchedule::JsContinuationStateManagerStub> JsContinuationStateMan
     std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo = abilityContext->GetAbilityInfo();
 
     napi_valuetype valuetype;
-    NAPI_CALL(env, napi_typeof(env, args[2], &valuetype));
+    NAPI_CALL(env, napi_typeof(env, args[ARG_INDEX_4_CALLBACK_FUNC], &valuetype));
     if (valuetype != napi_function) {
         return nullptr;
     }
     napi_ref callbackRef = nullptr;
-    napi_create_reference(env, args[2], 1, &callbackRef);
+    napi_create_reference(env, args[ARG_INDEX_4_CALLBACK_FUNC], 1, &callbackRef);
 
     sptr <DistributedSchedule::JsContinuationStateManagerStub> stub(
-            new DistributedSchedule::JsContinuationStateManagerStub());
+        new DistributedSchedule::JsContinuationStateManagerStub());
     DistributedSchedule::JsContinuationStateManagerStub::StateCallbackData callbackData;
     size_t stringSize = 0;
     std::string type;
@@ -143,17 +144,17 @@ void JsContinuationStateManager::GetAbilityContext(
 napi_value JsContinueManagerInit(napi_env env, napi_value exportObj)
 {
     static napi_property_descriptor desc[] = {
-            DECLARE_NAPI_FUNCTION("on", JsContinuationStateManager::ContinueStateCallbackOn),
-            DECLARE_NAPI_FUNCTION("off", JsContinuationStateManager::ContinueStateCallbackOff),
+        DECLARE_NAPI_FUNCTION("on", JsContinuationStateManager::ContinueStateCallbackOn),
+        DECLARE_NAPI_FUNCTION("off", JsContinuationStateManager::ContinueStateCallbackOff),
     };
     NAPI_CALL(env, napi_define_properties(env, exportObj, sizeof(desc) / sizeof(desc[0]), desc));
     return exportObj;
 }
 
 static napi_module continueManagerModule = {
-        .nm_filename = "app/ability/libcontinuemanager_napi.so/continuemanager.js",
-        .nm_register_func = OHOS::DistributedSchedule::JsContinueManagerInit,
-        .nm_modname = "app.ability.continueManager",
+    .nm_filename = "app/ability/libcontinuemanager_napi.so/continuemanager.js",
+    .nm_register_func = OHOS::DistributedSchedule::JsContinueManagerInit,
+    .nm_modname = "app.ability.continueManager",
 };
 
 extern "C" __attribute__((constructor)) void ContinuationStateManagerModuleRegister()

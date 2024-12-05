@@ -20,8 +20,8 @@
 #include "base/continuationmgr_log.h"
 #include "iremote_broker.h"
 
-namespace OHOS{
-namespace DistributedSchedule{
+namespace OHOS {
+namespace DistributedSchedule {
 class ContinuationStateClient {
 
 public:
