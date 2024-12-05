@@ -158,9 +158,9 @@ void DistributedSchedStub::InitLocalMissionManagerInner()
     localFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::SET_MISSION_CONTINUE_STATE)] =
         &DistributedSchedStub::SetMissionContinueStateInner;
     localFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK_REGISTER)] =
-            &DistributedSchedStub::ContinueStateCallbackRegister;
+        &DistributedSchedStub::ContinueStateCallbackRegister;
     localFuncsMap_[static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK_UNREGISTER)] =
-            &DistributedSchedStub::ContinueStateCallbackUnRegister;
+        &DistributedSchedStub::ContinueStateCallbackUnRegister;
 }
 
 void DistributedSchedStub::InitRemoteFuncsInner()

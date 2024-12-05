@@ -37,9 +37,9 @@ napi_value JsContinuationStateManager::ContinueStateCallbackOn(napi_env env, nap
     napi_value ret = nullptr;
     int32_t result = SUCCESS;
     sptr <DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
-    if (stub != nullptr && BIZTYPE_PREPARE_CONTINUE != stub->callbackData_.bizType) {
-        HILOGE("ContinueStateCallbackOn Unsupported business type: %{public}s",
-               stub->callbackData_.bizType.c_str());
+    if (stub == nullptr || BIZTYPE_PREPARE_CONTINUE != stub->callbackData_.bizType) {
+        HILOGE("ContinueStateCallbackOn Unsupported business type: %{public}s; need: %{public}s",
+               stub->callbackData_.bizType.c_str(), BIZTYPE_PREPARE_CONTINUE.c_str());
         result = FAILED;
         NAPI_CALL(env, napi_get_value_int32(env, ret, &result));
         return ret;
@@ -57,9 +57,9 @@ napi_value JsContinuationStateManager::ContinueStateCallbackOff(napi_env env, na
     napi_value ret = nullptr;
     int32_t result = SUCCESS;
     sptr <DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
-    if (stub != nullptr && BIZTYPE_PREPARE_CONTINUE != stub->callbackData_.bizType) {
-        HILOGE("ContinueStateCallbackOff Unsupported business type: %{public}s",
-               stub->callbackData_.bizType.c_str());
+    if (stub == nullptr || BIZTYPE_PREPARE_CONTINUE != stub->callbackData_.bizType) {
+        HILOGE("ContinueStateCallbackOn Unsupported business type: %{public}s; need: %{public}s",
+               stub->callbackData_.bizType.c_str(), BIZTYPE_PREPARE_CONTINUE.c_str());
         result = FAILED;
         NAPI_CALL(env, napi_get_value_int32(env, ret, &result));
         return ret;
@@ -98,10 +98,11 @@ sptr<DistributedSchedule::JsContinuationStateManagerStub> JsContinuationStateMan
             new DistributedSchedule::JsContinuationStateManagerStub());
     DistributedSchedule::JsContinuationStateManagerStub::StateCallbackData callbackData;
     size_t stringSize = 0;
+    std::string type;
     napi_get_value_string_utf8(env, args[0], nullptr, 0, &stringSize);
-    callbackData.bizType.resize(stringSize + 1);
-    napi_get_value_string_utf8(env, args[0], &callbackData.bizType[0], stringSize + 1, &stringSize);
+    napi_get_value_string_utf8(env, args[0], &type[0], stringSize + 1, &stringSize);
     napi_get_value_string(env, args[0], &callbackData.bizType);
+    callbackData.bizType = type.c_str();
     callbackData.bundleName = abilityContext->GetBundleName();
     callbackData.abilityName = abilityInfo->name;
     callbackData.callbackRef = callbackRef;
@@ -121,7 +122,7 @@ void JsContinuationStateManager::GetAbilityContext(
             HILOGE("get ability info failed");
             return;
         }
-        std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext = ability->GetAbilityContext();
+        abilityContext = ability->GetAbilityContext();
         if (!abilityContext) {
             HILOGE("get ability context failed");
             return;
@@ -132,8 +133,7 @@ void JsContinuationStateManager::GetAbilityContext(
             HILOGE("get stageMode ability info failed");
             return;
         }
-        std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(
-                modeContext);
+        abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(modeContext);
         if (!abilityContext) {
             HILOGE("get stageMode ability context failed");
             return;
@@ -141,7 +141,7 @@ void JsContinuationStateManager::GetAbilityContext(
     }
 }
 
-napi_value JsContinuationStateManagerInit(napi_env env, napi_value exportObj)
+napi_value JsContinueManagerInit(napi_env env, napi_value exportObj)
 {
     static napi_property_descriptor desc[] = {
             DECLARE_NAPI_FUNCTION("on", JsContinuationStateManager::ContinueStateCallbackOn),
@@ -151,15 +151,15 @@ napi_value JsContinuationStateManagerInit(napi_env env, napi_value exportObj)
     return exportObj;
 }
 
-static napi_module continuationStateManagerModule = {
-        .nm_filename = "continuation/libcontinuationstatemanager_napi.so/continuationstatemanager.js",
-        .nm_register_func = OHOS::DistributedSchedule::JsContinuationStateManagerInit,
-        .nm_modname = "continuation.continuationStateManager",
+static napi_module continueManagerModule = {
+        .nm_filename = "app/ability/libcontinuemanager_napi.so/continuemanager.js",
+        .nm_register_func = OHOS::DistributedSchedule::JsContinueManagerInit,
+        .nm_modname = "app.ability.continueManager",
 };
 
 extern "C" __attribute__((constructor)) void ContinuationStateManagerModuleRegister()
 {
-    napi_module_register(&continuationStateManagerModule);
+    napi_module_register(&continueManagerModule);
 }
 } // namespace DistributedSchedule
 } // namespace OHOS
