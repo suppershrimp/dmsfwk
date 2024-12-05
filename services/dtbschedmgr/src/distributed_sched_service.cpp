@@ -2626,6 +2626,39 @@ int32_t DistributedSchedService::NotifyProcessDiedFromRemote(const CallerInfo& c
     return errCode;
 }
 
+int32_t DistributedSchedService::NotifyQuickStartState(std::string bundleName, std::string abilityName,
+    int32_t state, std::string message)
+{
+    HILOGI("NotifyQuickStartState called, state: %{public}d, message: %{public}s", state, message.c_str());
+    auto remote = stateCallbackCache_.find(bundleName + abilityName);
+    if (remote == stateCallbackCache_.end()) {
+        return INVALID_REMOTE_PARAMETERS_ERR;
+    }
+
+    sptr<IRemoteObject> callback = remote->second;
+    MessageParcel data;
+    if(!data.WriteInterfaceToken(CONNECTION_CALLBACK_INTERFACE_TOKEN)){
+        HLOGE("Write interface token failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+
+    if (!data.WriteInt32(state)) {
+        HLOGE("Write state failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+
+    if (!data.WriteString(message)) {
+        HLOGE("Write message failed");
+        return ERR_FLATTEN_OBJECT;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+
+    callback->SendRequest(static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK), data, reply, option);
+    return ERR_OK;
+}
+
 void DistributedSchedService::RemoveConnectAbilityInfo(const std::string& deviceId)
 {
     {
