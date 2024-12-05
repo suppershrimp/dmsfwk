@@ -23,11 +23,18 @@ using namespace OHOS::AbilityRuntime;
 using namespace OHOS::AppExecFwk;
 namespace {
     const std::string TAG = "JsContinuationStateManagerStub";
+    const std::u16string CONNECTION_CALLBACK_INTERFACE_TOKEN = u"ohos.distributedschedule.accessToken";
+    const int32_t CONTINUE_MANAGER_PERMISSION_ERR = -1;
 }
 
 int32_t JsContinuationStateManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
     MessageParcel &reply, MessageOption &option)
 {
+    std::u16string token = data.ReadInterfaceToken();
+    if(CONTINUE_MANAGER_PERMISSION_ERR != token){
+        HILOGW("OnRemoteRequest interface token check failed!");
+        return CONTINUE_MANAGER_PERMISSION_ERR;
+    }
     switch (code) {
         case static_cast<uint32_t>(IDSchedInterfaceCode::CONTINUE_STATE_CALLBACK):
             return ContinueStateCallback(data, reply);

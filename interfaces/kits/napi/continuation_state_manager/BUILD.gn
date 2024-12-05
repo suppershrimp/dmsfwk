@@ -43,7 +43,7 @@ ohos_shared_library("continuemanager_napi") {
   ]
 
   public_configs = [
-    ":continuationstatemanager_napi_public_config",
+    ":continuemanager_napi_public_config",
     "//foundation/ability/dmsfwk/services/dtbschedmgr/test/resource:coverage_flags",
   ]
 

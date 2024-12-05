@@ -16,6 +16,6 @@ import("//build/ohos.gni")
 group("napi_packages") {
   deps = [
     "//foundation/ability/dmsfwk/interfaces/kits/napi/continuation_manager:continuationmanager_napi",
-    "//foundation/ability/dmsfwk/interfaces/kits/napi/continuation_state_manager:continuationstatemanager_napi",
+    "//foundation/ability/dmsfwk/interfaces/kits/napi/continuation_state_manager:continuemanager_napi",
   ]
 }

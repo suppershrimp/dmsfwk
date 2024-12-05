@@ -127,7 +127,5 @@ int32_t ContinuationStateClient::UnRegisterContinueStateCallback(const sptr<JsCo
     HILOGI("end, register result is: %{public}d", result);
     return result;
 }
-
-
 } // namespace DistributedSchedule
 } // namespace OHOS
