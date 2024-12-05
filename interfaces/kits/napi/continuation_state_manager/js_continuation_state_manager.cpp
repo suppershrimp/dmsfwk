@@ -101,7 +101,6 @@ sptr<DistributedSchedule::JsContinuationStateManagerStub> JsContinuationStateMan
     std::string type;
     napi_get_value_string_utf8(env, args[0], nullptr, 0, &stringSize);
     napi_get_value_string_utf8(env, args[0], &type[0], stringSize + 1, &stringSize);
-    napi_get_value_string(env, args[0], &callbackData.bizType);
     callbackData.bizType = type.c_str();
     callbackData.bundleName = abilityContext->GetBundleName();
     callbackData.abilityName = abilityInfo->name;
