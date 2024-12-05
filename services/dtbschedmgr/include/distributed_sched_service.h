@@ -145,6 +145,8 @@ public:
     int32_t DisconnectAbilityFromRemote(const sptr<IRemoteObject>& connect,
         int32_t uid, const std::string& sourceDeviceId) override;
     int32_t NotifyProcessDiedFromRemote(const CallerInfo& callerInfo) override;
+    int32_t NotifyQuickStartState(std::string bundleName, std::string abilityName, int32_t state,
+        std::string message);
 #ifdef SUPPORT_DISTRIBUTED_MISSION_MANAGER
     int32_t GetMissionInfos(const std::string& deviceId, int32_t numMissions,
         std::vector<AAFwk::MissionInfo>& missionInfos) override;
@@ -325,6 +327,8 @@ private:
         uint32_t accessToken);
 #endif
 
+public:
+    std::map<std::string, sptr<IRemoteObject>> stateCallbackCache_;
 private:
     std::shared_ptr<DSchedContinuation> dschedContinuation_;
     std::shared_ptr<DSchedCollaborationCallbackMgr> collaborateCbMgr_;
