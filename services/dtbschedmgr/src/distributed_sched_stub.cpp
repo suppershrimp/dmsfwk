@@ -375,7 +375,7 @@ int32_t DistributedSchedStub::ContinueStateCallbackRegister(MessageParcel &data,
         return ERR_NULL_OBJECT;
     }
 
-    DistributedSchedService::GetInstance().stateCallbackCache_.emplace(bundleName + abilityName, callback);
+    DistributedSchedService::GetInstance().stateCallbackCache_[bundleName + abilityName] = callback;
 
     int32_t result = ERR_OK;
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
