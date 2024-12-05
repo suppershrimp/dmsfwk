@@ -46,28 +46,31 @@ int32_t ContinuationStateClient::RegisterContinueStateCallback(const sptr<JsCont
         HILOGE("get dms proxy failed.");
         return ERR_FLATTEN_OBJECT;
     }
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(DMS_PROXY_INTERFACE_TOKEN)) {
         HILOGE("write token failed.");
         return ERR_FLATTEN_OBJECT;
     }
-
     if (!data.WriteString(callbackData.bundleName)) {
         HILOGE("write bundleName failed.");
         return ERR_FLATTEN_OBJECT;
     }
-
+    if (!data.WriteString(callbackData.process)) {
+        HILOGE("write process failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteString(callbackData.moduleName)) {
+        HILOGE("write moduleName failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
     if (!data.WriteString(callbackData.abilityName)) {
         HILOGE("write abilityName failed.");
         return ERR_FLATTEN_OBJECT;
     }
-
     if (!data.WriteRemoteObject(stub)) {
         HILOGE("write stub failed.");
         return ERR_FLATTEN_OBJECT;
     }
-
     MessageParcel reply;
     MessageOption option;
     int32_t error = remote->SendRequest(
@@ -103,14 +106,16 @@ int32_t ContinuationStateClient::UnRegisterContinueStateCallback(const sptr<JsCo
         HILOGE("write bundleName failed.");
         return ERR_FLATTEN_OBJECT;
     }
-
-    if (!data.WriteString(callbackData.abilityName)) {
-        HILOGE("write abilityName failed.");
+    if (!data.WriteString(callbackData.missionId)) {
+        HILOGE("write missionId failed.");
         return ERR_FLATTEN_OBJECT;
     }
-
-    if (!data.WriteRemoteObject(stub)) {
-        HILOGE("write stub failed.");
+    if (!data.WriteString(callbackData.moduleName)) {
+        HILOGE("write moduleName failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (!data.WriteString(callbackData.abilityName)) {
+        HILOGE("write abilityName failed.");
         return ERR_FLATTEN_OBJECT;
     }
 

@@ -68,9 +68,7 @@ int32_t JsContinuationStateManagerStub::ContinueStateCallback(MessageParcel &dat
     HILOGI("callback result: %{public}d", state);
     napi_value callbackReturn = nullptr;
     napi_call_function(env, undefined, callback, CALLBACK_PARAMS_NUM, callbackResult, &callbackReturn);
-    if (callbackData_.callbackRef != nullptr) {
-        napi_delete_reference(env, callbackData_.callbackRef);
-    }
+
     HILOGI("end");
     return ERR_OK;
 }

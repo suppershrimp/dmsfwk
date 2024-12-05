@@ -95,20 +95,32 @@ sptr<DistributedSchedule::JsContinuationStateManagerStub> JsContinuationStateMan
     napi_ref callbackRef = nullptr;
     napi_create_reference(env, args[ARG_INDEX_4_CALLBACK_FUNC], 1, &callbackRef);
 
-    sptr <DistributedSchedule::JsContinuationStateManagerStub> stub(
-        new DistributedSchedule::JsContinuationStateManagerStub());
-    DistributedSchedule::JsContinuationStateManagerStub::StateCallbackData callbackData;
-    size_t stringSize = 0;
-    std::string type;
-    napi_get_value_string_utf8(env, args[0], nullptr, 0, &stringSize);
-    napi_get_value_string_utf8(env, args[0], &type[0], stringSize + 1, &stringSize);
-    callbackData.bizType = type.c_str();
-    callbackData.bundleName = abilityContext->GetBundleName();
-    callbackData.abilityName = abilityInfo->name;
-    callbackData.callbackRef = callbackRef;
-    callbackData.env = env;
-    stub->callbackData_ = callbackData;
-    return stub;
+    // 如果缓存存在，更新回调函数，不存在则创建stub
+    if(stubCache_ == nullptr){
+        sptr<DistributedSchedule::JsContinuationStateManagerStub> stub(
+                new DistributedSchedule::JsContinuationStateManagerStub());
+        DistributedSchedule::JsContinuationStateManagerStub::StateCallbackData callbackData;
+        size_t stringSize = 0;
+        std::string type;
+        napi_get_value_string_utf8(env, args[0], nullptr, 0, &stringSize);
+        napi_get_value_string_utf8(env, args[0], &type[0], stringSize + 1, &stringSize);
+        callbackData.bizType = type.c_str();
+        callbackData.bundleName = abilityContext->GetBundleName();
+        abilityContext->GetMissionId(callbackData.missionId);
+        callbackData.moduleName = abilityInfo->moduleName;
+        callbackData.abilityName = abilityInfo->name;
+        callbackData.callbackRef = callbackRef;
+        callbackData.env = env;
+        stub->callbackData_ = callbackData;
+        stubCache_ = stub;
+    }else{
+        napi_ref oldCallbackRef = stubCache_->callbackData.callbackRef;
+        if (oldCallbackRef != nullptr) {
+            napi_delete_reference(env, oldCallbackRef);
+        }
+        stubCache_->callbackData.callbackRef = callbackRef;
+    }
+    return stubCache_;
 }
 
 void JsContinuationStateManager::GetAbilityContext(

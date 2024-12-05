@@ -32,6 +32,8 @@ class JsContinuationStateManagerStub : public IRemoteStub<IJsContinuationCallbac
 public:
     struct StateCallbackData {
         std::string bizType;
+        std::string missionId;
+        std::string moduleName;
         std::string bundleName;
         std::string abilityName;
         napi_env env;

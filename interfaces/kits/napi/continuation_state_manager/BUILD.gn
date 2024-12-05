@@ -42,10 +42,7 @@ ohos_shared_library("continuemanager_napi") {
     "js_continuation_state_manager_stub.cpp",
   ]
 
-  public_configs = [
-    ":continuemanager_napi_public_config",
-    "//foundation/ability/dmsfwk/services/dtbschedmgr/test/resource:coverage_flags",
-  ]
+  public_configs = [ ":continuemanager_napi_public_config" ]
 
   deps = [
     "${dms_path}/common:distributed_sched_utils",
@@ -58,10 +55,10 @@ ohos_shared_library("continuemanager_napi") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
     "ability_runtime:wantagent_innerkits",
-    "device_manager:devicemanagersdk",
-    "device_security_level:dslm_sdk",
     "cJSON:cjson",
     "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "device_security_level:dslm_sdk",
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
@@ -73,3 +70,4 @@ ohos_shared_library("continuemanager_napi") {
   subsystem_name = "ability"
   part_name = "dmsfwk"
 }
+

@@ -367,15 +367,17 @@ int32_t DistributedSchedStub::GetConnectAbilityFromRemoteExParam(MessageParcel& 
 
 int32_t DistributedSchedStub::ContinueStateCallbackRegister(MessageParcel &data, MessageParcel &reply)
 {
-    std::string bundleName = data.ReadString();
-    std::string abilityName = data.ReadString();
+    StateCallbackInfo stateCallbackInfo;
+    stateCallbackInfo.bundleName = data.ReadString();
+    stateCallbackInfo.missionId = data.ReadString();
+    stateCallbackInfo.moduleName = data.ReadString();
+    stateCallbackInfo.abilityName = data.ReadString();
 
-    sptr <IRemoteObject> callback = data.ReadRemoteObject();
+    sptr<IRemoteObject> callback = data.ReadRemoteObject();
     if (callback == nullptr) {
         return ERR_NULL_OBJECT;
     }
-
-    DistributedSchedService::GetInstance().stateCallbackCache_[bundleName + abilityName] = callback;
+    DSchedContinueManager::GetInstance().ContinueStateCallbackRegister(stateCallbackInfo, callback);
 
     int32_t result = ERR_OK;
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
@@ -384,11 +386,13 @@ int32_t DistributedSchedStub::ContinueStateCallbackRegister(MessageParcel &data,
 
 int32_t DistributedSchedStub::ContinueStateCallbackUnRegister(MessageParcel &data, MessageParcel &reply)
 {
-    std::string bundleName = data.ReadString();
-    std::string abilityName = data.ReadString();
+    StateCallbackInfo stateCallbackInfo;
+    stateCallbackInfo.bundleName = data.ReadString();
+    stateCallbackInfo.missionId = data.ReadString();
+    stateCallbackInfo.moduleName = data.ReadString();
+    stateCallbackInfo.abilityName = data.ReadString();
 
-    std::map<std::string, std::string> map;
-    DistributedSchedService::GetInstance().stateCallbackCache_.erase(bundleName + abilityName);
+    DSchedContinueManager::GetInstance().ContinueStateCallbackUnRegister(stateCallbackInfo);
 
     int32_t result = ERR_OK;
     PARCEL_WRITE_REPLY_NOERROR(reply, Int32, result);
