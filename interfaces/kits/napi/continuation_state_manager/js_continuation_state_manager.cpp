@@ -36,7 +36,7 @@ napi_value JsContinuationStateManager::ContinueStateCallbackOn(napi_env env, nap
     HILOGI("ContinueStateCallbackOn call");
     napi_value ret = nullptr;
     int32_t result = SUCCESS;
-    sptr <DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
+    sptr<DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
     if (stub == nullptr || BIZTYPE_PREPARE_CONTINUE != stub->callbackData_.bizType) {
         HILOGE("ContinueStateCallbackOn Unsupported business type: %{public}s; need: %{public}s",
                stub->callbackData_.bizType.c_str(), BIZTYPE_PREPARE_CONTINUE.c_str());
@@ -56,9 +56,9 @@ napi_value JsContinuationStateManager::ContinueStateCallbackOff(napi_env env, na
     HILOGI("ContinueStateCallbackOff call");
     napi_value ret = nullptr;
     int32_t result = SUCCESS;
-    sptr <DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
+    sptr<DistributedSchedule::JsContinuationStateManagerStub> stub = CreateStub(env, info);
     if (stub == nullptr || BIZTYPE_PREPARE_CONTINUE != stub->callbackData_.bizType) {
-        HILOGE("ContinueStateCallbackOn Unsupported business type: %{public}s; need: %{public}s",
+        HILOGE("ContinueStateCallbackOff Unsupported business type: %{public}s; need: %{public}s",
                stub->callbackData_.bizType.c_str(), BIZTYPE_PREPARE_CONTINUE.c_str());
         result = FAILED;
         NAPI_CALL(env, napi_get_value_int32(env, ret, &result));

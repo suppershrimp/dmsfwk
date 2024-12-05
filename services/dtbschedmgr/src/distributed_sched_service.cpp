@@ -2637,17 +2637,17 @@ int32_t DistributedSchedService::NotifyQuickStartState(std::string bundleName, s
     sptr<IRemoteObject> callback = remote->second;
     MessageParcel data;
     if(!data.WriteInterfaceToken(CONNECTION_CALLBACK_INTERFACE_TOKEN)){
-        HLOGE("Write interface token failed");
+        HILOGE("Write interface token failed");
         return ERR_FLATTEN_OBJECT;
     }
 
     if (!data.WriteInt32(state)) {
-        HLOGE("Write state failed");
+        HILOGE("Write state failed");
         return ERR_FLATTEN_OBJECT;
     }
 
     if (!data.WriteString(message)) {
-        HLOGE("Write message failed");
+        HILOGE("Write message failed");
         return ERR_FLATTEN_OBJECT;
     }
 
