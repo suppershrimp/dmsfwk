@@ -78,6 +78,7 @@
 #include "mission/distributed_sched_mission_manager.h"
 #include "mission/dsched_sync_e2e.h"
 #include "mission/wifi_state_listener.h"
+#include "mission/bluetooth_state_listener.h"
 #endif
 
 namespace OHOS {
@@ -334,6 +335,7 @@ void DistributedSchedService::InitMissionManager()
     InitCommonEventListener();
     InitWifiStateListener();
     InitWifiSemiStateListener();
+    InitBluetoothStateListener();
     MultiUserManager::GetInstance().Init();
 #endif
 }
@@ -448,6 +450,14 @@ void DistributedSchedService::InitWifiSemiStateListener()
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(wifiStateListener)) {
         HILOGE("SubscribeCommonEvent wifiSemiStateListener failed!");
     }
+}
+
+void DistributedSchedService::InitBluetoothStateListener()
+{
+    HILOGI("InitBluetoothStateListener called");
+    std::shared_ptr<BluetoothStateListener> bluetoothStateListener = BluetoothStateListener::GetInstance();
+    bluetoothStateListener->InitBluetoothState();
+    Bluetooth::BlutoothHost::GetDefaultHost().RegisterObserver(bluetoothStateListener);
 }
 
 void DistributedSchedService::InitDeviceCfg()
