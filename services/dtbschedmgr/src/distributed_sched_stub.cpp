@@ -369,7 +369,7 @@ int32_t DistributedSchedStub::ContinueStateCallbackRegister(MessageParcel &data,
 {
     StateCallbackInfo stateCallbackInfo;
     stateCallbackInfo.bundleName = data.ReadString();
-    stateCallbackInfo.missionId = data.ReadString();
+    stateCallbackInfo.missionId = data.ReadInt32();
     stateCallbackInfo.moduleName = data.ReadString();
     stateCallbackInfo.abilityName = data.ReadString();
 
@@ -388,7 +388,7 @@ int32_t DistributedSchedStub::ContinueStateCallbackUnRegister(MessageParcel &dat
 {
     StateCallbackInfo stateCallbackInfo;
     stateCallbackInfo.bundleName = data.ReadString();
-    stateCallbackInfo.missionId = data.ReadString();
+    stateCallbackInfo.missionId = data.ReadInt32();
     stateCallbackInfo.moduleName = data.ReadString();
     stateCallbackInfo.abilityName = data.ReadString();
 

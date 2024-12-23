@@ -33,7 +33,7 @@ private:
     static void GetAbilityContext(std::shared_ptr<AbilityRuntime::AbilityContext> &abilityContext,
         napi_env env, napi_value context);
 private:
-    sptr<DistributedSchedule::JsContinuationStateManagerStub> stubCache_ = nullptr;
+    static std::map<std::string, sptr<DistributedSchedule::JsContinuationStateManagerStub>> jsContinuationStateManagerStubCache_;
 };
 napi_value JsContinuationStateManagerInit(napi_env env, napi_value exportObj);
 } // namespace DistributedSchedule

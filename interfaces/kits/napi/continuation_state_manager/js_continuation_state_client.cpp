@@ -55,8 +55,8 @@ int32_t ContinuationStateClient::RegisterContinueStateCallback(const sptr<JsCont
         HILOGE("write bundleName failed.");
         return ERR_FLATTEN_OBJECT;
     }
-    if (!data.WriteString(callbackData.process)) {
-        HILOGE("write process failed.");
+    if (!data.WriteInt32(callbackData.missionId)) {
+        HILOGE("write missionId failed.");
         return ERR_FLATTEN_OBJECT;
     }
     if (!data.WriteString(callbackData.moduleName)) {
@@ -106,7 +106,7 @@ int32_t ContinuationStateClient::UnRegisterContinueStateCallback(const sptr<JsCo
         HILOGE("write bundleName failed.");
         return ERR_FLATTEN_OBJECT;
     }
-    if (!data.WriteString(callbackData.missionId)) {
+    if (!data.WriteInt32(callbackData.missionId)) {
         HILOGE("write missionId failed.");
         return ERR_FLATTEN_OBJECT;
     }

@@ -32,6 +32,8 @@ namespace {
     const int32_t FAILED = 1;
 }
 
+std::map<std::string, sptr<DistributedSchedule::JsContinuationStateManagerStub>> JsContinuationStateManager::jsContinuationStateManagerStubCache_;
+
 napi_value JsContinuationStateManager::ContinueStateCallbackOn(napi_env env, napi_callback_info info)
 {
     HILOGI("ContinueStateCallbackOn call");
@@ -96,7 +98,14 @@ sptr<DistributedSchedule::JsContinuationStateManagerStub> JsContinuationStateMan
     napi_create_reference(env, args[ARG_INDEX_4_CALLBACK_FUNC], 1, &callbackRef);
 
     // 如果缓存存在，更新回调函数，不存在则创建stub
-    if(stubCache_ == nullptr){
+    std::string bundleName = abilityContext->GetBundleName();
+    int32_t missionId;
+    abilityContext->GetMissionId(missionId);
+    std::string moduleName = abilityInfo->moduleName;
+    std::string abilityName = abilityInfo->name;
+    std::string key = std::to_string(missionId) + bundleName + moduleName + abilityName;
+    auto cacheStubEntry = jsContinuationStateManagerStubCache_.find(key);
+    if(cacheStubEntry == jsContinuationStateManagerStubCache_.end() || cacheStubEntry->second == nullptr){
         sptr<DistributedSchedule::JsContinuationStateManagerStub> stub(
                 new DistributedSchedule::JsContinuationStateManagerStub());
         DistributedSchedule::JsContinuationStateManagerStub::StateCallbackData callbackData;
@@ -112,15 +121,15 @@ sptr<DistributedSchedule::JsContinuationStateManagerStub> JsContinuationStateMan
         callbackData.callbackRef = callbackRef;
         callbackData.env = env;
         stub->callbackData_ = callbackData;
-        stubCache_ = stub;
+        jsContinuationStateManagerStubCache_[key] = stub;
     }else{
-        napi_ref oldCallbackRef = stubCache_->callbackData.callbackRef;
+        napi_ref oldCallbackRef = jsContinuationStateManagerStubCache_[key]->callbackData_.callbackRef;
         if (oldCallbackRef != nullptr) {
             napi_delete_reference(env, oldCallbackRef);
         }
-        stubCache_->callbackData.callbackRef = callbackRef;
+        jsContinuationStateManagerStubCache_[key]->callbackData_.callbackRef = callbackRef;
     }
-    return stubCache_;
+    return jsContinuationStateManagerStubCache_[key];
 }
 
 void JsContinuationStateManager::GetAbilityContext(
