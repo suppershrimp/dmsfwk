@@ -45,7 +45,10 @@ namespace DistributedCollab {
 
         static const std::string SPLIT_FLAG = "_";
 
-        static const std::string COLLAB_PGK_NAME = "collab";
+        static const std::string COLLAB_PGK_NAME = "dms";
+        static const std::string SESSION_NAME_PREFIX = "ohos.distributedschedule.dms.";
+        static const std::string BUNDLE_NAME = "com.";
+        static const std::string APP_ID = "com.";
 
         static std::map<ChannelDataType, std::string> CHANNEL_DATATYPE_PREFIX_MAP = {
             { ChannelDataType::MESSAGE, "M" },
@@ -54,8 +57,8 @@ namespace DistributedCollab {
         };
 
         static constexpr int32_t DSCHED_COLLAB_LOW_QOS_TYPE_MIN_BW = 0;
-        static constexpr int32_t DSCHED_COLLAB_LOW_QOS_TYPE_MAX_LATENCY = 0;
-        static constexpr int32_t DSCHED_COLLAB_LOW_QOS_TYPE_MIN_LATENCY = 0;
+        static constexpr int32_t DSCHED_COLLAB_LOW_QOS_TYPE_MAX_LATENCY = 5000;
+        static constexpr int32_t DSCHED_COLLAB_LOW_QOS_TYPE_MIN_LATENCY = 1000;
 
         static QosTV g_low_qosInfo[] = {
             { .qos = QOS_TYPE_MIN_BW, .value = DSCHED_COLLAB_LOW_QOS_TYPE_MIN_BW },
@@ -64,8 +67,8 @@ namespace DistributedCollab {
         };
 
         static constexpr int32_t DSCHED_COLLAB_HIGH_QOS_TYPE_MIN_BW = 0;
-        static constexpr int32_t DSCHED_COLLAB_HIGH_QOS_TYPE_MAX_LATENCY = 0;
-        static constexpr int32_t DSCHED_COLLAB_HIGH_QOS_TYPE_MIN_LATENCY = 0;
+        static constexpr int32_t DSCHED_COLLAB_HIGH_QOS_TYPE_MAX_LATENCY = 5000;
+        static constexpr int32_t DSCHED_COLLAB_HIGH_QOS_TYPE_MIN_LATENCY = 1000;
 
         static QosTV g_high_qosInfo[] = {
             { .qos = QOS_TYPE_MIN_BW, .value = DSCHED_COLLAB_HIGH_QOS_TYPE_MIN_BW },
@@ -92,7 +95,7 @@ namespace DistributedCollab {
             return;                                                               \
         }                                                                         \
         (channelId) = GetChannelId(socketId);                                     \
-        if (!isValidChannelId(channelId)) {                                       \
+        if (!!isValidChannelId(channelId)) {                                      \
             HILOGE("invalid socket id %{public}d, can't find channel", socketId); \
             return;                                                               \
         }                                                                         \
@@ -155,6 +158,10 @@ namespace DistributedCollab {
     int32_t ChannelManager::Init(const std::string& ownerName)
     {
         HILOGI("start init channel manager");
+        if (eventHandler_ != nullptr) {
+            HILOGW("server channel already init");
+            return ERR_OK;
+        }
         ownerName_ = ownerName;
 
         eventThread_ = std::thread(&ChannelManager::StartEvent, this);
@@ -163,6 +170,10 @@ namespace DistributedCollab {
             return eventHandler_ != nullptr;
         });
 
+        if (serverSocketId_ > 0) {
+            HILOGW("server socket already init");
+            return ERR_OK;
+        }
         int32_t socketServerId = CreateServerSocket();
         int32_t ret = 0;
         if (socketServerId <= 0) {
@@ -177,7 +188,7 @@ namespace DistributedCollab {
         }
         serverSocketId_ = socketServerId;
         HILOGI("end");
-        return socketServerId;
+        return ERR_OK;
     }
 
     void ChannelManager::StartEvent()
@@ -210,8 +221,10 @@ namespace DistributedCollab {
     int32_t ChannelManager::CreateServerSocket()
     {
         HILOGI("start create server socket");
+        std::string sessionName = SESSION_NAME_PREFIX + ownerName_;
+        HILOGI("sessionName: %{public}s, size: %{public}zu", sessionName.c_str(), sessionName.length());
         SocketInfo info = {
-            .name = const_cast<char*>(ownerName_.c_str()),
+            .name = const_cast<char*>(sessionName.c_str()),
             .pkgName = const_cast<char*>(COLLAB_PGK_NAME.c_str()),
         };
         int32_t socket = Socket(info);
@@ -248,7 +261,7 @@ namespace DistributedCollab {
         return VERSION_;
     }
 
-    int32_t ChannelManager::CreateServerChannel(const std::string& channelName, const ChannelDataType dataType, const PeerInfo& peerInfo)
+    int32_t ChannelManager::CreateServerChannel(const std::string& channelName, const ChannelDataType dataType, const ChannelPeerInfo& peerInfo)
     {
         HILOGI("start to creat server channel waiting for connect");
         std::optional<ChannelInfo> info = CreateBaseChannel(channelName, dataType, peerInfo);
@@ -260,10 +273,10 @@ namespace DistributedCollab {
         channelIdMap_[channelName].push_back(info->channelId);
         channelInfoMap_.emplace(info->channelId, std::move(*info));
         HILOGI("end");
-        return ERR_OK;
+        return info->channelId;
     }
 
-    int32_t ChannelManager::CreateClientChannel(const std::string& channelName, const ChannelDataType dataType, const PeerInfo& peerInfo)
+    int32_t ChannelManager::CreateClientChannel(const std::string& channelName, const ChannelDataType dataType, const ChannelPeerInfo& peerInfo)
     {
         HILOGI("start to creat client channel to connect other");
         std::optional<ChannelInfo> info = CreateBaseChannel(channelName, dataType, peerInfo);
@@ -276,12 +289,12 @@ namespace DistributedCollab {
         return ret == ERR_OK ? info->channelId : ret;
     };
 
-    std::optional<ChannelInfo> ChannelManager::CreateBaseChannel(const std::string& channelName, const ChannelDataType dataType, const PeerInfo& peerInfo)
+    std::optional<ChannelInfo> ChannelManager::CreateBaseChannel(const std::string& channelName, const ChannelDataType dataType, const ChannelPeerInfo& peerInfo)
     {
-        HILOGI("start create base channel");
+        HILOGI("start create base channel, dataType=%{public}d", static_cast<int32_t>(dataType));
         int32_t channelId = GenerateNextId(dataType);
-        if (isValidChannelId(channelId)) {
-            HILOGE("Get channel id failed");
+        if (!isValidChannelId(channelId)) {
+            HILOGE("Get channel id failed, id=%{public}d", channelId);
             return std::nullopt;
         }
         ChannelInfo info;
@@ -327,6 +340,7 @@ namespace DistributedCollab {
             socketChannelMap_.emplace(clientSocketId, info.channelId);
             socketStatusMap_.emplace(clientSocketId, ChannelStatus::UNCONNECTED);
         }
+        HILOGI("register channel name: %{public}s", info.channelName.c_str());
         {
             std::unique_lock<std::shared_mutex> writeLock(channelMutex_);
             info.clientSockets.push_back(clientSocketId);
@@ -344,10 +358,12 @@ namespace DistributedCollab {
             HILOGE("channel name too long, %{public}s", channelName.c_str());
             return INVALID_CHANNEL_NAME;
         }
-        std::string name = ownerName_ + SPLIT_FLAG + CHANNEL_DATATYPE_PREFIX_MAP[dataType] + SPLIT_FLAG + channelName;
+        std::string name = SESSION_NAME_PREFIX + ownerName_ + SPLIT_FLAG + CHANNEL_DATATYPE_PREFIX_MAP[dataType] + SPLIT_FLAG + channelName;
+        std::string peerSocketName = SESSION_NAME_PREFIX + peerName;
+        HILOGI("self-name: %{publics}, peerName: %{public}s", name.c_str(), peerSocketName.c_str());
         SocketInfo socketInfo = {
             .name = const_cast<char*>(name.c_str()),
-            .peerName = const_cast<char*>(peerName.c_str()),
+            .peerName = const_cast<char*>(peerSocketName.c_str()),
             .peerNetworkId = const_cast<char*>(peerNetworkId.c_str()),
             .pkgName = const_cast<char*>(COLLAB_PGK_NAME.c_str()),
             .dataType = CHANNEL_SOFTBUS_DATATYPE_MAP[dataType]
@@ -365,7 +381,7 @@ namespace DistributedCollab {
     int32_t ChannelManager::DeleteChannel(const int32_t channelId)
     {
         HILOGI("start delete channel");
-        if (isValidChannelId(channelId)) {
+        if (!isValidChannelId(channelId)) {
             HILOGE("invalid channel id");
             return INVALID_CHANNEL_ID;
         }
@@ -497,16 +513,14 @@ namespace DistributedCollab {
         if (bindTasks.empty()) {
             return ERR_OK;
         }
-        while (true) {
-            for (auto&& task : bindTasks) {
-                if (task.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
-                    int32_t ret = task.get();
-                    if (ret == ERR_OK) {
-                        return ERR_OK;
-                    }
+        for (auto&& task : bindTasks) {
+            if (task.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
+                int32_t ret = task.get();
+                HILOGI("bind task ret=%{public}d", ret);
+                if (ret == ERR_OK) {
+                    return ERR_OK;
                 }
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_TIME_GAP));
         }
 
         return CONNECT_CHANNEL_FAILED;
@@ -527,7 +541,7 @@ namespace DistributedCollab {
         QosSpeedType speedType = CHANNEL_DATATYPE_SPEED_MAP[dataType];
         const QosTV* qos = qos_config[speedType];
         const uint32_t qosCount = qos_speed_config[speedType];
-        HILOGI("start to bind socket, %{public}d, speed %{public}d", socketId, speedType);
+        HILOGI("start to bind socket, id:%{public}d, speed:%{public}d", socketId, speedType);
         int32_t ret = Bind(socketId, qos, qosCount, &channelManagerListener);
         HILOGI("bind end");
         if (ret != ERR_OK) {
@@ -540,16 +554,19 @@ namespace DistributedCollab {
 
     int32_t ChannelManager::SetSocketStatus(const int32_t socketId, const ChannelStatus status)
     {
+        HILOGI("start set socket id:%{public}d status %{public}d", socketId, static_cast<int32_t>(status));
         int32_t channelId = 0;
         {
             std::unique_lock<std::shared_mutex> writeLock(socketMutex_);
             auto it = socketStatusMap_.find(socketId);
             if (it == socketStatusMap_.end()) {
+                HILOGE("no valid socket in socketStatusMap");
                 return INVALID_SOCKET_ID;
             }
             it->second = status;
             auto channelIt = socketChannelMap_.find(socketId);
             if (channelIt == socketChannelMap_.end()) {
+                HILOGE("no valid socket in socketChannelMap");
                 return INVALID_SOCKET_ID;
             }
             channelId = channelIt->second;
@@ -559,6 +576,7 @@ namespace DistributedCollab {
 
     int32_t ChannelManager::UpdateChannelStatus(const int32_t channelId)
     {
+        HILOGI("update channel id=%{public}d", channelId);
         std::vector<int32_t> socketIds;
         ChannelStatus curStatus = ChannelStatus::UNCONNECTED;
         {
@@ -577,10 +595,11 @@ namespace DistributedCollab {
         ChannelStatus newStatus = ChannelStatus::UNCONNECTED;
         for (const auto id : socketIds) {
             if (GetSocketStatus(id) == ChannelStatus::CONNECTED) {
-                curStatus = ChannelStatus::CONNECTED;
+                newStatus = ChannelStatus::CONNECTED;
                 break;
             }
         }
+        HILOGI("curStatus:%{public}d, newStatus:%{public}d", static_cast<int32_t>(curStatus), static_cast<int32_t>(newStatus));
         if (newStatus != curStatus) {
             return SetChannelStatus(channelId, newStatus);
         }
@@ -589,6 +608,7 @@ namespace DistributedCollab {
 
     int32_t ChannelManager::SetChannelStatus(const int32_t channelId, const ChannelStatus status)
     {
+        HILOGI("set channel:%{public}d, status:%{public}d", channelId, static_cast<int32_t>(status));
         std::unique_lock<std::shared_mutex> writeLock(channelMutex_);
         auto infoIt = channelInfoMap_.find(channelId);
         if (infoIt == channelInfoMap_.end()) {
@@ -605,19 +625,22 @@ namespace DistributedCollab {
             return;
         }
         HILOGI("socket %{public}d binded", socketId);
-        std::optional<std::string> channelName = GetChannelNameFromSocket(info.name);
-        if (!channelName) {
+        std::optional<std::string> channelNameOpt = GetChannelNameFromSocket(info.name);
+        if (!channelNameOpt) {
             HILOGE("error socket name, %{public}s", info.name);
             return;
         }
-        std::optional<ChannelDataType> channelType = GetChannelDataTypeFromName(*channelName);
+        auto& channelName = *channelNameOpt;
+        std::optional<ChannelDataType> channelType = GetChannelDataTypeFromName(channelName);
         if (!channelType) {
-            HILOGE("error channel name, %{public}s", (*channelName).c_str());
+            HILOGE("error channel name, %{public}s", channelName.c_str());
             return;
         }
-        int32_t channelId = GetChannelId((*channelName).c_str(), *channelType);
+        // remove datatype flag
+        channelName = channelName.substr(2);
+        int32_t channelId = GetChannelId(channelName, *channelType);
         if (!isValidChannelId(channelId)) {
-            HILOGE("invalid channelid=%{public}d with channelName %{public}s", channelId, (*channelName).c_str());
+            HILOGE("invalid channelid=%{public}d with channelName %{public}s", channelId, channelName.c_str());
             return;
         }
         int32_t ret = RegisterSocket(socketId, channelId);
@@ -658,6 +681,7 @@ namespace DistributedCollab {
 
     int32_t ChannelManager::GetChannelId(const std::string& channelName, const ChannelDataType dataType)
     {
+        HILOGI("channelName: %{public}s, dataType: %{public}d", channelName.c_str(), static_cast<int32_t>(dataType));
         std::shared_lock<std::shared_mutex> readLock(channelMutex_);
         auto it = channelIdMap_.find(channelName);
         if (it == channelIdMap_.end()) {
@@ -682,11 +706,11 @@ namespace DistributedCollab {
     int32_t ChannelManager::RegisterSocket(const int32_t socketId, const int32_t channelId)
     {
         // update channelInfo
+        HILOGI("register socket with channel, channelId=%{public}d, socketId=%{public}d", channelId, socketId);
         {
             std::unique_lock<std::shared_mutex> writeLock(channelMutex_);
-            HILOGI("register socket with channel, channelId=%{public}d, socketId=%{public}d", channelId, socketId);
             auto infoIt = channelInfoMap_.find(channelId);
-            if (infoIt != channelInfoMap_.end()) {
+            if (infoIt == channelInfoMap_.end()) {
                 HILOGE("no valid channel");
                 return INVALID_CHANNEL_ID;
             }
@@ -785,7 +809,7 @@ namespace DistributedCollab {
 
     int32_t ChannelManager::SendBytes(const int32_t channelId, const std::shared_ptr<AVTransDataBuffer>& data)
     {
-        if (isValidChannelId(channelId) || data == nullptr) {
+        if (!isValidChannelId(channelId) || data == nullptr) {
             HILOGE("invalid channel id. %{public}d", channelId);
             return INVALID_CHANNEL_ID;
         }
@@ -866,7 +890,7 @@ namespace DistributedCollab {
 
     int32_t ChannelManager::SendStream(const int32_t channelId, const std::shared_ptr<AVTransStreamData>& data)
     {
-        if (isValidChannelId(channelId) || data == nullptr) {
+        if (!isValidChannelId(channelId) || data == nullptr) {
             HILOGE("invalid channel id");
             DoErrorCallback(channelId, INVALID_CHANNEL_ID);
             return INVALID_CHANNEL_ID;
@@ -892,7 +916,7 @@ namespace DistributedCollab {
 
     int32_t ChannelManager::SendMessage(const int32_t channelId, const std::shared_ptr<AVTransDataBuffer>& data)
     {
-        if (isValidChannelId(channelId) || data == nullptr) {
+        if (!isValidChannelId(channelId) || data == nullptr) {
             HILOGE("invalid channel id. %{public}d", channelId);
             return INVALID_CHANNEL_ID;
         }

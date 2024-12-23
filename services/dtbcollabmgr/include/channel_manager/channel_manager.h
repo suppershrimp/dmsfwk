@@ -41,8 +41,8 @@ namespace DistributedCollab {
         void DeInit();
 
         int32_t GetVersion();
-        int32_t CreateServerChannel(const std::string& channelName, const ChannelDataType dataType, const PeerInfo& peerInfo);
-        int32_t CreateClientChannel(const std::string& channelName, const ChannelDataType dataType, const PeerInfo& peerInfo);
+        int32_t CreateServerChannel(const std::string& channelName, const ChannelDataType dataType, const ChannelPeerInfo& peerInfo);
+        int32_t CreateClientChannel(const std::string& channelName, const ChannelDataType dataType, const ChannelPeerInfo& peerInfo);
         int32_t DeleteChannel(const int32_t channelId);
         int32_t RegisterChannelListener(const int32_t channelId, const std::shared_ptr<IChannelListener> listener);
         int32_t ConnectChannel(const int32_t channelId);
@@ -67,9 +67,9 @@ namespace DistributedCollab {
         static constexpr int32_t MAX_CHANNEL_NAME_LENGTH = 64;
         static constexpr int32_t CHANNEL_NAME_PREFIX_LENGTH = 64;
         static constexpr int32_t RETRY_TIME_GAP = 1000;
-        
+    
     private:
-        int32_t serverSocketId_;
+        int32_t serverSocketId_ = -1;
         std::string ownerName_;
 
         // for all channel res
@@ -110,7 +110,7 @@ namespace DistributedCollab {
 
         int32_t CreateServerSocket();
         int32_t CreateClientSocket(const std::string& channelName, const std::string& peerName, const std::string& peerNetworkId, const ChannelDataType dataType);
-        std::optional<ChannelInfo> CreateBaseChannel(const std::string& channelName, const ChannelDataType dataType, const PeerInfo& peerInfo);
+        std::optional<ChannelInfo> CreateBaseChannel(const std::string& channelName, const ChannelDataType dataType, const ChannelPeerInfo& peerInfo);
         int32_t GenerateNextId(const ChannelDataType dataType);
         bool isValidChannelId(const int32_t channelId);
         int32_t RegisterSocket(ChannelInfo& info, const ChannelDataType dataType);

@@ -34,7 +34,7 @@ namespace DistributedCollab {
         VIDEO_STREAM
     };
 
-    struct PeerInfo {
+    struct ChannelPeerInfo {
         std::string peerName;
         std::string networkId;
     };
@@ -44,8 +44,9 @@ namespace DistributedCollab {
         ChannelStatus status;
         ChannelDataType dataType;
         std::string channelName;
-        PeerInfo peerInfo;
+        ChannelPeerInfo peerInfo;
         std::vector<int32_t> clientSockets;
+        // socketId->sender
         std::map<int32_t, std::unique_ptr<DataSenderReceiver>> dataSenderReceivers;
     };
 }
