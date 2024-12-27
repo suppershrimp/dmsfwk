@@ -1,0 +1,84 @@
+# Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//build/ohos_var.gni")
+import("//foundation/ability/dmsfwk/dmsfwk.gni")
+
+config("dtbcollab_av_trans_provider_demo_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "${dms_path}/common/include",
+    "${dms_path}/services/dtbcollabmgr/include/av_trans_stream_provider",
+    "${dms_path}/services/dtbcollabmgr/include/channel_manager",
+  ]
+}
+
+ohos_executable("dtbcollab_av_stream_trans_provider_demo") {
+  public_configs = [ ":dtbcollab_av_trans_provider_demo_config" ]
+
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    cfi_no_vcall = true
+    debug = false
+    cfi_vcall_icall_only = true
+    boundary_sanitize = true
+    integer_overflow = true
+    ubsan = true
+  }
+
+  deps = [
+    "${dms_path}/common:distributed_sched_utils",
+    "${dms_path}/services/dtbcollabmgr/src/av_trans_stream_provider:dtbcollab_av_stream_trans_provider",
+    "${dms_path}/services/dtbcollabmgr/src/channel_manager:dtbcollab_channel_manager",
+  ]
+
+  sources = [ "stream_trans_demo.cpp" ]
+
+  defines = [
+    "HI_LOG_ENABLE",
+    "LOG_DOMAIN=0xD004170",
+  ]
+
+  if (dmsfwk_av_trans_stream_debug) {
+    defines += [ "DSCH_COLLAB_AV_TRANS_TEST_DEMO" ]
+  }
+
+  if (dmsfwk_av_trans_pixel_map_debug) {
+    defines += [ "DSCH_COLLAB_AV_TRANS_PICTURE_TEST_DEMO" ]
+  }
+
+  external_deps = [
+    "av_codec:av_codec_client",
+    "av_codec:av_codec_media_engine_filters",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "drivers_peripheral_display:hdi_gralloc_client",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "image_framework:image_native",
+    "media_foundation:media_foundation",
+  ]
+
+  install_enable = false
+  part_name = "dmsfwk"
+  subsystem_name = "ability"
+}
+
+group("av_trans_demo_target") {
+  deps = [ ":dtbcollab_av_stream_trans_provider_demo" ]
+}

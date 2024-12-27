@@ -24,6 +24,9 @@ declare_args() {
   dmsfwk_service_disable = false
   dmsfwk_ces_listener = false
   dmsfwk_mmi_listener = false
+  dmsfwk_av_enable_surface_cache = false
+  dmsfwk_av_trans_stream_debug = false
+  dmsfwk_av_trans_pixel_map_debug = false
   dmsfwk_check_bt = false
   dmsfwk_check_wifi = true
   dmsfwk_recv_broadcast = true
