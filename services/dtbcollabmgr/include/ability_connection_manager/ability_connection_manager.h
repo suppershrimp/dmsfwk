@@ -35,7 +35,6 @@ public:
     ~AbilityConnectionManager();
     
     void Init();
-    void UnInit();
     int32_t CreateSession(std::shared_ptr<OHOS::AppExecFwk::AbilityInfo> abilityInfo,
         PeerInfo& peerInfo, ConnectOption& opt, int32_t& sessionId);
     int32_t DestroySession(int32_t sessionId);
@@ -54,12 +53,12 @@ public:
 
     int32_t SendMessage(int32_t sessionId, const std::string& msg);
     int32_t SendData(int32_t sessionId, const std::shared_ptr<AVTransDataBuffer>& buffer);
-    int32_t SendImage(int32_t sessionId, const std::shared_ptr<AVTransDataBuffer> &pixelMapPtr);
+    int32_t SendImage(int32_t sessionId, const std::shared_ptr<Media::PixelMap> &pixelMapPtr);
 
     int32_t CreateStream(int32_t sessionId, const StreamParams& param, int32_t& streamId);
     int32_t SetSurfaceId(int32_t streamId, const std::string& surfaceId, const SurfaceParams& param);
     int32_t GetSurfaceId(int32_t streamId, const SurfaceParams& param, std::string& surfaceId);
-    int32_t updateSurfaceParam(int32_t streamId, const SurfaceParams& param);
+    int32_t UpdateSurfaceParam(int32_t streamId, const SurfaceParams& param);
     int32_t DestroyStream(int32_t streamId);
     int32_t StartStream(int32_t streamId);
     int32_t StopStream(int32_t streamId);
