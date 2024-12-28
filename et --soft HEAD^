@@ -1,0 +1,262 @@
+[33mcommit 82361c8b0c715ef5e502c86bede3d1c6c1b17596[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster_1228[m[33m, [m[1;31morigin/master_1228[m[33m)[m
+Author: liuhongjie <liuhongjie3@huawei.com>
+Date:   Sat Dec 28 18:46:01 2024 +0800
+
+    移除协同建链超时
+    
+    Signed-off-by: liuhongjie <liuhongjie3@huawei.com>
+
+[33mcommit b300c370dfac2ccc2c140717e4ff6f2500c4023c[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmaster[m[33m)[m
+Merge: bbd38775 eb8a600d
+Author: openharmony_ci <120357966@qq.com>
+Date:   Sat Dec 28 09:38:07 2024 +0000
+
+    !1258 查询长时任务，断开应用间建链
+    Merge pull request !1258 from m30043719/master
+
+[33mcommit bbd387759441116fd2e277c5b2b708f943b399de[m
+Merge: 89507b0d e7ce59a8
+Author: openharmony_ci <120357966@qq.com>
+Date:   Sat Dec 28 07:32:57 2024 +0000
+
+    !1257 [feat] 协同能力构建补全
+    Merge pull request !1257 from baishunqin/master
+
+[33mcommit eb8a600d120e5f3d6e703ad76ca0f71cc205458a[m
+Author: m30043719 <maxiaodong25@huawei.com>
+Date:   Sat Dec 28 15:10:23 2024 +0800
+
+    查询长时任务应用，断开应用间的建链
+    
+    Signed-off-by: m30043719 <maxiaodong25@huawei.com>
+
+[33mcommit e7ce59a8c3332650e5a1cfee5ad6689f731ac638[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 13:57:58 2024 +0800
+
+    修复build.gn
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit 32c59c0aede5e7c6cb26ed4cd4870357550aa2ec[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 12:41:44 2024 +0800
+
+    修复build.gn
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit 6f34b6dab062c4bf348b8bfe733c7ed88106d697[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 12:02:35 2024 +0800
+
+    修复数据发送问题
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit 9e3016eb22e419a08826a7fcd6fb8eaa4a47b385[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 11:59:51 2024 +0800
+
+    修复id判断问题
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit 857ea059b1398dc7a423aa4e412585990cae3a7d[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 11:51:27 2024 +0800
+
+    修复数据发送唤醒丢失
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit 4639a0cc50c9390eb532d811d0cd8e590eeac1bd[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 10:58:10 2024 +0800
+
+    修复格式化问题
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit c3d40903f0f3c8791754b3ed73a366c877e662a5[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 10:57:01 2024 +0800
+
+    修改格式化问题
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit b6d01c82bb2994c6a95947aed023539da1d2b2cf[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 10:26:09 2024 +0800
+
+    修复格式化问题
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit dc16a6cde46595a380710cd8463bc9e50a2c447e[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 10:18:44 2024 +0800
+
+    增加协同能力构建
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit b9500249315dc2efa2c0b4d6b09341ba2a9a5cf8[m
+Merge: a17c9bd9 89507b0d
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 09:49:29 2024 +0800
+
+    Merge https://gitee.com/baishunqin/ability_dmsfwk
+
+[33mcommit a17c9bd92fce9e485783e8ce1e802174a392e304[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Sat Dec 28 09:49:20 2024 +0800
+
+    增加TDD用例
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit 89507b0db68f81bfdd8de37fa1fb389349bb3750[m
+Merge: 774cb291 a9d5f661
+Author: openharmony_ci <120357966@qq.com>
+Date:   Fri Dec 27 10:53:59 2024 +0000
+
+    !1251 新增可信关系查询接口
+    Merge pull request !1251 from m30043719/master
+
+[33mcommit a9d5f661ec8fb58693965191a1b3571a42d53c4d[m
+Author: m30043719 <maxiaodong25@huawei.com>
+Date:   Fri Dec 27 15:43:32 2024 +0800
+
+    添加协调关系查询的注册接口
+    
+    Signed-off-by: m30043719 <maxiaodong25@huawei.com>
+
+[33mcommit 774cb291ceadd9ab7cdeee68c8659b01a0846659[m
+Merge: 387d1947 508f8cc1
+Author: openharmony_ci <120357966@qq.com>
+Date:   Fri Dec 27 08:30:21 2024 +0000
+
+    !1249 [feat] 跨端协同DFX能力构建
+    Merge pull request !1249 from baishunqin/master
+
+[33mcommit 508f8cc17d6b97dd9cf7302d8bbff22253805760[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Fri Dec 27 14:15:14 2024 +0800
+
+    修复格式化问题
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit ea3608af106df27ca79c2c134d8a5d87df2ffbaa[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Fri Dec 27 14:07:22 2024 +0800
+
+    补充DFX错误码
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit d24b85e95ff78f1f589781211bcf265716f0f02e[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Fri Dec 27 12:39:55 2024 +0800
+
+    增加DFX能力
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit 387d1947f50e8a514f6528f95beb9cff1be5467a[m
+Merge: d3f1555c 387bf6f5
+Author: openharmony_ci <120357966@qq.com>
+Date:   Fri Dec 27 03:18:56 2024 +0000
+
+    !1246 [feat] 跨端流传输组件编解码能力构建
+    Merge pull request !1246 from baishunqin/master
+
+[33mcommit d3f1555c697d8c0ed540af647b221042b6aa7a25[m
+Merge: 9ffb4c75 dd9d36bf
+Author: openharmony_ci <120357966@qq.com>
+Date:   Fri Dec 27 03:11:16 2024 +0000
+
+    !1247 协同能力增强, 应用协同生命周期管理
+    Merge pull request !1247 from liuhongjie/master_1226_02
+
+[33mcommit 9ffb4c755a7db49a2532bfb4b8f7387827f28e1a[m
+Merge: 255baa02 44fd6755
+Author: openharmony_ci <120357966@qq.com>
+Date:   Fri Dec 27 02:55:02 2024 +0000
+
+    !1244 协同能力增强,应用协同生命周期管理
+    Merge pull request !1244 from liuhongjie/master_1226_03
+
+[33mcommit dd9d36bffd98c38237d2967305a226b42db29b87[m
+Author: liuhongjie <liuhongjie3@huawei.com>
+Date:   Thu Dec 26 19:42:17 2024 +0800
+
+    协同能力增强,应用间建立协同
+    
+    Signed-off-by: liuhongjie <liuhongjie3@huawei.com>
+
+[33mcommit 387bf6f50733958bd1ceafbc1a3b181002b63e4b[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Fri Dec 27 10:13:59 2024 +0800
+
+    修复格式化问题
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit 255baa02ceebef97a8ace892d2407cfe0bfecfaa[m
+Merge: 56600144 562f245b
+Author: openharmony_ci <120357966@qq.com>
+Date:   Fri Dec 27 02:13:06 2024 +0000
+
+    !1245 宏配置补全
+    Merge pull request !1245 from 皇甫毅/master
+
+[33mcommit 7c25974586f4ce2984e6570062f02d34d8340976[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Fri Dec 27 09:48:35 2024 +0800
+
+    增加编解码能力
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit 44fd675524c0539c555dc9ef15a06752957540bd[m
+Author: liuhongjie <liuhongjie3@huawei.com>
+Date:   Thu Dec 26 21:39:09 2024 +0800
+
+    协同能力增强,应用协同生命周期管理
+    
+    Signed-off-by: liuhongjie <liuhongjie3@huawei.com>
+
+[33mcommit 56600144564d6c2637f2f13a85c96eed4bb3c5e2[m
+Merge: c3b775e1 5bc45a9a
+Author: openharmony_ci <120357966@qq.com>
+Date:   Fri Dec 27 01:17:35 2024 +0000
+
+    !1243 [feat] 流传输组件发送端特性
+    Merge pull request !1243 from baishunqin/master
+
+[33mcommit c3b775e141f2f071847ff129694227f04ab503dd[m
+Merge: a4cef984 7089ca69
+Author: openharmony_ci <120357966@qq.com>
+Date:   Thu Dec 26 15:09:41 2024 +0000
+
+    !1241 协同能力增强,应用间建立协同以及生命周期管理接口NAPI转换
+    Merge pull request !1241 from liuhongjie/master_1226_01
+
+[33mcommit 5bc45a9af4af7e93147e077d1f5a0191413b6a6c[m
+Author: baishunqin <baishunqin@huawei.com>
+Date:   Thu Dec 26 22:32:10 2024 +0800
+
+    修复格式化问题
+    
+    Signed-off-by: baishunqin <baishunqin@huawei.com>
+
+[33mcommit a4cef984e90ee838b797b37be33c9398425007b9[m
+Merge: 18436b99 5685b691
+Author: openharmony_ci <120357966@qq.com>
+Date:   Thu Dec 26 14:27:11 2024 +0000
+
+    !1234 协同单个实例类的开发
+    Merge pull request !1234 from m30043

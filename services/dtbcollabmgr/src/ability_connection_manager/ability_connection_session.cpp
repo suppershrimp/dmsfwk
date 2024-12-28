@@ -39,7 +39,6 @@ constexpr const char* EVENT_RECEIVE_DATA = "receiveData";
 constexpr const char* EVENT_RECEIVE_IMAGE = "receiveImage";
 constexpr int32_t DSCHED_COLLAB_PROTOCOL_VERSION = 1;
 static constexpr uint16_t PROTOCOL_VERSION = 1;
-constexpr int32_t CONNECTION_TIMEOUT = 20000;
 constexpr int32_t CHANNEL_NAME_LENGTH = 48;
 constexpr int32_t VIDEO_BIT_RATE = 640000;
 constexpr int32_t VIDEO_FRAME_RATE = 30;
@@ -153,9 +152,7 @@ int32_t AbilityConnectionSession::Connect(ConnectCallback& callback)
         sessionStatus_ = SessionStatus::CONNECTING;
         connectCallback_ = callback;
     }
-
     direction_ = CollabrateDirection::COLLABRATE_SOURCE;
-    SetTimeOut(CONNECTION_TIMEOUT);
     
     DistributedClient dmsClient;
     int32_t ret = dmsClient.CollabMission(sessionId_, localSocketName_, localInfo_, peerInfo_, connectOption_);
@@ -617,13 +614,14 @@ int32_t AbilityConnectionSession::InitChannels()
         return ret;
     }
 
-    ret = CreateChannel(channelName, ChannelDataType::BYTES, TransChannelType::STREAM_CHANNEL_BYTES);
+    std::string streamChannelName = channelName + "stream";
+    ret = CreateChannel(streamChannelName, ChannelDataType::BYTES, TransChannelType::STREAM_CHANNEL_BYTES);
     if (ret != ERR_OK) {
         HILOGE("init bytes channel failed!");
         return INVALID_PARAMETERS_ERR;
     }
 
-    ret = CreateChannel(channelName, ChannelDataType::VIDEO_STREAM, TransChannelType::STREAM_CHANNEL);
+    ret = CreateChannel(streamChannelName, ChannelDataType::VIDEO_STREAM, TransChannelType::STREAM_CHANNEL);
     if (ret != ERR_OK) {
         HILOGE("init bytes channel failed!");
         return INVALID_PARAMETERS_ERR;
