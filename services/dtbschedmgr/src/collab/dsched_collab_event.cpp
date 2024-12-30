@@ -51,9 +51,9 @@ int32_t BaseCmd::Marshal(std::string &jsonStr)
     cJSON_AddStringToObject(rootValue, "SinkModuleName", sinkModuleName_.c_str());
     cJSON_AddStringToObject(rootValue, "SinkServiceId", sinkServerId_.c_str());
 
-    cJSON_AddBoolToObject(rootValue, "NeedStream", needStream_);
-    cJSON_AddBoolToObject(rootValue, "NeedData", needData_);
-    cJSON_AddBoolToObject(rootValue, "NeedKeepLongAlive", needKeepLongAlive_);
+    cJSON_AddBoolToObject(rootValue, "NeedSendBigData", needSendBigData_);
+    cJSON_AddBoolToObject(rootValue, "NeedSendStream", needSendStream_);
+    cJSON_AddBoolToObject(rootValue, "NeedRecvStream", needRecvStream_);
 
     char *data = cJSON_Print(rootValue);
     if (data == nullptr) {
@@ -103,8 +103,8 @@ int32_t BaseCmd::Unmarshal(const std::string &jsonStr)
         *strValues[i] = item->valuestring;
     }
 
-    const char *boolKeys[] = { "NeedStream", "NeedData", "NeedKeepLongAlive" };
-    bool *boolValues[] = { &needStream_, &needData_, &needKeepLongAlive_ };
+    const char *boolKeys[] = { "NeedSendBigData", "NeedSendStream", "NeedRecvStream" };
+    bool *boolValues[] = { &needSendBigData_, &needSendStream_, &needRecvStream_ };
     int32_t boolLength = sizeof(boolKeys) / sizeof(boolKeys[0]);
     for (int32_t i = 0; i < boolLength; i++) {
         cJSON *item = cJSON_GetObjectItemCaseSensitive(rootValue, boolKeys[i]);

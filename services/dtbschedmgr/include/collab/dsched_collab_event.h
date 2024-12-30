@@ -50,9 +50,9 @@ public:
     virtual int32_t Marshal(std::string &jsonStr);
     virtual int32_t Unmarshal(const std::string &jsonStr);
 public:
-    bool needStream_ = false;
-    bool needData_ = false;
-    bool needKeepLongAlive_ = false;
+    bool needSendBigData_ = false;
+    bool needSendStream_ = false;
+    bool needRecvStream_ = false;
     int32_t collabVersion_ = -1;
     int32_t dmsVersion_ = -1;
     int32_t command_ = -1;
