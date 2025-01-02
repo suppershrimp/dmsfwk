@@ -69,7 +69,7 @@ private:
     void HandleReleaseAbilityLink(const std::string &bundleName, const int32_t &pid);
     void HandleDataRecv(const int32_t &softbusSessionId, std::shared_ptr<DSchedDataBuffer> dataBuffer);
     void NotifyDataRecv(const int32_t &softbusSessionId, int32_t command, const std::string& jsonStr,
-        std::shared_ptr<DSchedDataBuffer> dataBuffer);
+        std::shared_ptr<DSchedDataBuffer> dataBuffer, const std::string& collabToken);
     void WaitAllConnectDecision(const std::string &peerDeviceId, const std::shared_ptr<DSchedCollab> &dCollab);
     void SetTimeOut(const std::string &collabToken, int32_t timeout);
     void RemoveTimeout(const std::string &collabToken);

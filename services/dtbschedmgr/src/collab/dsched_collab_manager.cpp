@@ -221,8 +221,8 @@ void DSchedCollabManager::HandleCollabMission(const DSchedCollabInfo &info)
     newCollab->PostSrcStartTask();
     SetTimeOut(collabToken, COLLAB_TIMEOUT);
 
-#ifdef DMSFWK_ALL_CONNECT_MGR
-    if (!DSchedTransportSoftbusAdapter::GetInstance().IsNeedAllConnect()) {
+#ifdef COLLAB_ALL_CONNECT_DECISIONS
+    if (!DSchedTransportSoftbusAdapter::GetInstance().IsNeedAllConnect(SERVICE_TYPE_COLLAB)) {
         HILOGW("don't need wait all connect decision");
         return;
     }
@@ -260,13 +260,13 @@ std::string DSchedCollabManager::GenerateCollabToken(const std::string &srcDevic
 
 void DSchedCollabManager::SetTimeOut(const std::string &collabToken, int32_t timeout)
 {
-    HILOGI("called, collabToken: %{public}s", collabToken.c_str());
+    HILOGI("called, collabToken: %{public}s", GetAnonymStr(collabToken).c_str());
     auto func = [this, collabToken]() {
         if (collabs_.count(collabToken) == 0) {
             HILOGW("collab not exist.");
             return;
         }
-        HILOGE("collab timeout! info: %{public}s", collabToken.c_str());
+        HILOGE("collab timeout! info: %{public}s", GetAnonymStr(collabToken).c_str());
         auto dCollab = collabs_[collabToken];
         if (dCollab != nullptr) {
             dCollab->PostErrEndTask(COLLAB_ABILITY_TIMEOUT_ERR);
@@ -282,7 +282,7 @@ void DSchedCollabManager::SetTimeOut(const std::string &collabToken, int32_t tim
 
 void DSchedCollabManager::RemoveTimeout(const std::string &collabToken)
 {
-    HILOGI("called, collabToken: %{public}s", collabToken.c_str());
+    HILOGI("called, collabToken: %{public}s", GetAnonymStr(collabToken).c_str());
     if (eventHandler_ == nullptr) {
         HILOGE("eventHandler is nullptr");
         return;
@@ -357,7 +357,7 @@ int32_t DSchedCollabManager::NotifySinkPrepareResult(const std::string &collabTo
     const int32_t &collabSessionId, const std::string &socketName, const sptr<IRemoteObject> &clientCB)
 {
     HILOGI("called, collabToken: %{public}s, collabSessionId: %{public}d, result: %{public}d, socketName: %{public}s",
-        collabToken.c_str(), collabSessionId, result, socketName.c_str());
+        GetAnonymStr(collabToken).c_str(), collabSessionId, result, socketName.c_str());
     auto func = [this, collabToken, result, collabSessionId, socketName, clientCB]() {
         HandleCollabPrepareResult(collabToken, result, collabSessionId, socketName, clientCB);
     };
@@ -479,7 +479,7 @@ int32_t DSchedCollabManager::CancleReleaseAbilityLink(const std::string &bundleN
 
 int32_t DSchedCollabManager::NotifySessionClose(const std::string &collabToken)
 {
-    HILOGI("called, collabToken: %{public}s", collabToken.c_str());
+    HILOGI("called, collabToken: %{public}s", GetAnonymStr(collabToken).c_str());
     auto dCollab = GetDSchedCollabByTokenId(collabToken);
     if (dCollab == nullptr) {
         HILOGE("can't find collab");
@@ -492,7 +492,7 @@ int32_t DSchedCollabManager::NotifySessionClose(const std::string &collabToken)
 
 int32_t DSchedCollabManager::CleanUpSession(const std::string &collabToken)
 {
-    HILOGI("called, collabToken: %{public}s", collabToken.c_str());
+    HILOGI("called, collabToken: %{public}s", GetAnonymStr(collabToken).c_str());
     auto dCollab = GetDSchedCollabByTokenId(collabToken);
     if (dCollab == nullptr) {
         HILOGE("can't find collab");
@@ -553,7 +553,6 @@ void DSchedCollabManager::HandleDataRecv(const int32_t &softbusSessionId, std::s
         HILOGE("Parse cmd value error.");
         return;
     }
-
     cJSON *comvalue = cJSON_GetObjectItemCaseSensitive(cmdValue, "Command");
     if (comvalue == nullptr || !cJSON_IsNumber(comvalue)) {
         cJSON_Delete(cmdValue);
@@ -561,18 +560,26 @@ void DSchedCollabManager::HandleDataRecv(const int32_t &softbusSessionId, std::s
         return;
     }
     int32_t command = comvalue->valueint;
+    cJSON *collabTokenvalue = cJSON_GetObjectItemCaseSensitive(cmdValue, "CollabToken");
+    if (collabTokenvalue == nullptr || !cJSON_IsString(collabTokenvalue)) {
+        cJSON_Delete(cmdValue);
+        HILOGE("parse collabToken failed");
+        return;
+    }
+    int32_t collabToken = collabTokenvalue->valueint;
     cJSON_Delete(cmdValue);
-    NotifyDataRecv(softbusSessionId, command, jsonStr, dataBuffer);
+    NotifyDataRecv(softbusSessionId, command, jsonStr, dataBuffer, collabToken);
     HILOGI("end");
 }
 
 void DSchedCollabManager::NotifyDataRecv(const int32_t &softbusSessionId, int32_t command, const std::string& jsonStr,
-    std::shared_ptr<DSchedDataBuffer> dataBuffer)
+    std::shared_ptr<DSchedDataBuffer> dataBuffer, const std::string& collabToken)
 {
-    HILOGI("called, parsed cmd %{public}s", CMDDATA[command].c_str());
+    HILOGI("called, parsed cmd: %{public}s", CMDDATA[command].c_str());
     for (auto iter = collabs_.begin(); iter != collabs_.end(); iter++) {
-        if (iter->second != nullptr && softbusSessionId == iter->second->GetSoftbusSessionId()) {
-            HILOGI("softbusSessionId exist.");
+        if (iter->second != nullptr && softbusSessionId == iter->second->GetSoftbusSessionId() &&
+            collabToken == iter->second->GetCollabInfo().collabToken_) {
+            HILOGI("collab exist.");
             iter->second->OnDataRecv(command, dataBuffer);
             if (command == NOTIFY_RESULT_CMD) {
                 RemoveTimeout(iter->first);

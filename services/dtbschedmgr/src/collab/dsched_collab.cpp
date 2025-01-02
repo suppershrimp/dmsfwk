@@ -93,9 +93,9 @@ DSchedCollab::DSchedCollab(std::shared_ptr<SinkStartCmd> startCmd, const int32_t
     collabInfo_.srcCollabSessionId_ = startCmd->srcCollabSessionId_;
     collabInfo_.collabToken_ = startCmd->collabToken_;
     collabInfo_.srcCollabVersion_ = startCmd->collabVersion_;
-    collabInfo_.srcOpt_.needStream_ = startCmd->needStream_;
-    collabInfo_.srcOpt_.needData_ = startCmd->needData_;
-    collabInfo_.srcOpt_.needKeepLongAlive_ = startCmd->needKeepLongAlive_;
+    collabInfo_.srcOpt_.needSendBigData_ = startCmd->needSendBigData_;
+    collabInfo_.srcOpt_.needSendStream_ = startCmd->needSendStream_;
+    collabInfo_.srcOpt_.needRecvStream_ = startCmd->needRecvStream_;
     collabInfo_.srcOpt_.startParams_ = startCmd->startParams_;
     collabInfo_.srcOpt_.messageParams_ = startCmd->messageParams_;
     collabInfo_.srcInfo_.pid_ = startCmd->srcPid_;
@@ -357,9 +357,9 @@ int32_t DSchedCollab::PackStartCmd(std::shared_ptr<SinkStartCmd>& cmd)
     cmd->sinkAbilityName_ = collabInfo_.sinkInfo_.abilityName_;
     cmd->srcModuleName_ = collabInfo_.srcInfo_.moduleName_;
     cmd->sinkModuleName_ = collabInfo_.sinkInfo_.moduleName_;
-    cmd->needStream_ = collabInfo_.srcOpt_.needStream_;
-    cmd->needData_ = collabInfo_.srcOpt_.needData_;
-    cmd->needKeepLongAlive_ = collabInfo_.srcOpt_.needKeepLongAlive_;
+    cmd->needSendBigData_ = collabInfo_.srcOpt_.needSendBigData_;
+    cmd->needSendStream_ = collabInfo_.srcOpt_.needSendStream_;
+    cmd->needRecvStream_ = collabInfo_.srcOpt_.needRecvStream_;
     cmd->startParams_ = collabInfo_.srcOpt_.startParams_;
     cmd->messageParams_ = collabInfo_.srcOpt_.messageParams_;
     return PackPartCmd(cmd);
@@ -447,9 +447,9 @@ AAFwk::Want DSchedCollab::GenerateCollabWant()
     peerInfoParams.SetParam("serverId", AAFwk::String::Box(collabInfo_.srcInfo_.serverId_));
 
     AAFwk::WantParams optParams;
-    optParams.SetParam("isNeedSendBigData", AAFwk::Boolean::Box(collabInfo_.srcOpt_.needStream_));
-    optParams.SetParam("isNeedSendStream", AAFwk::Boolean::Box(collabInfo_.srcOpt_.needData_));
-    optParams.SetParam("isNeedReceiveStream", AAFwk::Boolean::Box(collabInfo_.srcOpt_.needKeepLongAlive_));
+    optParams.SetParam("isNeedSendBigData", AAFwk::Boolean::Box(collabInfo_.srcOpt_.needSendBigData_));
+    optParams.SetParam("isNeedSendStream", AAFwk::Boolean::Box(collabInfo_.srcOpt_.needSendStream_));
+    optParams.SetParam("isNeedReceiveStream", AAFwk::Boolean::Box(collabInfo_.srcOpt_.needRecvStream_));
     optParams.SetParam("parameters", AAFwk::WantParamWrapper::Box(collabInfo_.srcOpt_.messageParams_));
 
     AAFwk::WantParams collabParams;

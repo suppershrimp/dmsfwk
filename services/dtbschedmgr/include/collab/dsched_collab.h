@@ -75,17 +75,17 @@ struct CollabMessage : public Parcelable {
 };
 
 struct ConnectOpt : public Parcelable {
-    bool needStream_ = false;
-    bool needData_ = false;
-    bool needKeepLongAlive_ = false;
+    bool needSendBigData_ = false;
+    bool needSendStream_ = false;
+    bool needRecvStream_ = false;
     AAFwk::WantParams startParams_;
     AAFwk::WantParams messageParams_;
 
     bool ReadFromParcel(Parcel &parcel)
     {
-        needStream_ = parcel.ReadBool();
-        needData_ = parcel.ReadBool();
-        needKeepLongAlive_ = parcel.ReadBool();
+        needSendBigData_ = parcel.ReadBool();
+        needSendStream_ = parcel.ReadBool();
+        needRecvStream_ = parcel.ReadBool();
         std::shared_ptr<AAFwk::WantParams> startParamsPtr(parcel.ReadParcelable<AAFwk::WantParams>());
         if (startParamsPtr == nullptr) {
             return false;
@@ -136,9 +136,9 @@ public:
             "srcAppVersion: " + std::to_string(this->srcAppVersion_) + " " +
             "srcCollabSessionId: " + std::to_string(this->srcCollabSessionId_) + " " +
             "collabToken: " + GetAnonymStr(this->collabToken_) + " " +
-            "needStream: " + std::to_string(this->srcOpt_.needStream_) + " " +
-            "needData: " + std::to_string(this->srcOpt_.needData_) + " " +
-            "needKeepLongAlive: " + std::to_string(this->srcOpt_.needKeepLongAlive_) + " " +
+            "needSendBigData: " + std::to_string(this->srcOpt_.needSendBigData_) + " " +
+            "needSendStream: " + std::to_string(this->srcOpt_.needSendStream_) + " " +
+            "needRecvStream: " + std::to_string(this->srcOpt_.needRecvStream_) + " " +
             "srcDevId: " + GetAnonymStr(this->srcInfo_.deviceId_) + " " +
             "srcBundle: " + this->srcInfo_.bundleName_ + " " +
             "srcAbility: " + this->srcInfo_.abilityName_ + " " +
