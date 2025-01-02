@@ -553,7 +553,6 @@ void DSchedCollabManager::HandleDataRecv(const int32_t &softbusSessionId, std::s
         HILOGE("Parse cmd value error.");
         return;
     }
-
     cJSON *comvalue = cJSON_GetObjectItemCaseSensitive(cmdValue, "Command");
     if (comvalue == nullptr || !cJSON_IsNumber(comvalue)) {
         cJSON_Delete(cmdValue);
@@ -561,17 +560,25 @@ void DSchedCollabManager::HandleDataRecv(const int32_t &softbusSessionId, std::s
         return;
     }
     int32_t command = comvalue->valueint;
+    cJSON *collabTokenvalue = cJSON_GetObjectItemCaseSensitive(cmdValue, "CollabToken");
+    if (collabTokenvalue == nullptr || !cJSON_IsString(collabTokenvalue)) {
+        cJSON_Delete(cmdValue);
+        HILOGE("parse collabToken failed");
+        return;
+    }
+    int32_t collabToken = collabTokenvalue->valueint;
     cJSON_Delete(cmdValue);
-    NotifyDataRecv(softbusSessionId, command, jsonStr, dataBuffer);
+    NotifyDataRecv(softbusSessionId, command, jsonStr, dataBuffer, collabToken);
     HILOGI("end");
 }
 
 void DSchedCollabManager::NotifyDataRecv(const int32_t &softbusSessionId, int32_t command, const std::string& jsonStr,
-    std::shared_ptr<DSchedDataBuffer> dataBuffer)
+    std::shared_ptr<DSchedDataBuffer> dataBuffer, const std::string& collabToken)
 {
     HILOGI("called, parsed cmd: %{public}s", CMDDATA[command].c_str());
     for (auto iter = collabs_.begin(); iter != collabs_.end(); iter++) {
-        if (iter->second != nullptr && softbusSessionId == iter->second->GetSoftbusSessionId()) {// 根据pid和sessionId
+        if (iter->second != nullptr && softbusSessionId == iter->second->GetSoftbusSessionId() &&
+            collabToken == iter->second->GetCollabInfo().collabToken_) {
             HILOGI("collab exist.");
             iter->second->OnDataRecv(command, dataBuffer);
             if (command == NOTIFY_RESULT_CMD) {
