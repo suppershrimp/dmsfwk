@@ -22,7 +22,6 @@
 #include "distributed_sched_utils.h"
 #include "js_runtime_utils.h"
 #include "napi_common_util.h"
-#include "napi_error_code.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -32,6 +31,7 @@ namespace {
 const std::string TAG = "JsContinuationManager";
 const std::string CODE_KEY_NAME = "code";
 constexpr int32_t ERR_NOT_OK = -1;
+constexpr int32_t ERROR_CODE_ONE = 1;
 constexpr int32_t ARG_COUNT_ONE = 1;
 constexpr int32_t ARG_COUNT_TWO = 2;
 constexpr int32_t ARG_COUNT_THREE = 3;
@@ -121,6 +121,37 @@ napi_value JsContinuationManager::StartContinuationDeviceManager(napi_env env, n
     return (me != nullptr) ? me->OnStartContinuationDeviceManager(env, info) : nullptr;
 }
 
+std::function<void()> JsContinuationManager::CreateRegisterAsyncTask(
+    std::shared_ptr<ContinuationExtraParams> continuationExtraParams,
+    size_t unwrapArgc, int32_t errCode, napi_env env, std::unique_ptr<NapiAsyncTask> napiAsyncTask)
+{
+    auto asyncTask = [continuationExtraParams, unwrapArgc, errCode, env, task = napiAsyncTask.get()]() {
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(env, &scope);
+        if (scope == nullptr) {
+            delete task;
+            return;
+        }
+        if (errCode != 0) {
+            task->Reject(env, CreateJsError(env, errCode, "Invalidate params."));
+            napi_close_handle_scope(env, scope);
+            delete task;
+            return;
+        }
+        int32_t token = -1;
+        int32_t ret = (unwrapArgc == 0) ? DistributedAbilityManagerClient::GetInstance().Register(nullptr, token) :
+            DistributedAbilityManagerClient::GetInstance().Register(continuationExtraParams, token);
+        if (ret == ERR_OK) {
+            task->Resolve(env, CreateJsValue(env, token));
+        } else {
+            task->Reject(env, CreateJsError(env, ret, "Register failed."));
+        }
+        napi_close_handle_scope(env, scope);
+        delete task;
+    };
+    return asyncTask;
+}
+
 napi_value JsContinuationManager::OnRegister(napi_env env, napi_callback_info info)
 {
     HILOGD("called.");
@@ -142,35 +173,16 @@ napi_value JsContinuationManager::OnRegister(napi_env env, napi_callback_info in
         }
         unwrapArgc++;
     }
-    NapiAsyncTask::CompleteCallback complete =
-        [continuationExtraParams, unwrapArgc, errCode](napi_env env, NapiAsyncTask &task, int32_t status) {
-        napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
-        if (scope == nullptr) {
-            return;
-        }
-
-        if (errCode != 0) {
-            task.Reject(env, CreateJsError(env, errCode, "Invalidate params."));
-            napi_close_handle_scope(env, scope);
-            return;
-        }
-        int32_t token = -1;
-        int32_t ret = (unwrapArgc == 0) ? DistributedAbilityManagerClient::GetInstance().Register(nullptr, token) :
-            DistributedAbilityManagerClient::GetInstance().Register(continuationExtraParams, token);
-        if (ret == ERR_OK) {
-            task.Resolve(env, CreateJsValue(env, token));
-        } else {
-            task.Reject(env, CreateJsError(env, ret, "Register failed."));
-        }
-
-        napi_close_handle_scope(env, scope);
-    };
-
     napi_value lastParam = (argc <= unwrapArgc) ? nullptr : argv[unwrapArgc];
     napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsContinuationManager::OnRegister",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = CreateRegisterAsyncTask(continuationExtraParams, unwrapArgc, errCode,
+        env, std::move(napiAsyncTask));
+    if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_immediate)) {
+        napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
+    } else {
+        napiAsyncTask.release();
+    }
     return result;
 }
 
@@ -209,11 +221,17 @@ napi_value JsContinuationManager::OnRegisterContinuation(napi_env env, napi_call
         napi_throw(env, GenerateBusinessError(env, PARAMETER_CHECK_FAILED, errInfo));
         return CreateJsUndefined(env);
     }
-    NapiAsyncTask::CompleteCallback complete =
-        [this, continuationExtraParams, unwrapArgc](napi_env env, NapiAsyncTask &task, int32_t status) {
+    size_t argc = ARG_COUNT_TWO;
+    napi_value argv[ARG_COUNT_TWO] = { 0 };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    napi_value lastParam = (argc <= unwrapArgc) ? nullptr : argv[unwrapArgc];
+    napi_value result = nullptr;
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = [this, continuationExtraParams, unwrapArgc, env, task = napiAsyncTask.get()]() {
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
         if (scope == nullptr) {
+            delete task;
             return;
         }
 
@@ -221,21 +239,20 @@ napi_value JsContinuationManager::OnRegisterContinuation(napi_env env, napi_call
         int32_t errCode = (unwrapArgc == 0) ? DistributedAbilityManagerClient::GetInstance().Register(nullptr, token) :
             DistributedAbilityManagerClient::GetInstance().Register(continuationExtraParams, token);
         if (errCode == ERR_OK) {
-            task.Resolve(env, CreateJsValue(env, token));
+            task->Resolve(env, CreateJsValue(env, token));
         } else {
             errCode = ErrorCodeReturn(errCode);
-            task.Reject(env, CreateJsError(env, errCode, ErrorMessageReturn(errCode)));
+            task->Reject(env, CreateJsError(env, errCode, ErrorMessageReturn(errCode)));
         }
 
         napi_close_handle_scope(env, scope);
+        delete task;
     };
-    size_t argc = ARG_COUNT_TWO;
-    napi_value argv[ARG_COUNT_TWO] = { 0 };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
-    napi_value lastParam = (argc <= unwrapArgc) ? nullptr : argv[unwrapArgc];
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsContinuationManager::OnRegisterContinuation",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_immediate)) {
+        napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
+    } else {
+        napiAsyncTask.release();
+    }
     return result;
 }
 
@@ -255,34 +272,38 @@ napi_value JsContinuationManager::OnUnregister(napi_env env, napi_callback_info 
         HILOGE("Parse token failed");
         errCode = ERR_NOT_OK;
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [token, errCode](napi_env env, NapiAsyncTask &task, int32_t status) {
+    napi_value lastParam = (argc <= ARG_COUNT_ONE) ? nullptr : argv[ARG_COUNT_ONE];
+    napi_value result = nullptr;
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = [token, errCode, env, task = napiAsyncTask.get()]() {
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
         if (scope == nullptr) {
+            delete task;
             return;
         }
 
         if (errCode != 0) {
-            task.Reject(env, CreateJsError(env, errCode, "Invalidate params."));
+            task->Reject(env, CreateJsError(env, errCode, "Invalidate params."));
             napi_close_handle_scope(env, scope);
+            delete task;
             return;
         }
         int32_t ret = DistributedAbilityManagerClient::GetInstance().Unregister(token);
         if (ret == ERR_OK) {
-            task.Resolve(env, CreateJsUndefined(env));
+            task->Resolve(env, CreateJsUndefined(env));
         } else {
-            task.Reject(env, CreateJsError(env, ret, "Unregister failed."));
+            task->Reject(env, CreateJsError(env, ret, "Unregister failed."));
         }
 
         napi_close_handle_scope(env, scope);
+        delete task;
     };
-
-    napi_value lastParam = (argc <= ARG_COUNT_ONE) ? nullptr : argv[ARG_COUNT_ONE];
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsContinuationManager::OnUnregister",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_immediate)) {
+        napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
+    } else {
+        napiAsyncTask.release();
+    }
     return result;
 }
 
@@ -307,28 +328,33 @@ napi_value JsContinuationManager::OnUnregisterContinuation(napi_env env, napi_ca
         napi_throw(env, GenerateBusinessError(env, PARAMETER_CHECK_FAILED, errInfo));
         return CreateJsUndefined(env);
     }
-    NapiAsyncTask::CompleteCallback complete =
-        [this, token](napi_env env, NapiAsyncTask &task, int32_t status) {
+
+    napi_value lastParam = (argc == ARG_COUNT_ONE) ? nullptr : argv[ARG_COUNT_ONE];
+    napi_value result = nullptr;
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = [this, token, env, task = napiAsyncTask.get()]() {
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
         if (scope == nullptr) {
+            delete task;
             return;
         }
         int32_t errCode = DistributedAbilityManagerClient::GetInstance().Unregister(token);
         if (errCode == ERR_OK) {
-            task.Resolve(env, CreateJsNull(env));
+            task->Resolve(env, CreateJsNull(env));
         } else {
             errCode = ErrorCodeReturn(errCode);
-            task.Reject(env, CreateJsError(env, errCode, ErrorMessageReturn(errCode)));
+            task->Reject(env, CreateJsError(env, errCode, ErrorMessageReturn(errCode)));
         }
 
         napi_close_handle_scope(env, scope);
+        delete task;
     };
-
-    napi_value lastParam = (argc == ARG_COUNT_ONE) ? nullptr : argv[ARG_COUNT_ONE];
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsContinuationManager::OnUnregisterContinuation",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_immediate)) {
+        napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
+    } else {
+        napiAsyncTask.release();
+    }
     return result;
 }
 
@@ -492,33 +518,37 @@ napi_value JsContinuationManager::OnUpdateConnectStatus(napi_env env, napi_callb
     std::string deviceId;
     DeviceConnectStatus deviceConnectStatus = DeviceConnectStatus::IDLE;
     errCode = GetInfoForUpdateConnectStatus(env, argv, token, deviceId, deviceConnectStatus);
-    NapiAsyncTask::CompleteCallback complete =
-        [token, deviceId, deviceConnectStatus, errCode](napi_env env, NapiAsyncTask &task, int32_t status) {
+    napi_value lastParam = (argc <= ARG_COUNT_THREE) ? nullptr : argv[ARG_COUNT_THREE];
+    napi_value result = nullptr;
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = [token, deviceId, deviceConnectStatus, errCode, env, task = napiAsyncTask.get()]() {
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
         if (scope == nullptr) {
+            delete task;
             return;
         }
-
         if (errCode != 0) {
-            task.Reject(env, CreateJsError(env, errCode, "Invalidate params."));
+            task->Reject(env, CreateJsError(env, errCode, "Invalidate params."));
             napi_close_handle_scope(env, scope);
+            delete task;
             return;
         }
         int32_t ret = DistributedAbilityManagerClient::GetInstance().UpdateConnectStatus(
             token, deviceId, deviceConnectStatus);
         if (ret == ERR_OK) {
-            task.Resolve(env, CreateJsUndefined(env));
+            task->Resolve(env, CreateJsUndefined(env));
         } else {
-            task.Reject(env, CreateJsError(env, ret, "UpdateConnectStatus failed."));
+            task->Reject(env, CreateJsError(env, ret, "UpdateConnectStatus failed."));
         }
         napi_close_handle_scope(env, scope);
+        delete task;
     };
-
-    napi_value lastParam = (argc <= ARG_COUNT_THREE) ? nullptr : argv[ARG_COUNT_THREE];
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsContinuationManager::OnUpdateConnectStatus",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_immediate)) {
+        napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
+    } else {
+        napiAsyncTask.release();
+    }
     return result;
 }
 
@@ -563,33 +593,37 @@ napi_value JsContinuationManager::OnUpdateContinuationState(napi_env env, napi_c
             GenerateBusinessError(env, PARAMETER_CHECK_FAILED, errInfo));
         return CreateJsUndefined(env);
     }
-    NapiAsyncTask::CompleteCallback complete =
-        [this, token, deviceId, deviceConnectStatus](napi_env env, NapiAsyncTask &task, int32_t status) {
+    size_t argc = ARG_COUNT_FOUR;
+    napi_value argv[ARG_COUNT_FOUR] = { 0 };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    napi_value lastParam = (argc == ARG_COUNT_THREE) ? nullptr : argv[ARG_COUNT_THREE];
+    napi_value result = nullptr;
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = [this, token, deviceId, deviceConnectStatus, env, task = napiAsyncTask.get()]() {
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
         if (scope == nullptr) {
+            delete task;
             return;
         }
 
         int32_t errCode = DistributedAbilityManagerClient::GetInstance().UpdateConnectStatus(
             token, deviceId, deviceConnectStatus);
         if (errCode == ERR_OK) {
-            task.Resolve(env, CreateJsNull(env));
+            task->Resolve(env, CreateJsNull(env));
         } else {
             errCode = ErrorCodeReturn(errCode);
-            task.Reject(env, CreateJsError(env, errCode, ErrorMessageReturn(errCode)));
+            task->Reject(env, CreateJsError(env, errCode, ErrorMessageReturn(errCode)));
         }
 
         napi_close_handle_scope(env, scope);
+        delete task;
     };
-
-    size_t argc = ARG_COUNT_FOUR;
-    napi_value argv[ARG_COUNT_FOUR] = { 0 };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
-    napi_value lastParam = (argc == ARG_COUNT_THREE) ? nullptr : argv[ARG_COUNT_THREE];
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsContinuationManager::OnUpdateContinuationState",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_immediate)) {
+        napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
+    } else {
+        napiAsyncTask.release();
+    }
     return result;
 }
 
@@ -605,6 +639,39 @@ int32_t JsContinuationManager::CheckParamAndGetToken(napi_env env, size_t argc, 
         errCode = ERR_NOT_OK;
     }
     return errCode;
+}
+
+std::function<void()> JsContinuationManager::CreateDeviceManagerAsyncTask(
+    std::shared_ptr<ContinuationExtraParams> continuationExtraParams,
+    JsInfo jsInfo, napi_env env, std::unique_ptr<NapiAsyncTask> napiAsyncTask)
+{
+    auto asyncTask = [continuationExtraParams, jsInfo, env, task = napiAsyncTask.get()]() {
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(env, &scope);
+        if (scope == nullptr) {
+            delete task;
+            return;
+        }
+
+        if (jsInfo.errCode != 0) {
+            task->Reject(env, CreateJsError(env, jsInfo.errCode, "Invalidate params."));
+            napi_close_handle_scope(env, scope);
+            delete task;
+            return;
+        }
+        int32_t ret = (jsInfo.unwrapArgc == ARG_COUNT_ONE) ?
+            DistributedAbilityManagerClient::GetInstance().StartDeviceManager(jsInfo.token) :
+            DistributedAbilityManagerClient::GetInstance().StartDeviceManager(jsInfo.token, continuationExtraParams);
+        if (ret == ERR_OK) {
+            task->Resolve(env, CreateJsUndefined(env));
+        } else {
+            task->Reject(env, CreateJsError(env, ret, "StartDeviceManager failed."));
+        }
+
+        napi_close_handle_scope(env, scope);
+        delete task;
+    };
+    return asyncTask;
 }
 
 napi_value JsContinuationManager::OnStartDeviceManager(napi_env env, napi_callback_info info)
@@ -629,35 +696,17 @@ napi_value JsContinuationManager::OnStartDeviceManager(napi_env env, napi_callba
         }
         unwrapArgc++;
     }
-    NapiAsyncTask::CompleteCallback complete =
-        [token, continuationExtraParams, unwrapArgc, errCode](napi_env env, NapiAsyncTask &task, int32_t status) {
-        napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
-        if (scope == nullptr) {
-            return;
-        }
-
-        if (errCode != 0) {
-            task.Reject(env, CreateJsError(env, errCode, "Invalidate params."));
-            napi_close_handle_scope(env, scope);
-            return;
-        }
-        int32_t ret = (unwrapArgc == ARG_COUNT_ONE) ?
-            DistributedAbilityManagerClient::GetInstance().StartDeviceManager(token) :
-            DistributedAbilityManagerClient::GetInstance().StartDeviceManager(token, continuationExtraParams);
-        if (ret == ERR_OK) {
-            task.Resolve(env, CreateJsUndefined(env));
-        } else {
-            task.Reject(env, CreateJsError(env, ret, "StartDeviceManager failed."));
-        }
-
-        napi_close_handle_scope(env, scope);
-    };
-
     napi_value lastParam = (argc <= unwrapArgc) ? nullptr : argv[unwrapArgc];
     napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsContinuationManager::OnStartDeviceManager",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    JsInfo jsInfo = {token, unwrapArgc, errCode};
+    auto asyncTask = CreateDeviceManagerAsyncTask(continuationExtraParams, jsInfo,
+        env, std::move(napiAsyncTask));
+    if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_immediate)) {
+        napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
+    } else {
+        napiAsyncTask.release();
+    }
     return result;
 }
 
@@ -702,31 +751,36 @@ napi_value JsContinuationManager::OnStartContinuationDeviceManager(napi_env env,
         return CreateJsUndefined(env);
     }
     size_t unwrapArgc = argc;
-    NapiAsyncTask::CompleteCallback complete =
-        [this, token, continuationExtraParams, unwrapArgc](napi_env env, NapiAsyncTask &task, int32_t status) {
+    size_t napiArgc = ARG_COUNT_THREE;
+    napi_value argv[ARG_COUNT_THREE] = { 0 };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &napiArgc, argv, nullptr, nullptr));
+    napi_value lastParam = (napiArgc <= unwrapArgc) ? nullptr : argv[unwrapArgc];
+    napi_value result = nullptr;
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = [this, token, continuationExtraParams, unwrapArgc, env, task = napiAsyncTask.get()]() {
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
         if (scope == nullptr) {
+            delete task;
             return;
         }
         int32_t errCode = (unwrapArgc == ARG_COUNT_ONE) ?
             DistributedAbilityManagerClient::GetInstance().StartDeviceManager(token) :
             DistributedAbilityManagerClient::GetInstance().StartDeviceManager(token, continuationExtraParams);
         if (errCode == ERR_OK) {
-            task.Resolve(env, CreateJsNull(env));
+            task->Resolve(env, CreateJsNull(env));
         } else {
             errCode = ErrorCodeReturn(errCode);
-            task.Reject(env, CreateJsError(env, errCode, ErrorMessageReturn(errCode)));
+            task->Reject(env, CreateJsError(env, errCode, ErrorMessageReturn(errCode)));
         }
         napi_close_handle_scope(env, scope);
+        delete task;
     };
-    size_t napiArgc = ARG_COUNT_THREE;
-    napi_value argv[ARG_COUNT_THREE] = { 0 };
-    NAPI_CALL(env, napi_get_cb_info(env, info, &napiArgc, argv, nullptr, nullptr));
-    napi_value lastParam = (napiArgc <= unwrapArgc) ? nullptr : argv[unwrapArgc];
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsContinuationManager::OnStartContinuationDeviceManager",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_immediate)) {
+        napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
+    } else {
+        napiAsyncTask.release();
+    }
     return result;
 }
 
