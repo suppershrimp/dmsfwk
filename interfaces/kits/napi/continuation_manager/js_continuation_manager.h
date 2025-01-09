@@ -21,12 +21,23 @@
 #include "continuation_extra_params.h"
 #include "device_connect_status.h"
 #include "js_device_selection_listener.h"
+#include "napi_common_util.h"
+#include "napi_error_code.h"
+#include "napi/native_node_api.h"
 #include "native_engine/native_engine.h"
 #include "nlohmann/json.hpp"
+
 
 namespace OHOS {
 namespace DistributedSchedule {
 using JsDeviceSelectionListenerPtr = std::shared_ptr<JsDeviceSelectionListener>;
+using namespace OHOS::AbilityRuntime;
+
+struct JsInfo {
+    int32_t token;
+    size_t unwrapArgc;
+    int32_t errCode;
+};
 
 class JsContinuationManager final {
 public:
@@ -50,12 +61,17 @@ public:
 private:
     using CallbackPair = std::pair<std::unique_ptr<NativeReference>, sptr<JsDeviceSelectionListener>>;
     napi_value OnRegister(napi_env env, napi_callback_info info);
+    std::function<void()> CreateRegisterAsyncTask(std::shared_ptr<ContinuationExtraParams> continuationExtraParams,
+        size_t unwrapArgc, int32_t errCode, napi_env env, std::unique_ptr<NapiAsyncTask> napiAsyncTask);
     napi_value OnUnregister(napi_env env, napi_callback_info info);
     napi_value OnRegisterDeviceSelectionCallback(napi_env env, napi_callback_info info);
     napi_value OnUnregisterDeviceSelectionCallback(napi_env env, napi_callback_info info);
     napi_value OnUpdateConnectStatus(napi_env env, napi_callback_info info);
     int32_t GetInfoForUpdateConnectStatus(napi_env env,
         napi_value *argv, int32_t &token, std::string &deviceId, DeviceConnectStatus &deviceConnectStatus);
+    std::function<void()> CreateDeviceManagerAsyncTask(
+        std::shared_ptr<ContinuationExtraParams> continuationExtraParams,
+        JsInfo jsInfo, napi_env env, std::unique_ptr<NapiAsyncTask> napiAsyncTask);
     napi_value OnStartDeviceManager(napi_env env, napi_callback_info info);
     int32_t CheckParamAndGetToken(napi_env env, size_t argc, napi_value *argv, int32_t &token);
     napi_value OnInitDeviceConnectStateObject(napi_env env, napi_callback_info info);
