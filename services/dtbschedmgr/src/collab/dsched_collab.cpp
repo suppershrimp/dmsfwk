@@ -514,6 +514,7 @@ bool DSchedCollab::IsStartForeground()
     IString *ao = IString::Query(value);
     if (ao != nullptr) {
         std::string startOpt = AAFwk::String::Unbox(ao);
+        HILOGI("startOpt is: %{public}s, isLocked is %{public}d", startOpt.c_str());
         return (startOpt == VALUE_START_OPTION_BACKGROUND) ? false : true;
     }
     return true;
