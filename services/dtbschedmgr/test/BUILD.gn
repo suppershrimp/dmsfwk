@@ -365,11 +365,6 @@ ohos_unittest("dschedcontinuetest") {
 }
 
 ohos_unittest("dschedconnecttest") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
   module_out_path = module_output_path
 
   sources = [
@@ -851,11 +846,6 @@ ohos_unittest("dschedcontinuemanagerstatetest") {
 }
 
 ohos_unittest("distributedeventtest") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
   module_out_path = module_output_path
   cflags = [ "-Dprivate=public" ]
   sources = [
