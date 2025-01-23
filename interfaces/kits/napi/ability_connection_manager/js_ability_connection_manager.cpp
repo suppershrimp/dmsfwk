@@ -797,7 +797,7 @@ napi_status JsAbilityConnectionManager::CreateConnectThreadsafeFunction(napi_env
 void JsAbilityConnectionManager::ConnectThreadsafeFunctionCallback(napi_env env, napi_value js_callback,
     void* context, void* data)
 {
-    HILOGD("called.");
+    HILOGI("called.");
     AsyncConnectCallbackInfo* asyncData = static_cast<AsyncConnectCallbackInfo*>(data);
     napi_value connectResultObj;
     napi_create_object(env, &connectResultObj);
@@ -825,6 +825,7 @@ void JsAbilityConnectionManager::ExecuteConnect(napi_env env, void *data)
     napi_threadsafe_function tsfn = asyncData->tsfn;
 
     AbilityConnectionManager::ConnectCallback connectCallback = [tsfn, asyncData](ConnectResult result) {
+        HILOGI("connectCallback called.");
         asyncData->result = result;
         napi_call_threadsafe_function(tsfn, asyncData, napi_tsfn_nonblocking);
     };
