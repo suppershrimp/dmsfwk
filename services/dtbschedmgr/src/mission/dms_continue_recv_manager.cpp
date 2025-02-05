@@ -266,29 +266,44 @@ int32_t DMSContinueRecvMgr::RetryPostBroadcast(const std::string& senderNetworkI
 }
 
 bool DMSContinueRecvMgr::GetFinalBundleName(DmsBundleInfo &distributedBundleInfo, std::string &finalBundleName,
-    AppExecFwk::BundleInfo &localBundleInfo, std::string &continueType)
+    AppExecFwk::BundleInfo &localBundleInfo, std::string &abilityName)
 {
     HILOGI("accountId: %{public}d", accountId_);
-    std::string bundleName = distributedBundleInfo.bundleName;
-    if (BundleManagerInternal::GetLocalBundleInfo(bundleName, localBundleInfo) == ERR_OK) {
-        finalBundleName = bundleName;
-        return true;
+    std::vector<std::string> srcContinueBundleNameSort;
+    for (const auto &item: distributedBundleInfo.dmsAbilityInfos){
+        if(item.abilityName == abilityName){
+            srcContinueBundleNameSort = item.continueBundleName;
+            break;
+        }
     }
+    srcContinueBundleNameSort.push_back(distributedBundleInfo.bundleName);
+
     std::vector<std::string> bundleNameList;
-    bool continueBundleGot = BundleManagerInternal::GetContinueBundle4Src(bundleName, bundleNameList);
-    if (!continueBundleGot) {
-        HILOGE("can not get local bundle info or continue bundle for bundle name: %{public}s", bundleName.c_str());
-        return false;
+    bool continueBundleGot = BundleManagerInternal::GetContinueBundle4Src(distributedBundleInfo.bundleName, bundleNameList);
+    if (!continueBundleGot || bundleNameList.empty()) {
+        if(BundleManagerInternal::GetLocalBundleInfo(distributedBundleInfo.bundleName, localBundleInfo) == ERR_OK){
+            bundleNameList.push_back(distributedBundleInfo.bundleName);
+        }else{
+            HILOGE("can not get local bundle info or continue bundle for bundle name: %{public}s", distributedBundleInfo.bundleName.c_str());
+            return false;
+        }
     }
 
-    for (std::string &bundleNameItem: bundleNameList) {
-        HILOGI("find dst bundle name for diff bundle continue. src developer id: %{public}s; ",
-            GetAnonymStr(distributedBundleInfo.developerId).c_str());
+    for (const auto &bundleNameInSrcConfig: srcContinueBundleNameSort){
+        if(std::find(bundleNameList.begin(), bundleNameList.end(), bundleNameInSrcConfig) == bundleNameList.end()){
+            continue;
+        }
+        if(BundleManagerInternal::GetLocalBundleInfo(bundleNameInSrcConfig, localBundleInfo) != ERR_OK){
+            continue;
+        }
+        if(bundleNameInSrcConfig == distributedBundleInfo.bundleName){
+            finalBundleName = bundleNameInSrcConfig;
+            return true;
+        }
         AppExecFwk::AppProvisionInfo appProvisionInfo;
-        if (BundleManagerInternal::GetAppProvisionInfo4CurrentUser(bundleNameItem, appProvisionInfo)
-            && appProvisionInfo.developerId == distributedBundleInfo.developerId
-            && BundleManagerInternal::GetLocalBundleInfo(bundleNameItem, localBundleInfo) == ERR_OK) {
-            finalBundleName = bundleNameItem;
+        if (BundleManagerInternal::GetAppProvisionInfo4CurrentUser(bundleNameInSrcConfig, appProvisionInfo)
+            && appProvisionInfo.developerId == distributedBundleInfo.developerId) {
+            finalBundleName = bundleNameInSrcConfig;
             return true;
         }
     }
@@ -315,51 +330,139 @@ void DMSContinueRecvMgr::FindContinueType(const DmsBundleInfo &distributedBundle
     continueType = "";
 }
 
+bool DMSContinueRecvMgr::CompleteContinueInfo(std::string srcNetWorkId,
+    uint16_t srcBundleNameId, uint8_t srcContinueTypeId, int32_t retryTimes, DSchedContinueInfo &continueInfo)
+{
+    if (retryTimes >= DBMS_RETRY_MAX_TIME) {
+        HILOGE("meet max retry time!");
+        return false;
+    }
+    DmsBundleInfo distributedBundleInfo;
+    if (!DmsBmStorage::GetInstance()->GetDistributedBundleInfo(
+            srcNetWorkId, srcBundleNameId, distributedBundleInfo)) {
+        HILOGW("get distributedBundleInfo failed, retryTimes = %{public}d", retryTimes);
+        DmsKvSyncE2E::GetInstance()->PushAndPullData(srcNetWorkId);
+        return CompleteContinueInfo(srcNetWorkId, srcBundleNameId, srcContinueTypeId, retryTimes + 1);
+    }
+
+    std::vector<std::string> srcContinueBundleNameSort;
+    uint32_t pos = 0;
+    bool abilityGot = false;
+    for (auto dmsAbilityInfo: distributedBundleInfo.dmsAbilityInfos) {
+        for (auto continueTypeElement: dmsAbilityInfo.continueType) {
+            if (pos == srcContinueTypeId) {
+                continueInfo.continueType_ = continueTypeElement;
+                continueInfo.sourceBundleName_ = distributedBundleInfo.bundleName;
+                continueInfo.sourceModuleName = dmsAbilityInfo.moduleName;
+                continueInfo.sourceAbilityName_ = dmsAbilityInfo.abilityName;
+                srcContinueBundleNameSort = dmsAbilityInfo.continueBundleName;
+                abilityGot = true;
+                break;
+            }
+            ++pos;
+        }
+        if (abilityGot) {
+            break;
+        }
+    }
+    if (!abilityGot) {
+        return false;
+    }
+    srcContinueBundleNameSort.push_back(continueInfo.sourceBundleName_);
+
+    std::vector<std::string> bundleNameList;
+    AppExecFwk::BundleInfo localBundleInfo;
+    bool continueBundleGot = BundleManagerInternal::GetContinueBundle4Src(continueInfo.sourceBundleName_,
+                                                                          bundleNameList);
+    if (!continueBundleGot || bundleNameList.empty()) {
+        if (BundleManagerInternal::GetLocalBundleInfo(continueInfo.sourceBundleName_, localBundleInfo) == ERR_OK) {
+            bundleNameList.push_back(distributedBundleInfo.bundleName);
+        } else {
+            HILOGE("can not get local bundle info or continue bundle for bundle name: %{public}s",
+                   distributedBundleInfo.bundleName.c_str());
+            return false;
+        }
+    }
+
+    for (const auto &bundleNameInSrcConfig: srcContinueBundleNameSort) {
+        if (std::find(bundleNameList.begin(), bundleNameList.end(), bundleNameInSrcConfig) == bundleNameList.end()) {
+            continue;
+        }
+        if (BundleManagerInternal::GetLocalBundleInfo(bundleNameInSrcConfig, localBundleInfo) != ERR_OK) {
+            continue;
+        }
+        if (bundleNameInSrcConfig == distributedBundleInfo.bundleName) {
+            continueInfo.sinkBundleName_ = bundleNameInSrcConfig;
+            break;
+        }
+        AppExecFwk::AppProvisionInfo appProvisionInfo;
+        if (BundleManagerInternal::GetAppProvisionInfo4CurrentUser(bundleNameInSrcConfig, appProvisionInfo)
+            && appProvisionInfo.developerId == distributedBundleInfo.developerId) {
+            continueInfo.sinkBundleName_ = bundleNameInSrcConfig;
+            break;
+        }
+    }
+
+    std::vector<AbilityInfo> localAbilityInfos = localBundleInfo.abiliityInfos;
+    bool diffModuleGot = false;
+    for (const auto &abilityInfoElement: localAbilityInfos) {
+        std::vector<std::string> continueTypes = abilityInfoElement.continueType;
+        for (std::string &continueTypeElement: continueTypes) {
+            ContinueTypeFormat(continueTypeElement);
+            HILOGD("UpdateElementInfo check sink continue ability, current: "
+                   "continueType: %{public}s; abilityName: %{public}s; moduleName: %{public}s",
+                   continueTypeElement.c_str(), abilityInfoElement.abilityName.c_str(),
+                   abilityInfoElement.moduleName.c_str());
+            if (continueTypeElement != continueInfo.continueType_) {
+                continue;
+            }
+            if (continueInfo.sourceModuleName == abilityInfoElement.moduleName) {
+                continueInfo.sinkModuleName = abilityInfoElement.moduleName;
+                continueInfo.sinkAbilityName_ = abilityInfoElement.name;
+                return true;
+            } else if (!diffModuleGot) {
+                diffModuleGot = true;
+                continueInfo.sinkModuleName = abilityInfoElement.moduleName;
+                continueInfo.sinkAbilityName_ = abilityInfoElement.name;
+                break;
+            }
+        }
+    }
+    return diffModuleGot;
+}
+
 int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNetworkId,
     uint16_t bundleNameId, uint8_t continueTypeId, const int32_t state, const int32_t retry)
 {
     HILOGI("start, senderNetworkId: %{public}s, bundleNameId: %{public}u, state: %{public}d. accountId: %{public}d.",
         GetAnonymStr(senderNetworkId).c_str(), bundleNameId, state, accountId_);
-    DmsBundleInfo distributedBundleInfo;
-    if (!DmsBmStorage::GetInstance()->GetDistributedBundleInfo(senderNetworkId, bundleNameId,
-        distributedBundleInfo)) {
-        HILOGW("get distributedBundleInfo failed, try = %{public}d", retry);
-        DmsKvSyncE2E::GetInstance()->PushAndPullData(senderNetworkId);
-        return RetryPostBroadcast(senderNetworkId, bundleNameId, continueTypeId, state, retry);
-    }
 
-    std::string bundleName = distributedBundleInfo.bundleName;
-    HILOGI("get distributedBundleInfo success, bundleName: %{public}s", bundleName.c_str());
-    std::string finalBundleName;
-    AppExecFwk::BundleInfo localBundleInfo;
-    std::string continueType;
-    DmsAbilityInfo abilityInfo;
-    FindContinueType(distributedBundleInfo, continueTypeId, continueType, abilityInfo);
-
-    if (!GetFinalBundleName(distributedBundleInfo, finalBundleName, localBundleInfo, continueType)) {
+    DSchedContinueInfo continueInfo;
+    if (!CompleteContinueInfo(senderNetworkId, bundleNameId, continueTypeId, retry, continueInfo)) {
         HILOGE("The app is not installed on the local device.");
         NotifyIconDisappear(bundleNameId, senderNetworkId, state);
         return INVALID_PARAMETERS_ERR;
     }
-    HILOGI("got finalBundleName: %{public}s", finalBundleName.c_str());
-
+    HILOGI("got finalBundleName: %{public}s", continueInfo.sinkBundleName_.c_str());
+    AppExecFwk::BundleInfo localBundleInfo;
+    BundleManagerInternal::GetLocalBundleInfo(continueInfo.sinkBundleName_, localBundleInfo);
     if (localBundleInfo.applicationInfo.bundleType != AppExecFwk::BundleType::APP) {
         HILOGE("The bundleType must be app, but it is %{public}d", localBundleInfo.applicationInfo.bundleType);
         NotifyIconDisappear(bundleNameId, senderNetworkId, state);
         return INVALID_PARAMETERS_ERR;
     }
     if (state == ACTIVE
-        && !IsBundleContinuable(localBundleInfo, abilityInfo.abilityName, abilityInfo.moduleName, continueType)) {
-        HILOGE("Bundle %{public}s is not continuable", finalBundleName.c_str());
+        && !IsBundleContinuable(localBundleInfo, continueInfo.sourceAbilityName_, continueInfo.sourceModuleName, continueInfo.continueType_)) {
+        HILOGE("Bundle %{public}s is not continuable", continueInfo.sinkBundleName_.c_str());
         NotifyIconDisappear(bundleNameId, senderNetworkId, state);
         return BUNDLE_NOT_CONTINUABLE;
     }
 
-    int32_t ret = VerifyBroadcastSource(senderNetworkId, bundleName, finalBundleName, continueType, state);
+    int32_t ret = VerifyBroadcastSource(senderNetworkId, continueInfo.sourceBundleName_, continueInfo.sinkBundleName_, continueInfo.continueType_, state);
     if (ret != ERR_OK) {
         return ret;
     }
-    ret = NotifyDockDisplay(bundleNameId, currentIconInfo(senderNetworkId, bundleName, finalBundleName, continueType),
+    ret = NotifyDockDisplay(bundleNameId, currentIconInfo(senderNetworkId, continueInfo.sourceBundleName_, continueInfo.sinkBundleName_, continueInfo.continueType_),
         state);
     if (ret != ERR_OK) {
         return ret;

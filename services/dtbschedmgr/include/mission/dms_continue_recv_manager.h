@@ -31,6 +31,7 @@
 #include "distributed_mission_focused_listener.h"
 #include "event_handler.h"
 #include "mission_info.h"
+#include "dsched_continue.h"
 
 namespace OHOS {
 namespace DistributedSchedule {
@@ -96,7 +97,9 @@ private:
     int32_t RetryPostBroadcast(const std::string& senderNetworkId, uint16_t bundleNameId, uint8_t continueTypeId,
         const int32_t state, const int32_t retry);
     bool GetFinalBundleName(DmsBundleInfo& distributedBundleInfo,  std::string &finalBundleName,
-        AppExecFwk::BundleInfo& localBundleInfo, std::string& continueType);
+        AppExecFwk::BundleInfo& localBundleInfo, std::string& abilityName);
+    bool CompleteContinueInfo(std::string srcNetWorkId,
+        uint16_t srcBundleNameId, uint8_t srcContinueTypeId, int32_t retryTimes, DSchedContinueInfo &continueInfo);
     int32_t VerifyBroadcastSource(const std::string& senderNetworkId, const std::string& srcBundleName,
         const std::string& sinkBundleName, const std::string& continueType, const int32_t state);
     void PostOnBroadcastBusiness(const std::string& senderNetworkId, uint16_t bundleNameId, uint8_t continueTypeId,
