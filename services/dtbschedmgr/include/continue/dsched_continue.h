@@ -91,11 +91,11 @@ public:
     std::string sourceBundleName_;
     std::string sourceModuleName;
     std::string sourceAbilityName_;
-    std::string continueType_;
     std::string sinkDeviceId_;
     std::string sinkBundleName_;
     std::string sinkModuleName;
     std::string sinkAbilityName_;
+    std::string continueType_;
     int32_t missionId_ = 0;
     std::string continueSessionId_;
     int32_t sinkMissionId_ = 0;

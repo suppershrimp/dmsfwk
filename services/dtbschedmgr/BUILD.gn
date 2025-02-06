@@ -137,6 +137,7 @@ ohos_shared_library("distributedschedsvr") {
     "src/collaborate/dsched_collaborate_callback_mgr.cpp",
     "src/connect_death_recipient.cpp",
     "src/continue/dsched_continue.cpp",
+    "src/continue/util/dsched_continue_info_util.cpp",
     "src/continue/dsched_continue_event.cpp",
     "src/continue/dsched_continue_event_handler.cpp",
     "src/continue/dsched_continue_manager.cpp",
