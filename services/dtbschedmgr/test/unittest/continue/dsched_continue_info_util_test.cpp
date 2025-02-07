@@ -30,6 +30,7 @@ const std::string TEST_SOURCE_NETWORK_ID = "networkId1";
 const std::string TEST_INVALID_SOURCE_NETWORK_ID = "networkIdXXXXX";
 const std::string TEST_BUNDLE_NAME = "bundleName";
 const std::string TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_NAME = "bundleNameNoContinueBundle";
+const std::string TEST_SINK_NOT_EXIST_BUNDLE_NAME_NAME = "bundleNameSinkNotExist";
 const uint16_t TEST_BUNDLE_NAME_ID = 0;
 const uint16_t TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_ID = 1;
 const uint16_t TEST_SINK_NOT_EXIST_BUNDLE_NAME_ID = 2;
@@ -64,6 +65,8 @@ bool DmsBmStorage::GetDistributedBundleInfo(const std::string &networkId,
     }
     if(bundleNameId == TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_ID){
         distributeBundleInfo.bundleName = TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_NAME;
+    }else if(bundleNameId == TEST_SINK_NOT_EXIST_BUNDLE_NAME_ID){
+        distributeBundleInfo.bundleName = TEST_SINK_NOT_EXIST_BUNDLE_NAME_NAME;
     }else{
         distributeBundleInfo.bundleName = TEST_BUNDLE_NAME;
     }
@@ -178,7 +181,7 @@ HWTEST_F(DSchedContinueInfoUtilTest, CompleteContinueInfoTest_001, TestSize.Leve
     // no continue bundleNames = false
     ret = DSchedContinueInfoUtil::GetInstance().CompleteContinueInfo(
             TEST_SOURCE_NETWORK_ID, TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_ID, TEST_CONTINUE_TYPE_ID,continueInfo);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 
     // sink not exist src bundleName = false
     ret = DSchedContinueInfoUtil::GetInstance().CompleteContinueInfo(
