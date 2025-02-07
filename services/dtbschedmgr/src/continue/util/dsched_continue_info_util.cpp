@@ -124,7 +124,7 @@ bool DSchedContinueInfoUtil::CompleteSrcContinueInfo(DSchedContinueInfo &continu
             if (pos == srcContinueTypeId) {
                 continueInfo.continueType_ = continueTypeElement;
                 continueInfo.sourceBundleName_ = distributedBundleInfo.bundleName;
-                continueInfo.sourceModuleName = dmsAbilityInfo.moduleName;
+                continueInfo.sourceModuleName_ = dmsAbilityInfo.moduleName;
                 continueInfo.sourceAbilityName_ = dmsAbilityInfo.abilityName;
                 srcContinueBundleNameSort = dmsAbilityInfo.continueBundleName;
                 abilityGot = true;
@@ -152,7 +152,7 @@ bool DSchedContinueInfoUtil::CompleteSrcContinueInfo(DSchedContinueInfo &continu
             if (srcContinueType == continueTypeElement) {
                 continueInfo.continueType_ = continueTypeElement;
                 continueInfo.sourceBundleName_ = distributedBundleInfo.bundleName;
-                continueInfo.sourceModuleName = dmsAbilityInfo.moduleName;
+                continueInfo.sourceModuleName_ = dmsAbilityInfo.moduleName;
                 continueInfo.sourceAbilityName_ = dmsAbilityInfo.abilityName;
                 srcContinueBundleNameSort = dmsAbilityInfo.continueBundleName;
                 abilityGot = true;
@@ -201,13 +201,13 @@ bool DSchedContinueInfoUtil::CompleteSinkContinueInfo(DSchedContinueInfo &contin
             if (!IsSameContinueType(continueTypeElement, continueInfo.continueType_)) {
                 continue;
             }
-            if (continueInfo.sourceModuleName == abilityInfoElement.moduleName) {
-                continueInfo.sinkModuleName = abilityInfoElement.moduleName;
+            if (continueInfo.sourceModuleName_ == abilityInfoElement.moduleName) {
+                continueInfo.sinkModuleName_ = abilityInfoElement.moduleName;
                 continueInfo.sinkAbilityName_ = abilityInfoElement.name;
                 return true;
             } else if (!diffModuleGot) {
                 diffModuleGot = true;
-                continueInfo.sinkModuleName = abilityInfoElement.moduleName;
+                continueInfo.sinkModuleName_ = abilityInfoElement.moduleName;
                 continueInfo.sinkAbilityName_ = abilityInfoElement.name;
                 break;
             }
