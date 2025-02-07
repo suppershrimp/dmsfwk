@@ -247,7 +247,7 @@ HWTEST_F(DMSContinueManagerTest, testDealOnBroadcastBusiness001, TestSize.Level3
     recvMgr->PostOnBroadcastBusiness(senderNetworkId, bundleNameId, continueTypeId, state);
 
     int32_t ret = recvMgr->DealOnBroadcastBusiness(senderNetworkId, bundleNameId, continueTypeId, state, 0);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
 
     ret = recvMgr->DealOnBroadcastBusiness(senderNetworkId, bundleNameId, continueTypeId, state, DBMS_RETRY_MAX_TIME);
     EXPECT_EQ(ret, INVALID_PARAMETERS_ERR);
@@ -439,25 +439,6 @@ HWTEST_F(DMSContinueManagerTest, testGetContinueType_001, TestSize.Level1)
 
     EXPECT_FALSE(recvMgr->GetContinueType(sinkBundleName).empty());
     DTEST_LOG << "DMSContinueManagerTest testGetContinueType_001 end" << std::endl;
-}
-
-/**
- * @tc.name: testGetFinalBundleName_001
- * @tc.desc: test GetFinalBundleName
- * @tc.type: FUNC
- */
-HWTEST_F(DMSContinueManagerTest, testGetFinalBundleName_001, TestSize.Level1)
-{
-    DTEST_LOG << "DMSContinueManagerTest testGetFinalBundleName_001 start" << std::endl;
-    DmsBundleInfo info;
-    std::string finalBundleName;
-    AppExecFwk::BundleInfo localBundleInfo;
-    std::string continueType;
-    auto recvMgr = MultiUserManager::GetInstance().GetCurrentRecvMgr();
-    ASSERT_NE(nullptr, recvMgr);
-    bool ret = recvMgr->GetFinalBundleName(info, finalBundleName, localBundleInfo, continueType);
-    EXPECT_EQ(ret, false);
-    DTEST_LOG << "DMSContinueManagerTest testGetFinalBundleName_001 end" << std::endl;
 }
 
 /**

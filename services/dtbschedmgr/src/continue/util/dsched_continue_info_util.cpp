@@ -222,7 +222,7 @@ bool DSchedContinueInfoUtil::CompleteSinkContinueInfo(DSchedContinueInfo &contin
                 diffModuleGot = true;
                 continueInfo.sinkModuleName_ = abilityInfoElement.moduleName;
                 continueInfo.sinkAbilityName_ = abilityInfoElement.name;
-                break;
+                continue;
             }
         }
     }

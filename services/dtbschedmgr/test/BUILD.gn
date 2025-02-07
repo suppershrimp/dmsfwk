@@ -474,6 +474,34 @@ ohos_unittest("dmscontinuemanagertest") {
   subsystem_name = "ability"
 }
 
+ohos_unittest("dmscontinueinfoutiltest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  module_out_path = module_output_path
+  cflags = [ "-Dprivate=public" ]
+  sources = [
+    "unittest/continue/dsched_continue_info_util_test.cpp",
+  ]
+  sources += dtbschedmgr_sources
+
+  configs = [
+    ":test_config",
+    "${distributed_service}/dtbschedmgr/test/resource:coverage_flags",
+  ]
+  configs += dsched_configs
+
+  if (is_standard_system) {
+    external_deps = dsched_external_deps
+    external_deps += [ "config_policy:configpolicy_util" ]
+    public_deps = dsched_public_deps
+  }
+  part_name = "dmsfwk"
+  subsystem_name = "ability"
+}
+
 ohos_unittest("dmsmissionmanagertest") {
   module_out_path = module_output_path
   cflags = [ "-Dprivate=public" ]
