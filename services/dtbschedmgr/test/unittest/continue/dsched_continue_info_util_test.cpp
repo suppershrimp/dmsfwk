@@ -124,6 +124,9 @@ bool BundleManagerInternal::GetContinueBundle4Src(const std::string &srcBundleNa
 int32_t BundleManagerInternal::GetLocalBundleInfo(const std::string& bundleName,
     AppExecFwk::BundleInfo &localBundleInfo)
 {
+    if(bundleName == TEST_SINK_NOT_EXIST_BUNDLE_NAME_NAME){
+        return INVALID_PARAMETERS_ERR;
+    }
     AppExecFwk::AbilityInfo abilityInfo3;
     abilityInfo3.moduleName = "moduleName3";
     abilityInfo3.name = "abilityName3";
