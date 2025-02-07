@@ -21,9 +21,11 @@
 namespace OHOS {
 namespace DistributedSchedule {
 namespace {
+const std::string TAG = "DSchedContinueInfoUtil";
 constexpr int32_t DBMS_RETRY_MAX_TIME = 5;
 const std::string QUICK_START_CONFIGURATION = "_ContinueQuickStart";
 }
+IMPLEMENT_SINGLE_INSTANCE(DSchedContinueInfoUtil);
 bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, uint16_t srcBundleNameId,
     uint8_t srcContinueTypeId, DSchedContinueInfo &continueInfo, int32_t retryTimes)
 {
@@ -36,11 +38,13 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, uint
             srcNetWorkId, srcBundleNameId, distributedBundleInfo)) {
         HILOGW("get distributedBundleInfo failed, retryTimes = %{public}d", retryTimes);
         DmsKvSyncE2E::GetInstance()->PushAndPullData(srcNetWorkId);
-        return CompleteContinueInfo(srcNetWorkId, srcBundleNameId, srcContinueTypeId, continueInfo, retryTimes + 1);
+        return CompleteContinueInfo(srcNetWorkId, srcBundleNameId, srcContinueTypeId, continueInfo,
+                                    retryTimes + 1);
     }
 
     std::vector<std::string> srcContinueBundleNameSort;
-    if (!CompleteSrcContinueInfo(continueInfo, distributedBundleInfo, srcContinueTypeId, srcContinueBundleNameSort)) {
+    if (!CompleteSrcContinueInfo(continueInfo, distributedBundleInfo, srcContinueTypeId,
+                                 srcContinueBundleNameSort)) {
         return false;
     }
 
@@ -49,7 +53,8 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, uint
     bool continueBundleGot = BundleManagerInternal::GetContinueBundle4Src(continueInfo.sourceBundleName_,
                                                                           bundleNameList);
     if (!continueBundleGot || bundleNameList.empty()) {
-        if (BundleManagerInternal::GetLocalBundleInfo(continueInfo.sourceBundleName_, localBundleInfo) == ERR_OK) {
+        if (BundleManagerInternal::GetLocalBundleInfo(continueInfo.sourceBundleName_, localBundleInfo) ==
+            ERR_OK) {
             bundleNameList.push_back(distributedBundleInfo.bundleName);
         } else {
             HILOGE("can not get local bundle info or continue bundle for bundle name: %{public}s",
@@ -58,8 +63,10 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, uint
         }
     }
 
-    return CompleteSinkContinueInfo(continueInfo, distributedBundleInfo, srcContinueBundleNameSort, bundleNameList);
+    return CompleteSinkContinueInfo(continueInfo, distributedBundleInfo, srcContinueBundleNameSort,
+                                    bundleNameList);
 }
+
 bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, std::string srcBundleName,
     std::string srcContinueType, DSchedContinueInfo &continueInfo, int32_t retryTimes)
 {
@@ -69,23 +76,25 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, std:
     }
     DmsBundleInfo distributedBundleInfo;
     if (!DmsBmStorage::GetInstance()->GetDistributedBundleInfo(
-        srcNetWorkId, srcBundleName, distributedBundleInfo)) {
+            srcNetWorkId, srcBundleName, distributedBundleInfo)) {
         HILOGW("get distributedBundleInfo failed, retryTimes = %{public}d", retryTimes);
         DmsKvSyncE2E::GetInstance()->PushAndPullData(srcNetWorkId);
         return CompleteContinueInfo(srcNetWorkId, srcBundleName, srcContinueType, continueInfo, retryTimes + 1);
     }
 
     std::vector<std::string> srcContinueBundleNameSort;
-    if (!CompleteSrcContinueInfo(continueInfo, distributedBundleInfo, srcContinueType, srcContinueBundleNameSort)) {
+    if (!CompleteSrcContinueInfo(continueInfo, distributedBundleInfo, srcContinueType,
+                                 srcContinueBundleNameSort)) {
         return false;
     }
 
     std::vector<std::string> bundleNameList;
     AppExecFwk::BundleInfo localBundleInfo;
     bool continueBundleGot = BundleManagerInternal::GetContinueBundle4Src(continueInfo.sourceBundleName_,
-        bundleNameList);
+                                                                          bundleNameList);
     if (!continueBundleGot || bundleNameList.empty()) {
-        if (BundleManagerInternal::GetLocalBundleInfo(continueInfo.sourceBundleName_, localBundleInfo) == ERR_OK) {
+        if (BundleManagerInternal::GetLocalBundleInfo(continueInfo.sourceBundleName_, localBundleInfo) ==
+            ERR_OK) {
             bundleNameList.push_back(distributedBundleInfo.bundleName);
         } else {
             HILOGE("can not get local bundle info or continue bundle for bundle name: %{public}s",
@@ -94,7 +103,8 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, std:
         }
     }
 
-    return CompleteSinkContinueInfo(continueInfo, distributedBundleInfo, srcContinueBundleNameSort, bundleNameList);
+    return CompleteSinkContinueInfo(continueInfo, distributedBundleInfo, srcContinueBundleNameSort,
+                                    bundleNameList);
 }
 
 bool DSchedContinueInfoUtil::IsSameContinueType(std::string continueType1, std::string continueType2)
@@ -109,7 +119,7 @@ bool DSchedContinueInfoUtil::IsSameContinueType(std::string continueType1, std::
     }
     bool isSameContinueType = continueType1 == continueType2 || continueType1Format == continueType2;
     HILOGD("compare is same continue type: they are %{public}s for types: %{public}s; %{public}s",
-        isSameContinueType ? "the same" : "different", continueType1.c_str(), continueType2.c_str());
+           isSameContinueType ? "the same" : "different", continueType1.c_str(), continueType2.c_str());
     return isSameContinueType;
 }
 
@@ -140,6 +150,7 @@ bool DSchedContinueInfoUtil::CompleteSrcContinueInfo(DSchedContinueInfo &continu
         return false;
     }
     srcContinueBundleNameSort.push_back(continueInfo.sourceBundleName_);
+    return true;
 }
 
 bool DSchedContinueInfoUtil::CompleteSrcContinueInfo(DSchedContinueInfo &continueInfo,
@@ -167,15 +178,17 @@ bool DSchedContinueInfoUtil::CompleteSrcContinueInfo(DSchedContinueInfo &continu
         return false;
     }
     srcContinueBundleNameSort.push_back(continueInfo.sourceBundleName_);
+    return true;
 }
 
 bool DSchedContinueInfoUtil::CompleteSinkContinueInfo(DSchedContinueInfo &continueInfo,
-    DmsBundleInfo &distributedBundleInfo,std::vector<std::string> &srcContinueBundleNameSort,
+    DmsBundleInfo &distributedBundleInfo, std::vector<std::string> &srcContinueBundleNameSort,
     std::vector<std::string> &bundleNameList)
 {
     AppExecFwk::BundleInfo localBundleInfo;
     for (const auto &bundleNameInSrcConfig: srcContinueBundleNameSort) {
-        if (std::find(bundleNameList.begin(), bundleNameList.end(), bundleNameInSrcConfig) == bundleNameList.end()) {
+        if (std::find(bundleNameList.begin(), bundleNameList.end(), bundleNameInSrcConfig) ==
+            bundleNameList.end()) {
             continue;
         }
         if (BundleManagerInternal::GetLocalBundleInfo(bundleNameInSrcConfig, localBundleInfo) != ERR_OK) {
@@ -193,7 +206,7 @@ bool DSchedContinueInfoUtil::CompleteSinkContinueInfo(DSchedContinueInfo &contin
         }
     }
 
-    std::vector<AbilityInfo> localAbilityInfos = localBundleInfo.abiliityInfos;
+    std::vector<AbilityInfo> localAbilityInfos = localBundleInfo.abilityInfos;
     bool diffModuleGot = false;
     for (const auto &abilityInfoElement: localAbilityInfos) {
         std::vector<std::string> continueTypes = abilityInfoElement.continueType;

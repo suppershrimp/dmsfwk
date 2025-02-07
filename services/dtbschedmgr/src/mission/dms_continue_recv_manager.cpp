@@ -273,7 +273,8 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
         GetAnonymStr(senderNetworkId).c_str(), bundleNameId, state, accountId_);
 
     DSchedContinueInfo continueInfo;
-    if (!DSchedContinueInfoUtil::GetInstance().CompleteContinueInfo(senderNetworkId, bundleNameId, continueTypeId, continueInfo, retry)) {
+    if (!DSchedContinueInfoUtil::GetInstance().CompleteContinueInfo(senderNetworkId, bundleNameId, continueTypeId,
+                                                                    continueInfo, retry)) {
         HILOGE("The app is not installed on the local device.");
         NotifyIconDisappear(bundleNameId, senderNetworkId, state);
         return INVALID_PARAMETERS_ERR;
@@ -287,18 +288,21 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
         return INVALID_PARAMETERS_ERR;
     }
     if (state == ACTIVE
-        && !IsBundleContinuable(localBundleInfo, continueInfo.sourceAbilityName_, continueInfo.sourceModuleName, continueInfo.continueType_)) {
+        && !IsBundleContinuable(localBundleInfo, continueInfo.sourceAbilityName_, continueInfo.sourceModuleName_,
+                                continueInfo.continueType_)) {
         HILOGE("Bundle %{public}s is not continuable", continueInfo.sinkBundleName_.c_str());
         NotifyIconDisappear(bundleNameId, senderNetworkId, state);
         return BUNDLE_NOT_CONTINUABLE;
     }
 
-    int32_t ret = VerifyBroadcastSource(senderNetworkId, continueInfo.sourceBundleName_, continueInfo.sinkBundleName_, continueInfo.continueType_, state);
+    int32_t ret = VerifyBroadcastSource(senderNetworkId, continueInfo.sourceBundleName_, continueInfo.sinkBundleName_,
+                                        continueInfo.continueType_, state);
     if (ret != ERR_OK) {
         return ret;
     }
-    ret = NotifyDockDisplay(bundleNameId, currentIconInfo(senderNetworkId, continueInfo.sourceBundleName_, continueInfo.sinkBundleName_, continueInfo.continueType_),
-        state);
+    ret = NotifyDockDisplay(bundleNameId, currentIconInfo(senderNetworkId, continueInfo.sourceBundleName_,
+                                                          continueInfo.sinkBundleName_, continueInfo.continueType_),
+                            state);
     if (ret != ERR_OK) {
         return ret;
     }
