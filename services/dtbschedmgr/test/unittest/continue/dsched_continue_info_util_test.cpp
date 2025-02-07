@@ -29,8 +29,10 @@ namespace DistributedSchedule {
 const std::string TEST_SOURCE_NETWORK_ID = "networkId1";
 const std::string TEST_INVALID_SOURCE_NETWORK_ID = "networkIdXXXXX";
 const std::string TEST_BUNDLE_NAME = "bundleName";
+const std::string TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_NAME = "bundleNameNoContinueBundle";
 const uint16_t TEST_BUNDLE_NAME_ID = 0;
-const uint16_t TEST_SINK_NOT_EXIST_BUNDLE_NAME_ID = 1;
+const uint16_t TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_ID = 1;
+const uint16_t TEST_SINK_NOT_EXIST_BUNDLE_NAME_ID = 2;
 
 const uint8_t TEST_CONTINUE_TYPE_ID = 0;
 const uint8_t TEST_INVALID_CONTINUE_TYPE_ID = 1;
@@ -60,21 +62,25 @@ bool DmsBmStorage::GetDistributedBundleInfo(const std::string &networkId,
     if(networkId == TEST_INVALID_SOURCE_NETWORK_ID){
         return false;
     }
+    if(bundleNameId == TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_ID){
+        distributeBundleInfo.bundleName = TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_NAME;
+    }else{
         distributeBundleInfo.bundleName = TEST_BUNDLE_NAME;
-        distributeBundleInfo.developerId = "developerId";
-        distributeBundleInfo.bundleNameId = bundleNameId;
-        std::vector<DmsAbilityInfo> dmsAbilityInfos;
-        DmsAbilityInfo dmsAbilityInfo;
-        dmsAbilityInfo.abilityName = "abilityName";
-        dmsAbilityInfo.continueType.push_back("continueType");
-        dmsAbilityInfo.continueTypeId.push_back(0);
-        dmsAbilityInfo.continueBundleName.push_back("bundleName3");
-        dmsAbilityInfo.continueBundleName.push_back("bundleName2");
-        dmsAbilityInfo.continueBundleName.push_back("bundleName1");
-        dmsAbilityInfo.continueBundleName.push_back(TEST_BUNDLE_NAME);
-        dmsAbilityInfos.push_back(dmsAbilityInfo);
-        distributeBundleInfo.dmsAbilityInfos = dmsAbilityInfos;
-        return true;
+    }
+    distributeBundleInfo.developerId = "developerId";
+    distributeBundleInfo.bundleNameId = bundleNameId;
+    std::vector<DmsAbilityInfo> dmsAbilityInfos;
+    DmsAbilityInfo dmsAbilityInfo;
+    dmsAbilityInfo.abilityName = "abilityName";
+    dmsAbilityInfo.continueType.push_back("continueType");
+    dmsAbilityInfo.continueTypeId.push_back(0);
+    dmsAbilityInfo.continueBundleName.push_back("bundleName3");
+    dmsAbilityInfo.continueBundleName.push_back("bundleName2");
+    dmsAbilityInfo.continueBundleName.push_back("bundleName1");
+    dmsAbilityInfo.continueBundleName.push_back(TEST_BUNDLE_NAME);
+    dmsAbilityInfos.push_back(dmsAbilityInfo);
+    distributeBundleInfo.dmsAbilityInfos = dmsAbilityInfos;
+    return true;
 }
 
 bool GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
@@ -115,22 +121,22 @@ bool BundleManagerInternal::GetContinueBundle4Src(const std::string &srcBundleNa
 int32_t BundleManagerInternal::GetLocalBundleInfo(const std::string& bundleName,
     AppExecFwk::BundleInfo &localBundleInfo)
 {
-    AbilityInfo abilityInfo3;
+    AppExecFwk::AbilityInfo abilityInfo3;
     abilityInfo3.moduleName = "moduleName3";
     abilityInfo3.name = "abilityName3";
-    abilityInfo3.continueType = "continueType3";
+    abilityInfo3.continueType.push_back("continueType3");
     localBundleInfo.abilityInfos.push_back(abilityInfo3);
 
-    AbilityInfo abilityInfo2;
-    abilityInfo2.moduleName = "moduleName3";
-    abilityInfo2.name = "abilityName3";
-    abilityInfo2.continueType = "continueType3";
+    AppExecFwk::AbilityInfo abilityInfo2;
+    abilityInfo2.moduleName = "moduleName2";
+    abilityInfo2.name = "abilityName2";
+    abilityInfo2.continueType.push_back("continueType2");
     localBundleInfo.abilityInfos.push_back(abilityInfo2);
 
-    AbilityInfo abilityInfo;
+    AppExecFwk::AbilityInfo abilityInfo;
     abilityInfo.moduleName = "moduleName";
     abilityInfo.name = "abilityName";
-    abilityInfo.continueType = "continueType";
+    abilityInfo.continueType.push_back("continueType");
     localBundleInfo.abilityInfos.push_back(abilityInfo);
 
     return ERR_OK;
@@ -171,7 +177,7 @@ HWTEST_F(DSchedContinueInfoUtilTest, CompleteContinueInfoTest_001, TestSize.Leve
 
     // no continue bundleNames = false
     ret = DSchedContinueInfoUtil::GetInstance().CompleteContinueInfo(
-            TEST_SOURCE_NETWORK_ID, 100, TEST_CONTINUE_TYPE_ID,continueInfo);
+            TEST_SOURCE_NETWORK_ID, TEST_EMPTY_CONTINUE_BUNDLE_BUNDLE_ID, TEST_CONTINUE_TYPE_ID,continueInfo);
     EXPECT_FALSE(ret);
 
     // sink not exist src bundleName = false
