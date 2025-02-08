@@ -209,7 +209,7 @@ bool DSchedContinueInfoUtil::CompleteSinkContinueInfo(DSchedContinueInfo &contin
     DmsBundleInfo &distributedBundleInfo, std::vector<std::string> &srcContinueBundleNameSort,
     std::vector<std::string> &bundleNameList)
 {
-    HILOGI("start complete sink bundle info", distributedBundleInfo.bundleName.c_str());
+    HILOGI("start complete sink bundle info");
     AppExecFwk::BundleInfo localBundleInfo;
     for (const auto &bundleNameInSrcConfig: srcContinueBundleNameSort) {
         HILOGD("compare bundle name in src config: %{public}s", bundleNameInSrcConfig.c_str());
