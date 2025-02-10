@@ -89,7 +89,8 @@ bool DmsBmStorage::GetDistributedBundleInfo(const std::string &networkId,
 }
 
 bool DmsBmStorage::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
-    DmsBundleInfo &distributeBundleInfo){
+    DmsBundleInfo &distributeBundleInfo)
+{
     if (networkId == TEST_INVALID_SOURCE_NETWORK_ID) {
         return false;
     }

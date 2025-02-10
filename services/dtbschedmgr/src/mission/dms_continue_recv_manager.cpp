@@ -281,8 +281,10 @@ int32_t DMSContinueRecvMgr::DealOnBroadcastBusiness(const std::string& senderNet
     }
     HILOGI("got finalBundleName: %{public}s", continueInfo.sinkBundleName_.c_str());
     AppExecFwk::BundleInfo localBundleInfo;
-    int32_t localBundleInfoQueryResult = BundleManagerInternal::GetLocalBundleInfo(continueInfo.sinkBundleName_, localBundleInfo);
-    if (localBundleInfoQueryResult != ERR_OK || localBundleInfo.applicationInfo.bundleType != AppExecFwk::BundleType::APP) {
+    int32_t localBundleInfoQueryResult = BundleManagerInternal::GetLocalBundleInfo(continueInfo.sinkBundleName_,
+                                                                                   localBundleInfo);
+    if (localBundleInfoQueryResult != ERR_OK ||
+        localBundleInfo.applicationInfo.bundleType != AppExecFwk::BundleType::APP) {
         HILOGE("The bundleType must be app, but it is %{public}d", localBundleInfo.applicationInfo.bundleType);
         NotifyIconDisappear(bundleNameId, senderNetworkId, state);
         return INVALID_PARAMETERS_ERR;

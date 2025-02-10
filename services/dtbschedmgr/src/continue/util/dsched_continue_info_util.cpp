@@ -38,7 +38,7 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, uint
     }
     DmsBundleInfo distributedBundleInfo;
     if (!DmsBmStorage::GetInstance()->GetDistributedBundleInfo(
-            srcNetWorkId, srcBundleNameId, distributedBundleInfo)) {
+        srcNetWorkId, srcBundleNameId, distributedBundleInfo)) {
         HILOGW("get distributedBundleInfo failed, retryTimes = %{public}d", retryTimes);
         DmsKvSyncE2E::GetInstance()->PushAndPullData(srcNetWorkId);
         return CompleteContinueInfo(srcNetWorkId, srcBundleNameId, srcContinueTypeId, continueInfo,
@@ -83,7 +83,7 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, std:
     }
     DmsBundleInfo distributedBundleInfo;
     if (!DmsBmStorage::GetInstance()->GetDistributedBundleInfo(
-            srcNetWorkId, srcBundleName, distributedBundleInfo)) {
+        srcNetWorkId, srcBundleName, distributedBundleInfo)) {
         HILOGW("get distributedBundleInfo failed, retryTimes = %{public}d", retryTimes);
         DmsKvSyncE2E::GetInstance()->PushAndPullData(srcNetWorkId);
         return CompleteContinueInfo(srcNetWorkId, srcBundleName, std::move(srcContinueType), continueInfo, retryTimes + 1);
@@ -104,7 +104,8 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, std:
         AppExecFwk::BundleInfo localBundleInfo;
         if (BundleManagerInternal::GetLocalBundleInfo(continueInfo.sourceBundleName_, localBundleInfo) ==
             ERR_OK) {
-            HILOGI("same bundle is on the sink as src bundle name: %{public}s", distributedBundleInfo.bundleName.c_str());
+            HILOGI("same bundle is on the sink as src bundle name: %{public}s",
+                distributedBundleInfo.bundleName.c_str());
             bundleNameList.push_back(distributedBundleInfo.bundleName);
         } else {
             HILOGE("can not get local bundle info or continue bundle for bundle name: %{public}s",
@@ -211,6 +212,51 @@ bool DSchedContinueInfoUtil::CompleteSinkContinueInfo(DSchedContinueInfo &contin
 {
     HILOGI("start complete sink bundle info");
     AppExecFwk::BundleInfo localBundleInfo;
+    if(!CompareDstBundleName(continueInfo, distributedBundleInfo, srcContinueBundleNameSort,
+        bundleNameList, localBundleInfo)){
+        HILOGE("No dst bundle name matches for src bundle name: %{public}s", distributedBundleInfo.bundleName.c_str());
+        return false;
+    }
+
+    std::vector<AbilityInfo> localAbilityInfos = localBundleInfo.abilityInfos;
+    bool diffModuleGot = false;
+    for (const auto &abilityInfoElement: localAbilityInfos) {
+        std::vector<std::string> continueTypes = abilityInfoElement.continueType;
+        for (std::string &continueTypeElement: continueTypes) {
+            HILOGD("compare ability, continue type: %{public}s; ability name: %{public}s",
+                continueTypeElement.c_str(), abilityInfoElement.name.c_str());
+            if (!IsSameContinueType(continueTypeElement, continueInfo.continueType_)) {
+                HILOGD("continue type is not same as src");
+                continue;
+            }
+            if (continueInfo.sourceModuleName_ == abilityInfoElement.moduleName) {
+                HILOGD("got sink ability info that module is same as src."
+                       "ability name: %{public}s; module name: %{public}s",
+                    abilityInfoElement.name.c_str(), abilityInfoElement.moduleName.c_str());
+                continueInfo.sinkModuleName_ = abilityInfoElement.moduleName;
+                continueInfo.sinkAbilityName_ = abilityInfoElement.name;
+                return true;
+            } else if (!diffModuleGot) {
+                HILOGD("got sink ability info that module is different as src. "
+                    "ability name: %{public}s; module name: %{public}s",
+                    abilityInfoElement.name.c_str(), abilityInfoElement.moduleName.c_str());
+                diffModuleGot = true;
+                continueInfo.sinkModuleName_ = abilityInfoElement.moduleName;
+                continueInfo.sinkAbilityName_ = abilityInfoElement.name;
+                continue;
+            }
+        }
+    }
+    HILOGI("complete sink bundle info success, bundleName: %{public}s; continue type: %{public}s;"
+           " module: %{public}s;  ability: %{public}s; ",
+           continueInfo.sinkBundleName_.c_str(), continueInfo.continueType_.c_str(),
+           continueInfo.sinkModuleName_.c_str(), continueInfo.sinkAbilityName_.c_str());
+    return diffModuleGot;
+}
+
+bool DSchedContinueInfoUtil::CompareDstBundleName(DSchedContinueInfo &continueInfo,
+    const DmsBundleInfo &distributedBundleInfo, std::vector<std::string> &srcContinueBundleNameSort,
+    std::vector<std::string> &bundleNameList, AppExecFwk::BundleInfo &localBundleInfo) {
     for (const auto &bundleNameInSrcConfig: srcContinueBundleNameSort) {
         HILOGD("compare bundle name in src config: %{public}s", bundleNameInSrcConfig.c_str());
         if (std::find(bundleNameList.begin(), bundleNameList.end(), bundleNameInSrcConfig) ==
@@ -235,39 +281,7 @@ bool DSchedContinueInfoUtil::CompleteSinkContinueInfo(DSchedContinueInfo &contin
             break;
         }
     }
-
-    std::vector<AbilityInfo> localAbilityInfos = localBundleInfo.abilityInfos;
-    bool diffModuleGot = false;
-    for (const auto &abilityInfoElement: localAbilityInfos) {
-        std::vector<std::string> continueTypes = abilityInfoElement.continueType;
-        for (std::string &continueTypeElement: continueTypes) {
-            HILOGD("compare ability, continue type: %{public}s; ability name: %{public}s",
-                   continueTypeElement.c_str(), abilityInfoElement.name.c_str());
-            if (!IsSameContinueType(continueTypeElement, continueInfo.continueType_)) {
-                HILOGD("continue type is not same as src");
-                continue;
-            }
-            if (continueInfo.sourceModuleName_ == abilityInfoElement.moduleName) {
-                HILOGD("got sink ability info that module is same as src. ability name: %{public}s; module name: %{public}s",
-                       abilityInfoElement.name.c_str(), abilityInfoElement.moduleName.c_str());
-                continueInfo.sinkModuleName_ = abilityInfoElement.moduleName;
-                continueInfo.sinkAbilityName_ = abilityInfoElement.name;
-                return true;
-            } else if (!diffModuleGot) {
-                HILOGD("got sink ability info that module is different as src. ability name: %{public}s; module name: %{public}s",
-                       abilityInfoElement.name.c_str(), abilityInfoElement.moduleName.c_str());
-                diffModuleGot = true;
-                continueInfo.sinkModuleName_ = abilityInfoElement.moduleName;
-                continueInfo.sinkAbilityName_ = abilityInfoElement.name;
-                continue;
-            }
-        }
-    }
-    HILOGI("complete sink bundle info success, bundleName: %{public}s; continue type: %{public}s;"
-           " module: %{public}s;  ability: %{public}s; ",
-           continueInfo.sinkBundleName_.c_str(), continueInfo.continueType_.c_str(),
-           continueInfo.sinkModuleName_.c_str(), continueInfo.sinkAbilityName_.c_str());
-    return diffModuleGot;
+    return !continueInfo.sinkBundleName_.empty();
 }
 }  // namespace DistributedSchedule
 }  // namespace OHOS

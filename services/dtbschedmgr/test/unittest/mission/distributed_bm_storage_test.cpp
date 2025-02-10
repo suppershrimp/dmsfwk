@@ -509,7 +509,7 @@ HWTEST_F(DistributedBmStorageTest, GetContinueEventInfoTest_002, TestSize.Level1
     EXPECT_NE(distributedDataStorage, nullptr);
     if (distributedDataStorage != nullptr) {
         std::string networkId;
-        std::string bundleName;
+        std::string bundleName = "notExistBundleName";
         std::string continueType;
         ContinueEventInfo continueEventInfo;
         g_mockGetUdidByNetworkId = "udid";

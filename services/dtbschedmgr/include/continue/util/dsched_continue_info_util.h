@@ -21,8 +21,8 @@
 
 namespace OHOS {
 namespace DistributedSchedule {
-class DSchedContinueInfoUtil{
-    DECLARE_SINGLE_INSTANCE(DSchedContinueInfoUtil);
+class DSchedContinueInfoUtil {
+DECLARE_SINGLE_INSTANCE(DSchedContinueInfoUtil);
 public:
     bool CompleteContinueInfo(std::string srcNetWorkId, uint16_t srcBundleNameId,
         uint8_t srcContinueTypeId, DSchedContinueInfo &continueInfo, int32_t retryTimes = 0);
@@ -38,10 +38,15 @@ private:
         DmsBundleInfo &distributedBundleInfo, std::string srcContinueType,
         std::vector<std::string> &srcContinueBundleNameSort);
     bool CompleteSinkContinueInfo(DSchedContinueInfo &continueInfo,
-        DmsBundleInfo &distributedBundleInfo,std::vector<std::string> &srcContinueBundleNameSort,
+        DmsBundleInfo &distributedBundleInfo,
+        std::vector<std::string> &srcContinueBundleNameSort,
         std::vector<std::string> &bundleNameList);
+    bool DSchedContinueInfoUtil::CompareDstBundleName(DSchedContinueInfo &continueInfo,
+        const DmsBundleInfo &distributedBundleInfo,
+        std::vector<std::string> &srcContinueBundleNameSort,
+        std::vector<std::string> &bundleNameList,
+        AppExecFwk::BundleInfo &localBundleInfo);
 };
-
 }  // namespace DistributedSchedule
 }  // namespace OHOS
 #endif //ABILITY_DMSFWK_1_DSCHED_CONTINUE_INFO_UTIL_H

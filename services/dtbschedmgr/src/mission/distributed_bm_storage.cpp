@@ -758,7 +758,7 @@ DmsBundleInfo DmsBmStorage::ConvertToDistributedBundleInfo(const AppExecFwk::Bun
             dmsAbilityInfo.continueTypeId.push_back(pos++);
         }
         dmsAbilityInfo.moduleName = abilityInfo.moduleName;
-        for (const auto &item: abilityInfo.continueBundleNames){
+        for (const auto &item: abilityInfo.continueBundleNames) {
             dmsAbilityInfo.continueBundleName.push_back(item);
         }
         distributedBundleInfo.dmsAbilityInfos.push_back(dmsAbilityInfo);
