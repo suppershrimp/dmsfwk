@@ -980,6 +980,7 @@ group("unittest") {
     ":dmscollabstatetest",
     ":dmscollabsuptest",
     ":dmscollabtest",
+    ":dmscontinueinfoutiltest",
     ":dmsfreeinstallcbtest",
     ":dschedconnecttest",
     ":dschedcontinuemanagerstatetest",
