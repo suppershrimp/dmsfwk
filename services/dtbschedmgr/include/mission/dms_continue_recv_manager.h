@@ -31,7 +31,6 @@
 #include "distributed_mission_focused_listener.h"
 #include "event_handler.h"
 #include "mission_info.h"
-#include "dsched_continue.h"
 
 namespace OHOS {
 namespace DistributedSchedule {

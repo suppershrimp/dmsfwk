@@ -41,7 +41,7 @@ private:
         DmsBundleInfo &distributedBundleInfo,
         std::vector<std::string> &srcContinueBundleNameSort,
         std::vector<std::string> &bundleNameList);
-    bool DSchedContinueInfoUtil::CompareDstBundleName(DSchedContinueInfo &continueInfo,
+    bool CompareDstBundleName(DSchedContinueInfo &continueInfo,
         const DmsBundleInfo &distributedBundleInfo,
         std::vector<std::string> &srcContinueBundleNameSort,
         std::vector<std::string> &bundleNameList,

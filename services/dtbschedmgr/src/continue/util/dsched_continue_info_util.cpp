@@ -60,7 +60,8 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, uint
         AppExecFwk::BundleInfo localBundleInfo;
         if (BundleManagerInternal::GetLocalBundleInfo(continueInfo.sourceBundleName_, localBundleInfo) ==
             ERR_OK) {
-            HILOGI("same bundle is on the sink as src bundle name: %{public}s", distributedBundleInfo.bundleName.c_str());
+            HILOGI("same bundle is on the sink as src bundle name: %{public}s",
+                   distributedBundleInfo.bundleName.c_str());
             bundleNameList.push_back(distributedBundleInfo.bundleName);
         } else {
             HILOGE("can not get local bundle info or continue bundle for bundle name: %{public}s",
@@ -86,7 +87,8 @@ bool DSchedContinueInfoUtil::CompleteContinueInfo(std::string srcNetWorkId, std:
         srcNetWorkId, srcBundleName, distributedBundleInfo)) {
         HILOGW("get distributedBundleInfo failed, retryTimes = %{public}d", retryTimes);
         DmsKvSyncE2E::GetInstance()->PushAndPullData(srcNetWorkId);
-        return CompleteContinueInfo(srcNetWorkId, srcBundleName, std::move(srcContinueType), continueInfo, retryTimes + 1);
+        return CompleteContinueInfo(srcNetWorkId, srcBundleName, std::move(srcContinueType), continueInfo,
+                                    retryTimes + 1);
     }
 
     HILOGD("src distributedBundleInfo got. bundleName: %{public}s", distributedBundleInfo.bundleName.c_str());
@@ -212,8 +214,8 @@ bool DSchedContinueInfoUtil::CompleteSinkContinueInfo(DSchedContinueInfo &contin
 {
     HILOGI("start complete sink bundle info");
     AppExecFwk::BundleInfo localBundleInfo;
-    if(!CompareDstBundleName(continueInfo, distributedBundleInfo, srcContinueBundleNameSort,
-        bundleNameList, localBundleInfo)){
+    if (!CompareDstBundleName(continueInfo, distributedBundleInfo, srcContinueBundleNameSort,
+        bundleNameList, localBundleInfo)) {
         HILOGE("No dst bundle name matches for src bundle name: %{public}s", distributedBundleInfo.bundleName.c_str());
         return false;
     }
@@ -256,7 +258,8 @@ bool DSchedContinueInfoUtil::CompleteSinkContinueInfo(DSchedContinueInfo &contin
 
 bool DSchedContinueInfoUtil::CompareDstBundleName(DSchedContinueInfo &continueInfo,
     const DmsBundleInfo &distributedBundleInfo, std::vector<std::string> &srcContinueBundleNameSort,
-    std::vector<std::string> &bundleNameList, AppExecFwk::BundleInfo &localBundleInfo) {
+    std::vector<std::string> &bundleNameList, AppExecFwk::BundleInfo &localBundleInfo)
+{
     for (const auto &bundleNameInSrcConfig: srcContinueBundleNameSort) {
         HILOGD("compare bundle name in src config: %{public}s", bundleNameInSrcConfig.c_str());
         if (std::find(bundleNameList.begin(), bundleNameList.end(), bundleNameInSrcConfig) ==
