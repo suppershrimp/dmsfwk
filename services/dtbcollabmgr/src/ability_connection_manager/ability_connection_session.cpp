@@ -193,9 +193,14 @@ int32_t AbilityConnectionSession::AcceptConnect(const std::string& token)
     if (ret != ERR_OK) {
         HILOGE("init sink client failed!");
         dmsClient.NotifyPrepareResult(token, ret, sessionId_, localSocketName_);
+        Release();
         return ret;
     }
-    dmsClient.NotifyPrepareResult(token, ERR_OK, sessionId_, localSocketName_);
+    ret = dmsClient.NotifyPrepareResult(token, ERR_OK, sessionId_, localSocketName_);
+    if (ret != ERR_OK) {
+        HILOGE("notify prepare result failed!");
+        Release();
+    }
     return ERR_OK;
 }
 
