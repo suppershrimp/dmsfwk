@@ -482,9 +482,7 @@ ohos_unittest("dmscontinueinfoutiltest") {
   }
   module_out_path = module_output_path
   cflags = [ "-Dprivate=public" ]
-  sources = [
-    "unittest/continue/dsched_continue_info_util_test.cpp",
-  ]
+  sources = [ "unittest/continue/dsched_continue_info_util_test.cpp" ]
   sources += dtbschedmgr_sources
 
   configs = [
