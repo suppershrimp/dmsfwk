@@ -103,6 +103,8 @@ struct ConnectOption : public Parcelable {
     bool needReceiveStream;
     AAFwk::WantParams options;
     AAFwk::WantParams parameters;
+    bool needSendFile;
+    bool needReceiveFile;
     bool ReadFromParcel(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
     static ConnectOption *Unmarshalling(Parcel &parcel);
