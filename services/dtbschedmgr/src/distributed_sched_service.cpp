@@ -181,6 +181,7 @@ void DistributedSchedService::OnStop(const SystemAbilityOnDemandReason &stopReas
     }
     DistributedSchedAdapter::GetInstance().UnRegisterMissionListener(missionFocusedListener_);
     DmsContinueConditionMgr::GetInstance().UnInit();
+    DSchedContinueManager::GetInstance().UnInit();
 #endif
 
 #ifdef DMSFWK_INTERACTIVE_ADAPTER
@@ -323,9 +324,7 @@ bool DistributedSchedService::Init()
     InitMissionManager();
     DSchedCollabManager::GetInstance().Init();
     DistributedSchedAdapter::GetInstance().Init();
-    if (SwitchStatusDependency::GetInstance().IsContinueSwitchOn()) {
-        DSchedContinueManager::GetInstance().Init();
-    }
+    DSchedContinueManager::GetInstance().Init();
     connectDeathRecipient_ = sptr<IRemoteObject::DeathRecipient>(new ConnectDeathRecipient());
     callerDeathRecipient_ = sptr<IRemoteObject::DeathRecipient>(new CallerDeathRecipient());
     callerDeathRecipientForLocalDevice_ = sptr<IRemoteObject::DeathRecipient>(
@@ -386,7 +385,6 @@ void DistributedSchedService::RegisterDataShareObserver(const std::string& key)
                 return;
             }
             sendMgr->OnMissionStatusChanged(missionId, MISSION_EVENT_FOCUSED);
-            DSchedContinueManager::GetInstance().Init();
         } else {
             auto sendMgr = MultiUserManager::GetInstance().GetCurrentSendMgr();
             if (sendMgr == nullptr) {
@@ -400,7 +398,6 @@ void DistributedSchedService::RegisterDataShareObserver(const std::string& key)
                 return;
             }
             recvMgr->OnContinueSwitchOff();
-            DSchedContinueManager::GetInstance().UnInit();
         };
     };
     dataShareManager.RegisterObserver(key, observerCallback);
