@@ -67,7 +67,6 @@ void DSchedContinueManager::Init()
         HILOGI("DSchedContinueManager already inited, end.");
         return;
     }
-    DSchedTransportSoftbusAdapter::GetInstance().InitChannel();
     softbusListener_ = std::make_shared<DSchedContinueManager::SoftbusListener>();
     DSchedTransportSoftbusAdapter::GetInstance().RegisterListener(SERVICE_TYPE_CONTINUE, softbusListener_);
     eventThread_ = std::thread(&DSchedContinueManager::StartEvent, this);
