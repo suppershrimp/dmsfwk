@@ -60,6 +60,7 @@
 #include "dms_version_manager.h"
 #include "dsched_collab_manager.h"
 #include "dsched_continue_manager.h"
+#include "dsched_transport_softbus_adapter.h"
 #include "dtbschedmgr_device_info_storage.h"
 #include "dtbschedmgr_log.h"
 #include "parcel_helper.h"
@@ -182,7 +183,7 @@ void DistributedSchedService::OnStop(const SystemAbilityOnDemandReason &stopReas
     DistributedSchedAdapter::GetInstance().UnRegisterMissionListener(missionFocusedListener_);
     DmsContinueConditionMgr::GetInstance().UnInit();
 #endif
-
+    DSchedTransportSoftbusAdapter::GetInstance().ReleaseChannel();
 #ifdef DMSFWK_INTERACTIVE_ADAPTER
     dlclose(dllHandle_);
     dllHandle_ = nullptr;
@@ -320,6 +321,7 @@ bool DistributedSchedService::Init()
     InitDeviceCfg();
     DmsContinueTime::GetInstance().Init();
     DnetworkAdapter::GetInstance()->Init();
+    DSchedTransportSoftbusAdapter::GetInstance().InitChannel();
     if (!DtbschedmgrDeviceInfoStorage::GetInstance().Init()) {
         HILOGW("DtbschedmgrDeviceInfoStorage init failed.");
     }

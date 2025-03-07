@@ -78,7 +78,6 @@ void DSchedCollabManager::Init()
         HILOGI("DSchedCollabManager already inited, end.");
         return;
     }
-    DSchedTransportSoftbusAdapter::GetInstance().InitChannel();
     softbusListener_ = std::make_shared<DSchedCollabManager::SoftbusListener>();
     DSchedTransportSoftbusAdapter::GetInstance().RegisterListener(SERVICE_TYPE_COLLAB, softbusListener_);
     int32_t ret =  RegisterRelationChecker(&iAbilityRelationChecker);
@@ -189,7 +188,6 @@ void DSchedCollabManager::UnInit()
 {
     HILOGI("UnInit start");
     DSchedTransportSoftbusAdapter::GetInstance().UnregisterListener(SERVICE_TYPE_COLLAB, softbusListener_);
-    DSchedTransportSoftbusAdapter::GetInstance().ReleaseChannel();
     collabs_.clear();
 
     if (eventHandler_ != nullptr) {
