@@ -549,7 +549,7 @@ int32_t DistributedSchedService::GetDmsInteractiveAdapterProxy()
 {
     HILOGI("Get remote dms interactive adapter proxy.");
     std::lock_guard<std::mutex> autoLock(dmsAdapetrLock_);
-#if (defined(__aarch64__) || defined(__x86_64__))
+#if (defined(__aarch64__) || defined(__x86_64__) || defined(__loongarch_lp64))
     char resolvedPath[100] = "/system/lib64/libdms_interactive_adapter.z.so";
 #else
     char resolvedPath[100] = "/system/lib/libdms_interactive_adapter.z.so";
