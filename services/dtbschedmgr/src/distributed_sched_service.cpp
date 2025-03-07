@@ -65,6 +65,7 @@
 #include "parcel_helper.h"
 #include "string_wrapper.h"
 #include "switch_status_dependency.h"
+#include "svc_distributed_connection.h"
 #ifdef SUPPORT_COMMON_EVENT_SERVICE
 #include "common_event_listener.h"
 #endif
@@ -127,6 +128,7 @@ constexpr int32_t DEFAULT_DMS_MISSION_ID = -1;
 constexpr int32_t DEFAULT_DMS_CONNECT_TOKEN = -1;
 constexpr int32_t BIND_CONNECT_RETRY_TIMES = 3;
 constexpr int32_t BIND_CONNECT_TIMEOUT = 500; // 500ms
+constexpr int32_t SLEEP_INTERVAL = 100;
 constexpr int32_t MAX_DISTRIBUTED_CONNECT_NUM = 600;
 constexpr int32_t INVALID_CALLER_UID = -1;
 constexpr int32_t IASS_CALLBACK_ON_REMOTE_FREE_INSTALL_DONE = 1;
@@ -2404,6 +2406,32 @@ void DistributedSchedService::GetCallComponentList(std::vector<std::string>& dis
             distributedComponents.emplace_back(componentInfo);
         }
     }
+}
+
+int32_t DistributedSchedService::ConnectDExtAbility(std::string& bundleName, std::string& abilityName, int32_t userId)
+{
+    HILOGI("DistributedSchedService::ConnectDExtAbility start.");
+    sptr<SvcDistributedConnection> svcDConn(new SvcDistributedConnection(bundleName));
+    bool isCleanCalled = false;
+    AAFwk::Want want;
+    want.SetElementName(bundleName, abilityName);
+    svcDConn->ConnectDExtAbility(want, userId, isCleanCalled);
+    while (!(svcDConn->IsExtAbilityConnected())) {
+        usleep(SLEEP_INTERVAL);
+    }
+
+    auto proxy = svcDConn->GetDistributedExtProxy();
+    if (proxy == nullptr) {
+        HILOGE("extension distribute proxy is empty");
+        return ERR_NULL_OBJECT;
+    }
+    proxy->TriggerOnCreate(want);
+
+    AAFwk::WantParams wantParam;
+    wantParam.SetParam("CollabrationType", String::Box("SystemCapability.DistributedSched.AppCollaboration"));
+    proxy->TriggerOnCollaborate(wantParam);
+    HILOGI("DistributedSchedService::ConnectDExtAbility end.");
+    return ERR_OK;
 }
 
 void DistributedSchedService::ReportDistributedComponentChange(const CallerInfo& callerInfo, int32_t changeType,
