@@ -122,13 +122,17 @@ HWTEST_F(DMSContinueRecomMgrTest, testDMSContinueRecomMgrInitUninit001, TestSize
     auto recomMgr = MultiUserManager::GetInstance().GetCurrentRecomMgr();
     ASSERT_NE(nullptr, recomMgr);
     int32_t accountId = 100;
+    DTEST_LOG << "1" << std::endl;
     EXPECT_NO_FATAL_FAILURE(recomMgr->Init(accountId));
+    DTEST_LOG << "3" << std::endl;
     usleep(WAITTIME);
-
+    DTEST_LOG << "2" << std::endl;
     EXPECT_NO_FATAL_FAILURE(recomMgr->OnDeviceChanged());
+    DTEST_LOG << "4" << std::endl;
     int32_t missionId = 0;
     MissionEventType type = MISSION_EVENT_INVALID;
     EXPECT_NO_FATAL_FAILURE(recomMgr->OnMissionStatusChanged(missionId, type));
+    DTEST_LOG << "5" << std::endl;
     EXPECT_NO_FATAL_FAILURE(recomMgr->UnInit());
     DTEST_LOG << "DMSContinueRecomMgrTest testDMSContinueRecomMgrInitUninit001 end" << std::endl;
 }
