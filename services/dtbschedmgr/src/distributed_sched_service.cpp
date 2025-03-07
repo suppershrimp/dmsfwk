@@ -65,6 +65,7 @@
 #include "parcel_helper.h"
 #include "string_wrapper.h"
 #include "switch_status_dependency.h"
+#include "svc_distributed_connection.h"
 #ifdef SUPPORT_COMMON_EVENT_SERVICE
 #include "common_event_listener.h"
 #endif
@@ -123,6 +124,9 @@ const std::string DMS_CALLING_UID = "ohos.dms.callingUid";
 const std::string PKG_NAME = "DBinderBus_Dms_" + std::to_string(getprocpid());
 const std::string BOOT_COMPLETED_EVENT = "usual.event.BOOT_COMPLETED";
 const std::string COMMON_EVENT_WIFI_SEMI_STATE = "usual.event.wifi.SEMI_STATE";
+const std::string COLLABRATION_TYPE = "CollabrationType";
+const std::string SYSCAP = "SystemCapability.DistributedSched.AppCollaboration";
+const char *EXTENSION_START_PKGNAME = "ExtensionStartPkgName";    // softbus define
 constexpr int32_t DEFAULT_DMS_MISSION_ID = -1;
 constexpr int32_t DEFAULT_DMS_CONNECT_TOKEN = -1;
 constexpr int32_t BIND_CONNECT_RETRY_TIMES = 3;
@@ -149,7 +153,14 @@ constexpr int32_t DMSDURATION_STARTABILITY = 6;
 constexpr int32_t HID_HAP = 10000; /* first hap user */
 constexpr int32_t WINDOW_MANAGER_SERVICE_ID = 4606;
 constexpr int32_t SEMI_WIFI_ID = 1010;
+constexpr int32_t DSOFTBUS_UID = 1024;
 DataShareManager &dataShareManager = DataShareManager::GetInstance();
+
+const std::string HMOS_HAP_CODE_PATH = "1";
+const std::string LINUX_HAP_CODE_PATH = "2";
+const int32_t CONNECT_WAIT_TIME_S = 2 * 1000 * 1000; /* 2 second */
+std::mutex getDistibutedProxyLock_;
+std::condition_variable getDistibutedProxyCondition_;
 }
 
 IMPLEMENT_SINGLE_INSTANCE(DistributedSchedService);
@@ -159,6 +170,162 @@ DistributedSchedService::DistributedSchedService() : SystemAbility(DISTRIBUTED_S
 {
 }
 
+static sptr<AppExecFwk::IBundleMgr> GetBundleManager()
+{
+    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        HILOGE("Failed to get system ability manager");
+        return nullptr;
+    }
+
+    auto bundleObj = saMgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (bundleObj == nullptr) {
+        HILOGE("Failed to get bundle manager service");
+        return nullptr;
+    }
+
+    return iface_cast<AppExecFwk::IBundleMgr>(bundleObj);
+}
+
+std::string GetDExtensionName(std::string bundleName, int32_t userId)
+{
+    std::vector<AppExecFwk::BundleInfo> installedBundles;
+    auto bms = GetBundleManager();
+    if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
+        HILOGE("Failed to get bundle infos");
+        return "";
+    }
+
+    for (const auto &installedBundle : installedBundles) {
+        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
+            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            continue;
+        }
+
+        for (const auto &ext : installedBundle.extensionInfos) {
+            if (ext.bundleName != bundleName) {
+                continue;
+            }
+
+            if (ext.type != AppExecFwk::ExtensionAbilityType::DISTRIBUTED) {
+                continue;
+            }
+
+            HILOGI("bundleName: %{public}s, find extName: %{public}s", bundleName.c_str(), ext.name.c_str());
+            return ext.name;
+        }
+    }
+
+    HILOGI("bundleName: %{public}s , find extName failed", bundleName.c_str());
+    return "";
+}
+
+std::string GetDExtensionProcess(std::string bundleName, int32_t userId)
+{
+    std::vector<AppExecFwk::BundleInfo> installedBundles;
+    auto bms = GetBundleManager();
+    if (!bms->GetBundleInfos(AppExecFwk::GET_BUNDLE_WITH_EXTENSION_INFO, installedBundles, userId)) {
+        HILOGE("Failed to get bundle infos");
+        return "";
+    }
+
+    for (const auto &installedBundle : installedBundles) {
+        if (installedBundle.applicationInfo.codePath == HMOS_HAP_CODE_PATH ||
+            installedBundle.applicationInfo.codePath == LINUX_HAP_CODE_PATH) {
+            HILOGI("Unsupported applications, name : %{public}s", installedBundle.name.data());
+            continue;
+        }
+
+        for (const auto &ext : installedBundle.extensionInfos) {
+            if (ext.bundleName != bundleName) {
+                continue;
+            }
+
+            if (ext.type != AppExecFwk::ExtensionAbilityType::DISTRIBUTED) {
+                continue;
+            }
+
+            HILOGI("bundleName: %{public}s, find process: %{public}s", bundleName.c_str(), ext.process.c_str());
+            return ext.process;
+        }
+    }
+
+    HILOGI("bundleName: %{public}s , find process failed", bundleName.c_str());
+    return "";
+}
+
+std::function<void(const std::string &&)> GetDistributedConnectDone(std::string &bundleName)
+{
+    return [](const std::string &&bundleName) {
+        HILOGI("GetDistributedConnectDone, bundleName: %{public}s", bundleName.c_str());
+        getDistibutedProxyCondition_.notify_one();
+    };
+}
+
+int32_t DistributedSchedService::ConnectDExtAbility(std::string &bundleName, std::string &abilityName,
+    int32_t userId)
+{
+    HILOGI("DistributedSchedService::ConnectDExtensionAbility start.");
+    if (!MultiUserManager::GetInstance().IsUserForeground(userId)) {
+        HILOGW("The current user is not foreground. userId: %{public}d.", userId);
+        return DMS_NOT_FOREGROUND_USER;
+    }
+    sptr<SvcDistributedConnection> svcDConn(new SvcDistributedConnection(bundleName));
+    auto callConnected = GetDistributedConnectDone(bundleName);
+    svcDConn->SetCallback(callConnected);
+    bool isCleanCalled = false;
+    AAFwk::Want want;
+    want.SetElementName(bundleName, abilityName);
+    int32_t result = svcDConn->ConnectDExtAbility(want, userId, isCleanCalled);
+
+    std::unique_lock<std::mutex> lock(getDistibutedProxyLock_);
+    getDistibutedProxyCondition_.wait_for(lock, std::chrono::seconds(CONNECT_WAIT_TIME_S));
+
+    auto proxy = svcDConn->GetDistributedExtProxy();
+    if (proxy == nullptr) {
+        HILOGE("Extension distribute proxy is empty");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    proxy->TriggerOnCreate(want);
+
+    AAFwk::WantParams wantParam;
+    wantParam.SetParam(COLLABRATION_TYPE, String::Box(SYSCAP));
+    proxy->TriggerOnCollaborate(wantParam);
+    HILOGI("DistributedSchedService::ConnectDExtensionAbility end.");
+    return result;
+}
+
+static int32_t StartDistributedExtensionAbility(int32_t userId, const char *bundleName, IResultCallback *callback)
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != DSOFTBUS_UID) {
+        HILOGE("The current process does not have permission to launch the extension.");
+        return DMS_PERMISSION_DENIED;
+    }
+    std::string bundleNameInner = bundleName;
+    int pId = 0;
+
+    std::string abilityName = GetDExtensionName(bundleNameInner, userId);
+    HILOGI("bundleName: %{public}s, abilityName: %{public}s", bundleNameInner.c_str(), abilityName.c_str());
+    int32_t res = DistributedSchedService::GetInstance().ConnectDExtAbility(bundleNameInner, abilityName, userId);
+    if (callback == nullptr) {
+        HILOGE("callback is nullptr.");
+        return INVALID_PARAMETERS_ERR;
+    }
+
+    if (callback->result != nullptr) {
+        (*(callback->result))(userId, pId, bundleName, res);
+    }
+
+    return ERR_OK;
+}
+
+IStartProcessCallback startProcessCallback = {
+    .StartDistributedExtension = StartDistributedExtensionAbility
+};
+
 void DistributedSchedService::OnStart(const SystemAbilityOnDemandReason &startReason)
 {
     HILOGI("OnStart reason %{public}s, reasonId_:%{public}d", startReason.GetName().c_str(), startReason.GetId());
@@ -166,6 +333,12 @@ void DistributedSchedService::OnStart(const SystemAbilityOnDemandReason &startRe
         HILOGI("OnStart dms service failed.");
         return;
     }
+
+    int32_t ret = RegisterExtensionStart(EXTENSION_START_PKGNAME, &startProcessCallback);
+    if (ret != ERR_OK) {
+        HILOGE("RegisterExtensionStart failed, ret: %{public}d", ret);
+    }
+
     Publish(this);
     HandleBootStart(startReason);
 }
@@ -3706,6 +3879,10 @@ int32_t DistributedSchedService::CheckTargetPermission(const OHOS::AAFwk::Want& 
     }
     HILOGD("target ability info bundleName:%{public}s abilityName:%{public}s visible:%{public}d",
         targetAbility.bundleName.c_str(), targetAbility.name.c_str(), targetAbility.visible);
+    if (targetAbility.extensionAbilityType == AppExecFwk::ExtensionAbilityType::DISTRIBUTED) {
+        HILOGE("Dont have the permission to start DExtension.");
+        return DMS_PERMISSION_DENIED;
+    }
     HILOGD("callerType:%{public}d accountType:%{public}d callerUid:%{public}d AccessTokenID:%{public}s",
         callerInfo.callerType, accountInfo.accountType, callerInfo.uid,
         GetAnonymStr(std::to_string(callerInfo.accessToken)).c_str());
